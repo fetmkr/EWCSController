@@ -1,0 +1,19 @@
+{
+  "name": "ewcscontroller",
+  "version": "1.0.0",
+  "description": "EWCS Controller",
+  "main": "server.js",
+  "scripts": {
+    "test": "start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fetmkr/EWCSController.git"
+  },
+  "author": "fetm",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fetmkr/EWCSController/issues"
+  },
+  "homepage": "https://github.com/fetmkr/EWCSController#readme"
+}
