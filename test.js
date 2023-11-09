@@ -3,12 +3,31 @@ import adc from 'mcp-spi-adc';
 import SHT4X from 'sht4x';
 import { Gpio } from 'onoff';
 import fs from  'fs';
+import modbus from 'modbus-serial'
 
+const client = new modbus()
+client.connectAsciiSerial("/dev/ttyAMA5",{baudRate:9600})
+function writeModbus() {
+    client.setID(1);
+
+    // write the values 0, 0xffff to registers starting at address 5
+    // on device number 1.
+    client.writeRegisters(5, [0 , 0xffff])
+        .then(read);
+}
+
+function read() {
+    // read the 2 registers starting at address 5
+    // on device number 1.
+    client.readHoldingRegisters(5, 2)
+        .then(console.log);
+}
 
 const LED = new Gpio(16, 'out')
 const rs485txEn = new Gpio(23, 'out')
 
 const thermostat = await SHT4X.open();
+
 
 const port0 = new SerialPort({
     path: '/dev/ttyAMA0',
@@ -34,13 +53,13 @@ port3.on('data', function(data){
     console.log("port3: "+ data)
 })
 
-const port5 = new SerialPort({
-    path: '/dev/ttyAMA5',
-    baudRate: 9600,
-})
-port5.on('data', function(data){
-    console.log("port5: "+  data)
-})
+// const port5 = new SerialPort({
+//     path: '/dev/ttyAMA5',
+//     baudRate: 9600,
+// })
+// port5.on('data', function(data){
+//     console.log("port5: "+  data)
+// })
 
 
 const cs125CurrentADCChan = adc.open(0, {speedHz: 20000}, err => {
@@ -65,8 +84,12 @@ function uartTxTest(){
     port0.write('0')
     port2.write('2')
     port3.write('3')
-    port5.write('5')
+    rs485txEn.writeSync(1)
+    //port5.write('5')
+    writeModbus()
 }
+
+
 
 function readADC() {
     cs125CurrentADCChan.read((err, reading) => {
