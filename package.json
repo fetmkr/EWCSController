@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "EWCS Controller",
   "main": "server.js",
+  "type": "module",
   "scripts": {
-    "test": "start"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,24 @@
   "bugs": {
     "url": "https://github.com/fetmkr/EWCSController/issues"
   },
-  "homepage": "https://github.com/fetmkr/EWCSController#readme"
+  "homepage": "https://github.com/fetmkr/EWCSController#readme",
+  "dependencies": {
+    "crc": "^4.3.2",
+    "cron": "^3.1.6",
+    "express": "^4.18.2",
+    "express-ws": "^5.0.2",
+    "ffmpeg": "^0.0.4",
+    "ffmpeg-extract-frame": "^1.0.2",
+    "ffmpeg-extract-frames": "^2.0.2",
+    "glob": "^10.3.10",
+    "is-online": "^10.0.0",
+    "local-ip-address": "^1.0.0",
+    "mcp-spi-adc": "^3.2.0",
+    "modbus-serial": "^8.0.13",
+    "nano": "^10.1.2",
+    "onoff": "^6.0.3",
+    "public-ip": "^6.0.1",
+    "serialport": "^12.0.0",
+    "sht4x": "^1.0.3"
+  }
 }
