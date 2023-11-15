@@ -65,6 +65,7 @@ port0.on('data', function(data){
             let timeCommand = "sudo timedatectl set-time '"+(data[1]+2000).toString()+"-"+ data[2].toString()+"-"+data[3].toString()+" "+data[4].toString()+":"+data[5].toString()+":"+data[6].toString()+"'"
             console.log(timeCommand)
             shell.exec(timeCommand)
+            //setSystemTime();
 
         }
         
@@ -75,6 +76,11 @@ port0.on('data', function(data){
 
 function shutdown(){
     shell.exec("sudo halt")
+}
+
+function setSystemTime(year, month, date, hour, min, sec){
+    let timeCommand = "sudo timedatectl set-time '"+ year.toString()+"-"+ month.toString()+"-"+ date.toString()+" "+hour.toString()+":"+min.toString()+":"+sec.toString()+"'"
+    shell.exec(timeCommand)
 }
 
 // CS125
