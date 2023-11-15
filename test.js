@@ -4,6 +4,10 @@ import SHT4X from 'sht4x';
 import { Gpio } from 'onoff';
 import fs from  'fs';
 import modbus from 'modbus-serial'
+import shell from 'shelljs'
+import internal from 'stream';
+
+let utcTime = 0
 
 const client = new modbus()
 client.connectAsciiSerial("/dev/ttyAMA5",{baudRate:9600})
@@ -28,15 +32,52 @@ const rs485txEn = new Gpio(23, 'out')
 
 const thermostat = await SHT4X.open();
 
-
+// to PIC controller
 const port0 = new SerialPort({
     path: '/dev/ttyAMA0',
     baudRate: 9600,
 })
 port0.on('data', function(data){
     console.log("port0: "+ data)
+
+    if(data.length == 1){
+    if(data == 'Q')
+        {
+            console.log("RPI shutting down in 5 secs");
+            setTimeout(shutdown,5000);
+        }
+
+        if(data == 'O')
+        {
+            // RPI is already on
+            port0.write('O')
+        }
+
+    }else{
+        console.log("time data")
+        // 'T' = 84
+        if(data[0] == 84 ){
+            // for(let i = 0; i< data.length ; i++){
+            //     console.log(data[i])
+            // }
+            console.log(new Date(data[1]+2000,data[2],data[3],data[4],data[5],data[6]))
+            console.log(new Date(data[1]+2000,data[2],data[3],data[4],data[5],data[6]).getTime())
+            let timeCommand = "sudo timedatectl set-time '"+(data[1]+2000).toString()+"-"+ data[2].toString()+"-"+data[3].toString()+" "+data[4].toString()+":"+data[5].toString()+":"+data[6].toString()+"'"
+            console.log(timeCommand)
+            shell.exec(timeCommand)
+
+        }
+        
+    }
+    
+
 })
 
+function shutdown(){
+    shell.exec("sudo halt")
+}
+
+// CS125
 const port2 = new SerialPort({
     path: '/dev/ttyAMA2',
     baudRate: 9600,
@@ -45,6 +86,7 @@ port2.on('data', function(data){
     console.log("port2: "+ data)
 })
 
+// Iridium
 const port3 = new SerialPort({
     path: '/dev/ttyAMA3',
     baudRate: 9600,
@@ -53,6 +95,7 @@ port3.on('data', function(data){
     console.log("port3: "+ data)
 })
 
+// rs485
 // const port5 = new SerialPort({
 //     path: '/dev/ttyAMA5',
 //     baudRate: 9600,
@@ -81,7 +124,8 @@ const batteryVoltageADCChan = adc.open(3, {speedHz: 20000}, err => {
 
 
 function uartTxTest(){
-    port0.write('0')
+    // give me time    
+    port0.write('T')
     port2.write('2')
     port3.write('3')
     rs485txEn.writeSync(1)
