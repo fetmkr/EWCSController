@@ -1,4 +1,5 @@
 import { SerialPort, ReadlineParser  } from 'serialport';
+import { ByteLengthParser } from '@serialport/parser-byte-length'
 import adc from 'mcp-spi-adc';
 import SHT4X from 'sht4x';
 import { Gpio } from 'onoff';
@@ -9,6 +10,9 @@ import internal from 'stream';
 import crc16ccitt from 'crc/crc16ccitt';
 
 let utcTime = 0
+
+
+
 
 const client = new modbus()
 client.connectAsciiSerial("/dev/ttyAMA5",{baudRate:9600})
@@ -36,7 +40,7 @@ const thermostat = await SHT4X.open();
 // to PIC controller
 const port0 = new SerialPort({
     path: '/dev/ttyAMA0',
-    baudRate: 9600,
+    baudRate: 115200,
 })
 port0.on('data', function(data){
     console.log("port0: "+ data)
@@ -66,7 +70,8 @@ port0.on('data', function(data){
             let timeCommand = "sudo timedatectl set-time '"+(data[1]+2000).toString()+"-"+ data[2].toString()+"-"+data[3].toString()+" "+data[4].toString()+":"+data[5].toString()+":"+data[6].toString()+"'"
             console.log(timeCommand)
             shell.exec(timeCommand)
-            //setSystemTime();
+
+            // setSystemTime(year, month, date, hour, min, sec);
 
         }
         
@@ -79,10 +84,10 @@ function shutdown(){
     shell.exec("sudo halt")
 }
 
-function setSystemTime(year, month, date, hour, min, sec){
-    let timeCommand = "sudo timedatectl set-time '"+ year.toString()+"-"+ month.toString()+"-"+ date.toString()+" "+hour.toString()+":"+min.toString()+":"+sec.toString()+"'"
-    shell.exec(timeCommand)
-}
+// function setSystemTime(year, month, date, hour, min, sec){
+//     let timeCommand = "sudo timedatectl set-time '"+ year.toString()+"-"+ month.toString()+"-"+ date.toString()+" "+hour.toString()+":"+min.toString()+":"+sec.toString()+"'"
+//     shell.exec(timeCommand)
+// }
 
 // CS125
 const port2 = new SerialPort({
@@ -113,16 +118,7 @@ port3.on('data', function(data){
 
 
 
-const portCamera = new SerialPort({
-    path: '/dev/ttyUSB0',
-    baudRate: 115200,
-})
 
-portCamera.on('data', function(data){
-    let buff = Buffer.from(data);
-
-    console.log(buff)
-})
 
 const cs125CurrentADCChan = adc.open(0, {speedHz: 20000}, err => {
     if (err) throw err;
@@ -140,30 +136,103 @@ const batteryVoltageADCChan = adc.open(3, {speedHz: 20000}, err => {
     if (err) throw err;
 });
 
-
+function timeSyncRequest()
+{
+    // time sync request    
+    port0.write('T')
+    console.log("Time Sync Requested")
+}
 
 function uartTxTest(){
-    // give me time    
-    port0.write('T')
+    
+
     port2.write('2')
     port3.write('3')
     // rs485txEn.writeSync(1)
     // port5.write('5')
     // writeModbus()
-    let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x01,0xc1,0xc2])
-    portCamera.write(cmd)
-    
-    
+ 
 }
 
+let imageArray = new Array();
+
+imageArray = [];
+
+let captureState = 0
+let packetCounter = 0
+let packetSize = 768 // hard coded as 0x00, 0x03 
+let snapshotSize = 0
+
+let dataBuffer = Buffer.alloc(0)
+let started = false
+
+const portCamera = new SerialPort({
+    path: '/dev/ttyUSB0',
+    baudRate: 115200,
+})
+
+
+portCamera.on('data', function(data){
+    dataBuffer = Buffer.concat([dataBuffer,data])
+    
+    // Check for start sequence 0x90, 0xEB, 0x01, 0x49 if not started
+    if (!started) {
+        for (let i = 0; i < dataBuffer.length - 3; i++) {
+        if (dataBuffer[i] === 0x90 && dataBuffer[i + 1] === 0xEB && dataBuffer[i + 2] === 0x01 && dataBuffer[i + 3] === 0x49) {
+            started = true;
+            dataBuffer = dataBuffer.slice(i); // Start from the sequence
+            break;
+        }
+        }
+    }
+    // If started, check if we have read at least 778 bytes
+    if (started && dataBuffer.length >= 776) {
+        // Process your 768 bytes here
+        let receivedData = dataBuffer.slice(0, 776);
+        let requiredData = dataBuffer.slice(6, 768);
+        console.log("Received 778 bytes starting with 0x90, 0xEB, 0x01, 0x49: ", receivedData);
+        console.log("Sliced 768 bytes starting with 0x90, 0xEB, 0x01, 0x49: ", requiredData);
+
+        // Reset for the next message
+        dataBuffer = dataBuffer.slice(776);
+        started = false;
+    }
+  
+    // capture ready
+    if(data[0] == 0x90 && data[1] == 0xeb && data[3] == 0x40 && data.length ==19 && captureState == 0 ){
+        console.log(data)
+        
+        snapshotSize = data.readInt32LE(7)
+        console.log(snapshotSize)
+        
+        captureState = 1
+    }
+   
+
+    //console.log(data)
+})
+
 function captureImage(){
-    let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x01,0xc1,0xc2])
-    portCamera.write(cmd)
+    if(captureState == 0){
+        let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x01,0xc1,0xc2])
+        portCamera.write(cmd)
+    }
+    else if (captureState == 1)
+    {
+
+        let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x48, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x03,0xc1,0xc2])
+        portCamera.write(cmd)
+        captureState = 2
+    }
+    else if (captureState == 2)
+    {
+
+    }
 }
 
 function getImage(){
-    let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x48, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x03,0xc1,0xc2])
-    portCamera.write(cmd)
+    
+
 }
 
 
@@ -227,10 +296,11 @@ function testEWCSController(){
     console.log("**** EWCS Controller Board Function Test")
     toggleLED()
     uartTxTest()
+    //timeSyncRequest()
     readTempHumidity()
     readADC()
     readRPI4Temp()
-    
+    captureImage()
 }
 
 
