@@ -161,11 +161,14 @@ imageArray = [];
 let captureState = 0
 let packetCounter = 0
 let packetSize = 768 // hard coded as 0x00, 0x03 
+let packetNum = 0
 let snapshotSize = 0
 
 let dataBuffer = Buffer.alloc(0)
+let imageBuffer = Buffer.alloc(0)
 let started = false
-
+let remainingBytesSize = 0;
+let isSaved = false
 const portCamera = new SerialPort({
     path: '/dev/ttyUSB0',
     baudRate: 115200,
@@ -186,25 +189,64 @@ portCamera.on('data', function(data){
         }
     }
     // If started, check if we have read at least 778 bytes
-    if (started && dataBuffer.length >= 776) {
+    if (started && dataBuffer.length >= packetSize + 8) {
         // Process your 768 bytes here
-        let receivedData = dataBuffer.slice(0, 776);
-        let requiredData = dataBuffer.slice(6, 768);
-        console.log("Received 778 bytes starting with 0x90, 0xEB, 0x01, 0x49: ", receivedData);
-        console.log("Sliced 768 bytes starting with 0x90, 0xEB, 0x01, 0x49: ", requiredData);
+        let receivedData = dataBuffer.slice(0, packetSize +8);
+        let requiredData = dataBuffer.slice(6, packetSize+6);
+
+        imageBuffer = Buffer.concat([imageBuffer, requiredData])
+        //console.log("snapshot size "+snapshotSize)
+        //console.log("image buffer length "+imageBuffer.length)
+        
+
+        //console.log("packet counter / packet num "+ packetCounter +" / "+ packetNum)
+        //console.log("Received "+Number(packetSize+8)+" bytes starting with 0x90, 0xEB, 0x01, 0x49: ")
+        //console.log(receivedData);
+        //console.log("Sliced "+packetSize+" bytes starting with 0x90, 0xEB, 0x01, 0x49: ")
+        //console.log(requiredData);
+
+   
+        
 
         // Reset for the next message
-        dataBuffer = dataBuffer.slice(776);
+        dataBuffer = dataBuffer.slice(packetSize+8);
+
+        // count packet counter
+        // get the last remaining one
+        if (packetCounter < packetNum-1){
+            
+            packetCounter++;
+            captureState = 1
+        }
+        else if(packetCounter == packetNum-1){
+            // time to get the remaining bytes
+            packetCounter++;
+            packetSize = remainingBytesSize
+            captureState = 1
+        }
+        else if(packetCounter >= packetNum){
+            //finish getting subpacket 
+            //go to write file state
+            packetSize = 768
+            captureState = 3
+        }
+
         started = false;
     }
   
     // capture ready
     if(data[0] == 0x90 && data[1] == 0xeb && data[3] == 0x40 && data.length ==19 && captureState == 0 ){
-        console.log(data)
+        packetCounter=0;
+        //console.log(data)
         
         snapshotSize = data.readInt32LE(7)
-        console.log(snapshotSize)
+        //console.log("snapshot size: "+snapshotSize)
         
+        remainingBytesSize = (snapshotSize % packetSize)
+        packetNum = Math.floor(snapshotSize / packetSize)
+        //console.log("Packets: "+packetNum)
+        //console.log("remainingBytes size: "+remainingBytesSize)
+
         captureState = 1
     }
    
@@ -213,19 +255,53 @@ portCamera.on('data', function(data){
 })
 
 function captureImage(){
+    //115200bps
+    //11520 bytes/s
+    // ~90 us per byte
+    // if command + return subpacket = ~ 800 bytes -> 800x90 us = 72000us = 72ms
     if(captureState == 0){
-        let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x01,0xc1,0xc2])
+        imageBuffer= Buffer.alloc(0)
+        let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x05,0xc1,0xc2])
         portCamera.write(cmd)
     }
     else if (captureState == 1)
     {
+        isSaved = false
 
-        let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x48, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x03,0xc1,0xc2])
+        let startAddr = packetCounter * 768
+        let addrBuf = Buffer.allocUnsafe(4);
+        //console.log("start address: "+startAddr )
+        addrBuf.writeInt32LE(Number(startAddr))
+        
+        let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x48, 0x06, 0x00]) 
+        cmd = Buffer.concat([cmd, addrBuf,Buffer.from([0x00, 0x03, 0xc1, 0xc2])])
         portCamera.write(cmd)
         captureState = 2
     }
     else if (captureState == 2)
     {
+        // wait to get subpacket
+    }
+    else if (captureState == 3){
+        // write file
+
+        console.log("snapshot size "+snapshotSize)
+        console.log("image buffer length "+imageBuffer.length)
+        if(isSaved == false){
+            if(snapshotSize == imageBuffer.length)
+            {
+                fs.writeFile("capture.jpg", imageBuffer, (err)=>{
+                    if(err){
+                        console.log(err)
+                    }
+                    else {
+                        console.log("image written successfully")
+                        isSaved = true
+                        captureState =0
+                    }
+                })
+            }
+        }
 
     }
 }
@@ -292,16 +368,16 @@ async function readTempHumidity(){
 }
 
 function testEWCSController(){
-    console.log("");
-    console.log("**** EWCS Controller Board Function Test")
+    //console.log("");
+    //console.log("**** EWCS Controller Board Function Test")
     toggleLED()
-    uartTxTest()
+    //uartTxTest()
     //timeSyncRequest()
-    readTempHumidity()
-    readADC()
-    readRPI4Temp()
+    //readTempHumidity()
+    //readADC()
+    //readRPI4Temp()
     captureImage()
 }
 
 
-setInterval(testEWCSController,1000);
+setInterval(testEWCSController,100);
