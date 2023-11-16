@@ -6,6 +6,7 @@ import fs from  'fs';
 import modbus from 'modbus-serial'
 import shell from 'shelljs'
 import internal from 'stream';
+import crc16ccitt from 'crc/crc16ccitt';
 
 let utcTime = 0
 
@@ -111,6 +112,18 @@ port3.on('data', function(data){
 // })
 
 
+
+const portCamera = new SerialPort({
+    path: '/dev/ttyUSB0',
+    baudRate: 115200,
+})
+
+portCamera.on('data', function(data){
+    let buff = Buffer.from(data);
+
+    console.log(buff)
+})
+
 const cs125CurrentADCChan = adc.open(0, {speedHz: 20000}, err => {
     if (err) throw err;
 });
@@ -134,11 +147,24 @@ function uartTxTest(){
     port0.write('T')
     port2.write('2')
     port3.write('3')
-    rs485txEn.writeSync(1)
-    //port5.write('5')
-    writeModbus()
+    // rs485txEn.writeSync(1)
+    // port5.write('5')
+    // writeModbus()
+    let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x01,0xc1,0xc2])
+    portCamera.write(cmd)
+    
+    
 }
 
+function captureImage(){
+    let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x01,0xc1,0xc2])
+    portCamera.write(cmd)
+}
+
+function getImage(){
+    let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x48, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x03,0xc1,0xc2])
+    portCamera.write(cmd)
+}
 
 
 function readADC() {

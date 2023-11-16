@@ -144,6 +144,7 @@ export default function ApiServer(ewcsData, ewcsImageData) {
       
 
       router.get('/get/now/ewcsdata', async function(req,res){
+        
         const data = ewcsDataNow();
         return res.json({ewcsdata: data});
       });

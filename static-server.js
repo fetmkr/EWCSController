@@ -6,9 +6,9 @@ export default function StaticServer() {
     var router = express.Router();
 
     //router.use('/', express.static(__dirname + '/..'));
-    router.use('/', express.static(__dirname ));
-    console.log("index.html goes to")
-    console.log(__dirname);
+    router.use('/', express.static(__dirname +'web' ));
+    //console.log("index.html goes to")
+    //console.log(__dirname+'web');
 
     return router
 }

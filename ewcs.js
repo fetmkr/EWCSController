@@ -724,7 +724,7 @@ function EWCS(db) {
     // }.bind(this), 60*1000);
     
     // save updated data
-    // startDataSaveTimer(db);
+     startDataSaveTimer(db);
     // startImageSaveTimer();
 
 };
