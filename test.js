@@ -4,6 +4,7 @@ import adc from 'mcp-spi-adc';
 import SHT4X from 'sht4x';
 import { Gpio } from 'onoff';
 import fs from  'fs';
+import path from 'path'
 import modbus from 'modbus-serial'
 import shell from 'shelljs'
 import internal from 'stream';
@@ -11,7 +12,8 @@ import crc16ccitt from 'crc/crc16ccitt';
 
 let utcTime = 0
 
-
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 
 const client = new modbus()
@@ -145,7 +147,7 @@ function timeSyncRequest()
 
 function uartTxTest(){
     
-
+    port0.write('0')
     port2.write('2')
     port3.write('3')
     // rs485txEn.writeSync(1)
@@ -153,6 +155,39 @@ function uartTxTest(){
     // writeModbus()
  
 }
+// Function to ensure the directory exists
+function ensureDirectoryExistence(filePath) {
+    const dirname = path.dirname(filePath);
+    if (fs.existsSync(dirname)) {
+      return true;
+    }
+    ensureDirectoryExistence(dirname);
+    fs.mkdirSync(dirname);
+}
+
+function saveImage(imageBuffer) {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+    
+  
+    const baseDirectory = path.join(__dirname, 'ewcs-image');
+    const directoryPath = path.join(baseDirectory, `${year}-${month}`);
+    const timestamp = Date.now(); // Epoch timestamp in UTC
+    const filePath = path.join(directoryPath, `${timestamp}.jpg`);
+  
+    ensureDirectoryExistence(filePath);
+  
+    fs.writeFile(filePath, imageBuffer, (err) => {
+      if (err) throw err;
+      console.log(`Image saved as ${filePath}`);
+      isSaved = true
+      captureState =0
+    });
+}
+
+
+
 
 let imageArray = new Array();
 
@@ -290,16 +325,17 @@ function captureImage(){
         if(isSaved == false){
             if(snapshotSize == imageBuffer.length)
             {
-                fs.writeFile("capture.jpg", imageBuffer, (err)=>{
-                    if(err){
-                        console.log(err)
-                    }
-                    else {
-                        console.log("image written successfully")
-                        isSaved = true
-                        captureState =0
-                    }
-                })
+                saveImage(imageBuffer)
+                // fs.writeFile("capture.jpg", imageBuffer, (err)=>{
+                //     if(err){
+                //         console.log(err)
+                //     }
+                //     else {
+                //         console.log("image written successfully")
+                //         isSaved = true
+                //         captureState =0
+                //     }
+                // })
             }
         }
 
