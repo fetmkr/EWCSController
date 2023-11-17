@@ -4,7 +4,7 @@
 
 // import EWCS from './ewcs.js';
 
-import {EWCS, updateRN171,getCameraIpAddress,getDataSavePeriod,getImageSavePeriod} from './ewcs.js'
+import {EWCS,getCameraIpAddress,getDataSavePeriod,getImageSavePeriod} from './ewcs.js'
 
 //import RealtimeServer from './realtime-server.js';
 //import HistoryServer from './history-server.js';
@@ -53,13 +53,13 @@ const main = async () => {
     app.use('/api', apiServer);
     app.use('/', staticServer);
     
-    app.get('/DATAIN', (req, res) => {
-        //updateRN171(req.query.sd1, req.query.sd2);
-        //console.log(req);
-        //res.send('Hello World!')
-        //console.log('datain get requested')
-        updateRN171(req.query.sd1, req.query.sd2);
-    })
+    // app.get('/DATAIN', (req, res) => {
+    //     //updateRN171(req.query.sd1, req.query.sd2);
+    //     //console.log(req);
+    //     //res.send('Hello World!')
+    //     //console.log('datain get requested')
+    //     updateRN171(req.query.sd1, req.query.sd2);
+    // })
     
     var port = process.env.PORT || 8080
     

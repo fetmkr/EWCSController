@@ -1,14 +1,19 @@
 import { DB } from './db.js';
 import { SerialPort, ReadlineParser  } from 'serialport';
 import adc from 'mcp-spi-adc';
+import SHT4X from 'sht4x';
 import { Gpio } from 'onoff';
 const LED = new Gpio(16, 'out')
 import isOnline from 'is-online';
 import crc16ccitt from 'crc/crc16ccitt';
 import fs from  'fs';
+import path from 'path'
 import CronJob from 'cron';
 import { readFile, writeFile } from "fs";
 import extractFrame  from 'ffmpeg-extract-frame';
+import * as url from 'url';
+
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 // changed
 // const job = new CronJob.CronJob(
@@ -22,6 +27,9 @@ import extractFrame  from 'ffmpeg-extract-frame';
 // 	'Asia/Seoul'
 // );
 
+
+const thermostat = await SHT4X.open();
+
 let ewcsData = {
     stationName: "KOPRI", 
     timestamp: 0,
@@ -30,12 +38,13 @@ let ewcsData = {
     cs125SYNOP: 0,
     cs125Temp: 0,
     cs125Humidity: 0,
-    rn171Temp: 0,
-    rn171Humidity: 0,
+    SHT45Temp: 0, // changed
+    SHT45Humidity: 0,
     iridiumCurrent : 0,
     cameraCurrent : 0,
     rpiTemp: 0,
     batteryVoltage : 0,
+    lastImage: "", // added
     mode: "normal" 
 };
 
@@ -55,13 +64,23 @@ function setEWCSTime(){
     ewcsData.timestamp = Date.now();
 }
 
-// delete
-function updateRN171(temp, humidity){
-    ewcsData.rn171Temp = parseFloat(temp);
-    ewcsData.rn171Humidity = parseFloat(humidity);
-    //console.log('RN171 Temp: ' + temp);
-    //console.log('RN171 Humidity: ' + humidity);
+// function updateSHT45(temp, humidity){
+//     ewcsData.SHT45Temp = parseFloat(temp);
+//     ewcsData.SHT45Humidity = parseFloat(humidity);
+//     //console.log('SHT45 Temp: ' + temp);
+//     //console.log('SHT45 Humidity: ' + humidity);
+// }
+
+
+async function updateSHT45(){
+    //console.log(await thermostat.serialNumber());
+    const val = await thermostat.measurements()
+    ewcsData.SHT45Temp = parseFloat((val.temperature-32)*5/9).toFixed(3);
+    ewcsData.SHT45Humidity = parseFloat(val.humidity).toFixed(3);
+    // console.log("SHT45 temperature: "+ ewcsData.SHT45Temp);
+    // console.log("SHT45 humidity: "+ ewcsData.SHT45Humidity);
 }
+
 
 // 시리얼 포트 리스팅 하기
 // SerialPort.list().then(ports => {
@@ -348,11 +367,11 @@ function sendIridium(){
     let cs125HumidityBuffer = Buffer.allocUnsafe(4);
     cs125HumidityBuffer.writeFloatBE(Number(ewcsData.cs125Humidity));
 
-    let rn171TempBuffer = Buffer.allocUnsafe(4);
-    rn171TempBuffer.writeFloatBE(Number(ewcsData.rn171Temp));
+    let SHT45TempBuffer = Buffer.allocUnsafe(4);
+    SHT45TempBuffer.writeFloatBE(Number(ewcsData.SHT45Temp));
 
-    let rn171HumidityBuffer = Buffer.allocUnsafe(4);
-    rn171HumidityBuffer.writeFloatBE(Number(ewcsData.rn171Humidity));
+    let SHT45HumidityBuffer = Buffer.allocUnsafe(4);
+    SHT45HumidityBuffer.writeFloatBE(Number(ewcsData.SHT45Humidity));
 
     let iridiumCurrentBuffer = Buffer.allocUnsafe(4);
     iridiumCurrentBuffer.writeFloatBE(Number(ewcsData.iridiumCurrent));
@@ -387,8 +406,8 @@ function sendIridium(){
     cs125SYNOPBuffer,
     cs125TempBuffer,
     cs125HumidityBuffer,
-    rn171TempBuffer,
-    rn171HumidityBuffer,
+    SHT45TempBuffer,
+    SHT45HumidityBuffer,
     iridiumCurrentBuffer,
     cameraCurrentBuffer,
     rpiTempBuffer,
@@ -692,8 +711,8 @@ function EWCS(db) {
         "ewcs.cs125.SYNOP": 0,
         "ewcs.cs125.temp": 0,
         "ewcs.cs125.humidity": 0,
-        "ewcs.rn171.temp": 0,
-        "ewcs.rn171.humidity": 0,
+        "ewcs.SHT45.temp": 0,
+        "ewcs.SHT45.humidity": 0,
         "ewcs.iridium.current": 0,
         "ewcs.camera.current": 0,
         "ewcs.rpi.temp": 0,
@@ -725,19 +744,20 @@ function EWCS(db) {
     
     // save updated data
      startDataSaveTimer(db);
-    // startImageSaveTimer();
+    startImageSaveTimer();
 
 };
 
 EWCS.prototype.updateState = function () {
     readADC();
+    updateSHT45()
     this.state["ewcs.cs125.current"] = ewcsData.cs125Current;
     this.state["ewcs.cs125.visibility"] = ewcsData.cs125Visibility;
     this.state["ewcs.cs125.SYNOP"] = ewcsData.cs125SYNOP;
     this.state["ewcs.cs125.temp"] = ewcsData.cs125Temp;
     this.state["ewcs.cs125.humidity"] = ewcsData.cs125Humidity;
-    this.state["ewcs.rn171.temp"] = ewcsData.rn171Temp;
-    this.state["ewcs.rn171.humidity"] = ewcsData.rn171Humidity;
+    this.state["ewcs.SHT45.temp"] = ewcsData.SHT45Temp;
+    this.state["ewcs.SHT45.humidity"] = ewcsData.SHT45Humidity;
     this.state["ewcs.iridium.current"] = ewcsData.iridiumCurrent;
     this.state["ewcs.camera.current"] = ewcsData.cameraCurrent;
     this.state["ewcs.rpi.temp"] = ewcsData.rpiTemp;
@@ -854,6 +874,198 @@ async function f1() {
     }
 }
 
+let captureState = 0
+let packetCounter = 0
+let packetSize = 768 // hard coded as 0x00, 0x03 
+let packetNum = 0
+let snapshotSize = 0
+
+let dataBuffer = Buffer.alloc(0)
+let imageBuffer = Buffer.alloc(0)
+let started = false
+let remainingBytesSize = 0;
+let isSaved = false
+
+let packetCaptureIntervalID = 0;
+
+const portCamera = new SerialPort({
+    path: '/dev/ttyUSB0',
+    baudRate: 115200,
+})
+
+
+portCamera.on('data', function(data){
+    dataBuffer = Buffer.concat([dataBuffer,data])
+    
+    // Check for start sequence 0x90, 0xEB, 0x01, 0x49 if not started
+    if (!started) {
+        for (let i = 0; i < dataBuffer.length - 3; i++) {
+        if (dataBuffer[i] === 0x90 && dataBuffer[i + 1] === 0xEB && dataBuffer[i + 2] === 0x01 && dataBuffer[i + 3] === 0x49) {
+            started = true;
+            dataBuffer = dataBuffer.slice(i); // Start from the sequence
+            break;
+        }
+        }
+    }
+    // If started, check if we have read at least 778 bytes
+    if (started && dataBuffer.length >= packetSize + 8) {
+        // Process your 768 bytes here
+        let receivedData = dataBuffer.slice(0, packetSize +8);
+        let requiredData = dataBuffer.slice(6, packetSize+6);
+
+        imageBuffer = Buffer.concat([imageBuffer, requiredData])
+        //console.log("snapshot size "+snapshotSize)
+        //console.log("image buffer length "+imageBuffer.length)
+        
+
+        //console.log("packet counter / packet num "+ packetCounter +" / "+ packetNum)
+        //console.log("Received "+Number(packetSize+8)+" bytes starting with 0x90, 0xEB, 0x01, 0x49: ")
+        //console.log(receivedData);
+        //console.log("Sliced "+packetSize+" bytes starting with 0x90, 0xEB, 0x01, 0x49: ")
+        //console.log(requiredData);
+
+   
+        
+
+        // Reset for the next message
+        dataBuffer = dataBuffer.slice(packetSize+8);
+
+        // count packet counter
+        // get the last remaining one
+        if (packetCounter < packetNum-1){
+            
+            packetCounter++;
+            captureState = 1
+        }
+        else if(packetCounter == packetNum-1){
+            // time to get the remaining bytes
+            packetCounter++;
+            packetSize = remainingBytesSize
+            captureState = 1
+        }
+        else if(packetCounter >= packetNum){
+            //finish getting subpacket 
+            //go to write file state
+            packetSize = 768
+            captureState = 3
+        }
+
+        started = false;
+    }
+  
+    // capture ready
+    if(data[0] == 0x90 && data[1] == 0xeb && data[3] == 0x40 && data.length ==19 && captureState == 0 ){
+        packetCounter=0;
+        //console.log(data)
+        
+        snapshotSize = data.readInt32LE(7)
+        //console.log("snapshot size: "+snapshotSize)
+        
+        remainingBytesSize = (snapshotSize % packetSize)
+        packetNum = Math.floor(snapshotSize / packetSize)
+        //console.log("Packets: "+packetNum)
+        //console.log("remainingBytes size: "+remainingBytesSize)
+
+        captureState = 1
+    }
+   
+
+    //console.log(data)
+})
+
+// Function to ensure the directory exists
+function ensureDirectoryExistence(filePath) {
+    const dirname = path.dirname(filePath);
+    if (fs.existsSync(dirname)) {
+      return true;
+    }
+    ensureDirectoryExistence(dirname);
+    fs.mkdirSync(dirname);
+}
+
+function saveImage(imageBuffer) {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+    
+  
+    const baseDirectory = path.join(__dirname, 'ewcs-image');
+    const directoryPath = path.join(baseDirectory, `${year}-${month}`);
+    const timestamp = Date.now(); // Epoch timestamp in UTC
+    const filePath = path.join(directoryPath, `${timestamp}.jpg`);
+    const urlPath = path.join(`${year}-${month}`,`${timestamp}.jpg`)
+  
+    ensureDirectoryExistence(filePath);
+  
+    fs.writeFile(filePath, imageBuffer, async function (err) {
+      if (err) throw err;
+
+      console.log(`Image saved as ${filePath}`);
+      const ewcsImageData = await new DB().create('ewcs-image')
+      new DB().insertAsync(ewcsImageData, { timestamp: timestamp, value: `${urlPath}.jpg` });
+      console.log("ewcs image saved at: ", Date(Date.now()));
+      ewcsData.lastImage = urlPath
+      isSaved = true
+      captureState =0
+    });
+
+    // const lastPath = path.join(baseDirectory,`last/${timestamp}.jpg`)
+    // fs.writeFile(lastPath, imageBuffer, function (err) {
+    //     if (err) throw err;
+  
+    //     console.log(`Last Image saved as ${lastPath}`);
+    //     ewcsData.lastImage = `${timestamp}.jpg`
+        
+    // });
+
+
+
+}
+
+function captureImage(){
+    //115200bps
+    //11520 bytes/s
+    // ~90 us per byte
+    // if command + return subpacket = ~ 800 bytes -> 800x90 us = 72000us = 72ms
+    if(captureState == 0){
+        imageBuffer= Buffer.alloc(0)
+        let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x05,0xc1,0xc2])
+        portCamera.write(cmd)
+    }
+    else if (captureState == 1)
+    {
+        isSaved = false
+
+        let startAddr = packetCounter * 768
+        let addrBuf = Buffer.allocUnsafe(4);
+        //console.log("start address: "+startAddr )
+        addrBuf.writeInt32LE(Number(startAddr))
+        
+        let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x48, 0x06, 0x00]) 
+        cmd = Buffer.concat([cmd, addrBuf,Buffer.from([0x00, 0x03, 0xc1, 0xc2])])
+        portCamera.write(cmd)
+        captureState = 2
+    }
+    else if (captureState == 2)
+    {
+        // wait to get subpacket
+    }
+    else if (captureState == 3){
+        // write file
+
+        console.log("snapshot size "+snapshotSize)
+        console.log("image buffer length "+imageBuffer.length)
+        if(isSaved == false){
+            if(snapshotSize == imageBuffer.length)
+            {
+                clearInterval(packetCaptureIntervalID);
+                saveImage(imageBuffer)
+            }
+        }
+
+    }
+}
+
  
 function startImageSaveTimer(){
 
@@ -861,10 +1073,14 @@ function startImageSaveTimer(){
 
     //console.log("image save period: "+ parseInt(getImageSavePeriod()).toString()+" seconds");
     console.log("ewcs image saving.. ")
-    f1();
+
+    
+    packetCaptureIntervalID = setInterval(captureImage,100);
 
     const a = setTimeout(startImageSaveTimer,interval);
 }
+
+
 
 
 
@@ -876,5 +1092,5 @@ initEWCS();
 setInterval(sendHeartbeat, 1000);
 setInterval(checkNetworkConnection, 5000);
 
-export {EWCS, readADC, updateRN171, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium,cameraOn, cameraOff, setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress};
+export {EWCS, readADC, updateSHT45, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium,cameraOn, cameraOff, setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress};
 

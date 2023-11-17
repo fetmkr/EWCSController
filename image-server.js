@@ -9,7 +9,7 @@ import { DB } from './db.js';
 export default function ImageServer(ewcsImageData) {
     var router = express.Router();
 
-    router.use('/', express.static(__dirname + './ewcsimage'));
+    router.use('/', express.static(__dirname + './ewcs-image'));
  
     router.get('/last/:size', async function (req, res) {
         const size = req.params.size
