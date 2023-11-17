@@ -12,6 +12,8 @@ import CronJob from 'cron';
 import { readFile, writeFile } from "fs";
 import extractFrame  from 'ffmpeg-extract-frame';
 import * as url from 'url';
+import shell from 'shelljs'
+
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -53,6 +55,7 @@ let ewcsStatus = {
     cs125HoodHeaterStatus: 0,
     cameraOnStatus: 0,
     iridiumOnStatus: 0,
+    powerSaveOnStatus: 0,
     ipAddress:"",
     gateway:"",
     cameraIpAddress:"",
@@ -97,6 +100,57 @@ const port0 = new SerialPort({
     path: '/dev/ttyAMA0',
     baudRate: 115200,
 })
+
+port0.on('data', function(data){
+    console.log("port0: "+ data)
+
+    if(data.length == 1){
+    if(data == 'Q')
+        {
+            console.log("RPI shutting down in 5 secs");
+            setTimeout(shutdown,5000);
+        }
+
+        if(data == 'O')
+        {
+            // RPI is already on
+            port0.write('O')
+        }
+
+    }else{
+        console.log("time data")
+        // 'T' = 84
+        if(data[0] == 84 ){
+            // for(let i = 0; i< data.length ; i++){
+            //     console.log(data[i])
+            // }
+            console.log(new Date(data[1]+2000,data[2],data[3],data[4],data[5],data[6]))
+            console.log(new Date(data[1]+2000,data[2],data[3],data[4],data[5],data[6]).getTime())
+            let timeCommand = "sudo timedatectl set-time '"+(data[1]+2000).toString()+"-"+ data[2].toString()+"-"+data[3].toString()+" "+data[4].toString()+":"+data[5].toString()+":"+data[6].toString()+"'"
+            console.log(timeCommand)
+            shell.exec(timeCommand)
+
+            // setSystemTime(year, month, date, hour, min, sec);
+
+        }
+        
+    }
+    
+
+})
+
+function shutdown(){
+    shell.exec("sudo halt")
+}
+
+
+function timeSyncRequest()
+{
+    // time sync request    
+    port0.write('T')
+    console.log("Time Sync Requested")
+}
+
 
 // cs125 port
 const port2 = new SerialPort({
@@ -585,6 +639,18 @@ function cameraOff(){
 
 }
 
+function powerSaveOn(){
+    port0.write('S');
+    ewcsStatus.powerSaveOnStatus = 1;
+    console.log('power save on')
+}
+
+function powerSaveOff(){
+    port0.write('s');
+    ewcsStatus.powerSaveOnStatus = 0;
+    console.log('power save off')
+}
+
 
 // async function poeReset(){
 //     poeOff();
@@ -846,6 +912,8 @@ async function initEWCS()
         cs125On();
         iridiumOn();
         CS125HoodHeaterOff();
+        powerSaveOn();
+        timeSyncRequest();
    })
 
 }
