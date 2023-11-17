@@ -627,7 +627,7 @@ function cs125Off(){
 
 function cameraOn(){
     port0.write('P');
-    ewcsStatus.cameraOnStatusOn = 1;
+    ewcsStatus.cameraOnStatus = 1;
     console.log('camera on')
 
 }
