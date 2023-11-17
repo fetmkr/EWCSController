@@ -129,5 +129,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# ignore large data file
-ewcs-image/*.jpg
+
