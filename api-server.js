@@ -1,6 +1,6 @@
 import express from 'express';
 import { DB } from './db.js';
-import { iridiumOn,iridiumOff , setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,cameraOn,cameraOff,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod } from './ewcs.js';
+import { iridiumOn,iridiumOff , powerSaveOn, powerSaveOff,setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,cameraOn,cameraOff,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod } from './ewcs.js';
 import { reboot } from './reboot.js';
 import { changeSystemIp, changeCouchDbIp, getPublicIp,getLocalIp} from './ip.js';
 
@@ -142,6 +142,24 @@ export default function ApiServer(ewcsData, ewcsImageData) {
        
           res.status(200).json(response).end();
       });
+
+      router.get('/set/powersave', async function (req, res) {
+        const onData = req.query.on;
+        console.log(onData);
+        if (onData === '1') {
+          powerSaveOn();
+
+        }
+        else if(onData === '0') {
+          powerSaveOff();
+
+        }
+        
+        const response = { "powersave": onData }
+       
+          res.status(200).json(response).end();
+      });
+
 
 
       router.get('/get/cs125/status', async function(req,res){
