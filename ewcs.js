@@ -33,7 +33,7 @@ let ewcsData = {
     rn171Temp: 0,
     rn171Humidity: 0,
     iridiumCurrent : 0,
-    poeCurrent : 0,
+    cameraCurrent : 0,
     rpiTemp: 0,
     batteryVoltage : 0,
     mode: "normal" 
@@ -42,7 +42,7 @@ let ewcsData = {
 let ewcsStatus = {
     cs125OnStatus: 0,
     cs125HoodHeaterStatus: 0,
-    poeOnStatus: 0,
+    cameraOnStatus: 0,
     iridiumOnStatus: 0,
     ipAddress:"",
     gateway:"",
@@ -189,7 +189,7 @@ const iridiumCurrentADCChan = adc.open(1, {speedHz: 20000}, err => {
     if (err) throw err;
 });
 
-const poeCurrentADCChan = adc.open(2, {speedHz: 20000}, err => {
+const cameraCurrentADCChan = adc.open(2, {speedHz: 20000}, err => {
     if (err) throw err;
 });
 
@@ -231,10 +231,10 @@ function readADC() {
         ewcsData.iridiumCurrent = parseFloat(parseFloat((reading.rawValue * 3.3 / 1024)*20000/1000).toFixed(3));
         //console.log('iridium Current: '+ ewcsData.iridiumCurrent + ' A');
     });
-    poeCurrentADCChan.read((err, reading) => {
+    cameraCurrentADCChan.read((err, reading) => {
         if (err) throw err;
-        ewcsData.poeCurrent = parseFloat(parseFloat((reading.rawValue * 3.3 / 1024)*20000/1000).toFixed(3));
-        //console.log('poe Current: '+ ewcsData.poeCurrent + ' A');
+        ewcsData.cameraCurrent = parseFloat(parseFloat((reading.rawValue * 3.3 / 1024)*20000/1000).toFixed(3));
+        //console.log('camera Current: '+ ewcsData.cameraCurrent + ' A');
 
     });
     batteryVoltageADCChan.read((err, reading) => {
@@ -357,8 +357,8 @@ function sendIridium(){
     let iridiumCurrentBuffer = Buffer.allocUnsafe(4);
     iridiumCurrentBuffer.writeFloatBE(Number(ewcsData.iridiumCurrent));
 
-    let poeCurrentBuffer = Buffer.allocUnsafe(4);
-    poeCurrentBuffer.writeFloatBE(Number(ewcsData.poeCurrent));
+    let cameraCurrentBuffer = Buffer.allocUnsafe(4);
+    cameraCurrentBuffer.writeFloatBE(Number(ewcsData.cameraCurrent));
 
     let rpiTempBuffer = Buffer.allocUnsafe(4);
     rpiTempBuffer.writeFloatBE(Number(ewcsData.rpiTemp));
@@ -390,7 +390,7 @@ function sendIridium(){
     rn171TempBuffer,
     rn171HumidityBuffer,
     iridiumCurrentBuffer,
-    poeCurrentBuffer,
+    cameraCurrentBuffer,
     rpiTempBuffer,
     batteryVoltageBuffer,
     modeBuffer
@@ -552,29 +552,29 @@ function cs125Off(){
 
 }
 
-function poeOn(){
+function cameraOn(){
     port0.write('P');
-    ewcsStatus.poeOnStatus = 1;
-    console.log('poe on')
+    ewcsStatus.cameraOnStatusOn = 1;
+    console.log('camera on')
 
 }
 
-function poeOff(){
+function cameraOff(){
     port0.write('p');
-    ewcsStatus.poeOnStatus = 0;
-    console.log('poe off')
+    ewcsStatus.cameraOnStatus = 0;
+    console.log('camera off')
 
 }
 
 
-async function poeReset(){
-    poeOff();
-    console.log("poe off")
-    await new Promise(resolve => setTimeout(resolve, 5*1000))
-    poeOn();
-    console.log("poe on")
-    return true;
-}
+// async function poeReset(){
+//     poeOff();
+//     console.log("poe off")
+//     await new Promise(resolve => setTimeout(resolve, 5*1000))
+//     poeOn();
+//     console.log("poe on")
+//     return true;
+// }
 
 function getCs125OnStatus() {
     return ewcsStatus.cs125OnStatus;
@@ -584,8 +584,8 @@ function getCs125HoodHeaterStatus() {
     return ewcsStatus.cs125HoodHeaterStatus;
 }
 
-function getPoeOnStatus() {
-    return ewcsStatus.poeOnStatus;
+function getCameraOnStatus() {
+    return ewcsStatus.cameraOnStatus;
 }
 
 function getIridiumOnStatus() {
@@ -695,7 +695,7 @@ function EWCS(db) {
         "ewcs.rn171.temp": 0,
         "ewcs.rn171.humidity": 0,
         "ewcs.iridium.current": 0,
-        "ewcs.poe.current": 0,
+        "ewcs.camera.current": 0,
         "ewcs.rpi.temp": 0,
         "ewcs.battery.voltage": 0,
         "ewcs.mode": "normal",
@@ -739,7 +739,7 @@ EWCS.prototype.updateState = function () {
     this.state["ewcs.rn171.temp"] = ewcsData.rn171Temp;
     this.state["ewcs.rn171.humidity"] = ewcsData.rn171Humidity;
     this.state["ewcs.iridium.current"] = ewcsData.iridiumCurrent;
-    this.state["ewcs.poe.current"] = ewcsData.poeCurrent;
+    this.state["ewcs.camera.current"] = ewcsData.cameraCurrent;
     this.state["ewcs.rpi.temp"] = ewcsData.rpiTemp;
     this.state["ewcs.battery.voltage"] = ewcsData.batteryVoltage;
     this.state["ewcs.mode"] = ewcsData.mode;  
@@ -822,7 +822,7 @@ async function initEWCS()
         console.log("current rpi ip gateway: "+ ewcsStatus.gateway);
         console.log("current camera ip address: "+ ewcsStatus.cameraIpAddress);
 
-        poeOn();
+        cameraOn();
         cs125On();
         iridiumOn();
         CS125HoodHeaterOff();
@@ -876,5 +876,5 @@ initEWCS();
 setInterval(sendHeartbeat, 1000);
 setInterval(checkNetworkConnection, 5000);
 
-export {EWCS, readADC, updateRN171, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium, poeReset,setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getPoeOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress};
+export {EWCS, readADC, updateRN171, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium,cameraOn, cameraOff, setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress};
 

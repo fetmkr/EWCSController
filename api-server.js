@@ -1,6 +1,6 @@
 import express from 'express';
 import { DB } from './db.js';
-import { iridiumOn,iridiumOff , setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,poeReset,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getPoeOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod } from './ewcs.js';
+import { iridiumOn,iridiumOff , setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,cameraOn,cameraOff,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod } from './ewcs.js';
 import { reboot } from './reboot.js';
 import { changeSystemIp, changeCouchDbIp, getPublicIp,getLocalIp} from './ip.js';
 
@@ -100,10 +100,10 @@ export default function ApiServer(ewcsData, ewcsImageData) {
         return res.json({cs125HoodHeaterStatus: status});
       });
 
-      router.get('/set/poe/reset', async function (req, res) {
-        const result = poeReset();
-        return res.json({poereset: result});
-      });
+      // router.get('/set/poe/reset', async function (req, res) {
+      //   const result = poeReset();
+      //   return res.json({poereset: result});
+      // });
 
       
 
@@ -126,14 +126,32 @@ export default function ApiServer(ewcsData, ewcsImageData) {
           res.status(200).json(response).end();
       });
 
+      router.get('/set/camera', async function (req, res) {
+        const onData = req.query.on;
+        console.log(onData);
+        if (onData === '1') {
+          cameraOn();
+
+        }
+        else if(onData === '0') {
+          cameraOff();
+
+        }
+        
+        const response = { "result": onData }
+       
+          res.status(200).json(response).end();
+      });
+
+
       router.get('/get/cs125/status', async function(req,res){
         const status = getCs125OnStatus();
         return res.json({cs125OnStatus: status});
       });
 
-      router.get('/get/poe/status', async function(req,res){
-        const status = getPoeOnStatus();
-        return res.json({poeOnStatus: status});
+      router.get('/get/camera/status', async function(req,res){
+        const status = getCameraOnStatus();
+        return res.json({cameraOnStatus: status});
       });
 
       router.get('/get/iridium/status', async function(req,res){

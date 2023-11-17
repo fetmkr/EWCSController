@@ -186,7 +186,18 @@ function saveImage(imageBuffer) {
     });
 }
 
-
+// Function to get the path of an image from a timestamp
+function getImagePathFromTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are zero-indexed in UTC
+  
+    const baseDirectory = path.join(__dirname, 'ewcs-image');
+    const directoryPath = path.join(baseDirectory, `${year}-${month}`);
+    const filePath = path.join(directoryPath, `${timestamp}.jpg`);
+  
+    return filePath;
+}
 
 
 let imageArray = new Array();
@@ -342,11 +353,6 @@ function captureImage(){
     }
 }
 
-function getImage(){
-    
-
-}
-
 
 function readADC() {
     cs125CurrentADCChan.read((err, reading) => {
@@ -371,7 +377,6 @@ function readADC() {
         console.log('Input Voltage: ' + val +' V');
     });
     
-
 }   
 
 function readRPI4Temp() {
