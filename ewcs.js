@@ -17,17 +17,21 @@ import shell from 'shelljs'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
+
+let ewcsDataUpdateIntervalID
+let ewcsDataSave = true
+
 // changed
-// const job = new CronJob.CronJob(
-// 	'0 0 * * * ',
-// 	function() {
-//         sendIridium();
-// 		console.log('You will see this message every 24 hour');
-// 	},
-// 	null,
-// 	true,
-// 	'Asia/Seoul'
-// );
+const job = new CronJob.CronJob(
+	'0 * * * * ',
+	function() {
+        //sendIridium();
+		console.log('Iridium Message Every Hour: '+ Date(Date.now()));
+	},
+	null,
+	true,
+	'ETC/UTC'
+);
 
 
 const thermostat = await SHT4X.open();
@@ -54,7 +58,9 @@ let ewcsStatus = {
     cs125OnStatus: 0,
     cs125HoodHeaterStatus: 0,
     cameraOnStatus: 0,
+    cameraIsSaving:0,
     iridiumOnStatus: 0,
+    iridiumIsSending: 0,
     powerSaveOnStatus: 0,
     ipAddress:"",
     gateway:"",
@@ -107,8 +113,9 @@ port0.on('data', function(data){
     if(data.length == 1){
     if(data == 'Q')
         {
-            console.log("RPI shutting down in 5 secs");
-            setTimeout(shutdown,5000);
+            console.log("RPI safe shutting down");
+            shutdown()
+            
         }
 
         if(data == 'O')
@@ -140,7 +147,25 @@ port0.on('data', function(data){
 })
 
 function shutdown(){
-    shell.exec("sudo halt")
+    // stop all the updating and saving activities
+    // check ewcsStatus.cameraIsSaving == 0 && ewcsStatus.iridiumIsSending == 0
+    // stop all the update and saving
+    clearInterval(ewcsDataUpdateIntervalID)
+    ewcsDataSave = false
+
+    const intervalID = setInterval(()=>{
+
+        if(ewcsStatus.cameraIsSaving == 0 && ewcsStatus.iridiumIsSending == 0){
+            console.log("All the updating and saving stopped")
+            console.log("Serial Camera & Iridium Idle. Shutting down in 5 sec")
+            clearInterval(intervalID)
+
+            setTimeout(()=>{
+                shell.exec("sudo halt")
+            },5000); 
+        }
+
+    },100)
 }
 
 
@@ -372,6 +397,7 @@ port3.on('data', function(data){
                     console.log("ack + success + end received");
                     console.log("iridium data sent successfully.");
                     clearInterval(intervalID);
+                    ewcsStatus.iridiumIsSending = 0
                     sendCnt = 0;
                     iridiumState = 0;
                 }
@@ -401,6 +427,8 @@ function sendIridium(){
     // wait for ack: 0x06
     // wait for success: 0x08
     // wait for end: 0x0A
+
+    ewcsStatus.iridiumIsSending = 1
 
     let utcBuffer = Buffer.allocUnsafe(8);
     utcBuffer.writeBigInt64BE(BigInt(Date.now()));
@@ -535,10 +563,11 @@ function sendIridium(){
         sendCnt++;
 
         console.log("Iridium data send requested: " + sendCnt + " th times");
-
-        if(sendCnt > 10) {
+        // try 5 times
+        if(sendCnt > 5) {
             iridiumState = 0;
             clearInterval(intervalID);
+            ewcsStatus.iridiumIsSending = 0
             console.log("failed to send iridium data!");
         }
     }, 5*60*1000);
@@ -574,6 +603,15 @@ function getStationName() {
 
 function setMode(mode){
     ewcsData.mode = mode
+    
+    if(ewcsData.mode === "normal")
+    {
+        powerSaveOff()
+    }
+    else if(ewcsData.mode === "emergency")
+    {
+        powerSaveOn()
+    }
     fs.readFile('config.json', 'utf8', (error, data) => {
         if(error){
            console.log(error);
@@ -796,7 +834,7 @@ function EWCS(db) {
     // }, this);
 
     // update data every second but not save
-    setInterval(function () {
+    ewcsDataUpdateIntervalID= setInterval(function () {
         this.updateState();
         // no websocket this time
         // this.generateTelemetry();
@@ -809,8 +847,10 @@ function EWCS(db) {
     // }.bind(this), 60*1000);
     
     // save updated data
-     startDataSaveTimer(db);
-    startImageSaveTimer();
+    if(ewcsDataSave){
+        startDataSaveTimer(db);
+        startImageSaveTimer();
+    }
 
 };
 
@@ -897,6 +937,9 @@ async function initEWCS()
         const parsedData = JSON.parse(data);
         ewcsData.stationName =  parsedData.stationName;
         console.log("initialize station name to: "+ parsedData.stationName);  
+        ewcsData.mode = parsedData.mode;
+        setMode(ewcsData.mode)
+        
         
         ewcsStatus.ipAddress = parsedData.ipAddress;
         ewcsStatus.gateway = parsedData.gateway;
@@ -908,11 +951,11 @@ async function initEWCS()
         console.log("current rpi ip gateway: "+ ewcsStatus.gateway);
         console.log("current camera ip address: "+ ewcsStatus.cameraIpAddress);
 
+
         cameraOn();
         cs125On();
         iridiumOn();
         CS125HoodHeaterOff();
-        powerSaveOff();
         timeSyncRequest();
    })
 
@@ -1078,6 +1121,7 @@ function saveImage(imageBuffer) {
       ewcsData.lastImage = urlPath
       isSaved = true
       captureState =0
+      ewcsStatus.cameraIsSaving = 0
     });
 
     // const lastPath = path.join(baseDirectory,`last/${timestamp}.jpg`)
@@ -1106,6 +1150,7 @@ function captureImage(){
 
          if (cameraTryCount > 5){
             cameraTryCount = 0
+            ewcsStatus.cameraIsSaving = 0
             clearInterval(packetCaptureIntervalID);
             console.log("check serial camera connection")
          }   
@@ -1155,7 +1200,7 @@ function captureImage(){
 
  
 function startImageSaveTimer(){
-
+    ewcsStatus.cameraIsSaving = 1;
     const interval = parseInt(getImageSavePeriod())* 1000;
 
     //console.log("image save period: "+ parseInt(getImageSavePeriod()).toString()+" seconds");
