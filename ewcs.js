@@ -956,6 +956,8 @@ let isSaved = false
 
 let packetCaptureIntervalID = 0;
 
+let cameraTryCount = 0
+
 const portCamera = new SerialPort({
     path: '/dev/ttyUSB0',
     baudRate: 115200,
@@ -1034,6 +1036,7 @@ portCamera.on('data', function(data){
         //console.log("Packets: "+packetNum)
         //console.log("remainingBytes size: "+remainingBytesSize)
 
+        //
         captureState = 1
     }
    
@@ -1071,7 +1074,7 @@ function saveImage(imageBuffer) {
       console.log(`Image saved as ${filePath}`);
       const ewcsImageData = await new DB().create('ewcs-image')
       new DB().insertAsync(ewcsImageData, { timestamp: timestamp, value: `${urlPath}.jpg` });
-      console.log("ewcs image saved at: ", Date(Date.now()));
+      console.log("ewcs image saved to image database at: ", Date(Date.now()));
       ewcsData.lastImage = urlPath
       isSaved = true
       captureState =0
@@ -1095,10 +1098,22 @@ function captureImage(){
     //11520 bytes/s
     // ~90 us per byte
     // if command + return subpacket = ~ 800 bytes -> 800x90 us = 72000us = 72ms
+
+    
+
     if(captureState == 0){
+        cameraTryCount++
+
+         if (cameraTryCount > 5){
+            cameraTryCount = 0
+            clearInterval(packetCaptureIntervalID);
+            console.log("check serial camera connection")
+         }   
         imageBuffer= Buffer.alloc(0)
         let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x05,0xc1,0xc2])
         portCamera.write(cmd)
+
+        // if takes too long to get ready reply then stop 
     }
     else if (captureState == 1)
     {
@@ -1124,10 +1139,14 @@ function captureImage(){
         console.log("snapshot size "+snapshotSize)
         console.log("image buffer length "+imageBuffer.length)
         if(isSaved == false){
+            clearInterval(packetCaptureIntervalID);
             if(snapshotSize == imageBuffer.length)
             {
-                clearInterval(packetCaptureIntervalID);
+                //clearInterval(packetCaptureIntervalID);
                 saveImage(imageBuffer)
+            }
+            else{
+                console.log("serial camera image save failed")
             }
         }
 
@@ -1141,11 +1160,21 @@ function startImageSaveTimer(){
 
     //console.log("image save period: "+ parseInt(getImageSavePeriod()).toString()+" seconds");
     console.log("ewcs image saving.. ")
-
+    cameraTryCount = 0
     
     packetCaptureIntervalID = setInterval(captureImage,100);
-
+    
     const a = setTimeout(startImageSaveTimer,interval);
+    // If image cannot be saved in 6 secs, init Serial camera connection
+    // setTimeout(()=>{
+    //     if(captureState == 1 && isSaved == false) {
+    //         clearInterval(packetCaptureIntervalID)
+    //         // init camera state
+    //         started = false
+    //         captureState = 0
+    //         console.log("Serial camera connection dropped during capture")
+    //     }
+    // }, 6000)
 }
 
 

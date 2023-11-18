@@ -54,7 +54,7 @@ function DB() {
         return;
       }
       //console.log(b);
-      console.log("couchdb data inserted.")
+      console.log("data inserted to couchdb database.")
     })
   }
   
