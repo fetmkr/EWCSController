@@ -160,6 +160,11 @@ function shutdown(){
             console.log("Serial Camera & Iridium Idle. Shutting down in 5 sec")
             clearInterval(intervalID)
 
+            // turn off all the devices
+            // after stopping the software
+            cs125Off()
+            iridiumOff()
+            cameraOff()
             setTimeout(()=>{
                 shell.exec("sudo halt")
             },5000); 
