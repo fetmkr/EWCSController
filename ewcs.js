@@ -13,6 +13,8 @@ import { readFile, writeFile } from "fs";
 import extractFrame  from 'ffmpeg-extract-frame';
 import * as url from 'url';
 import shell from 'shelljs'
+import { crc16modbus } from 'crc';
+
 
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -281,7 +283,7 @@ const port3 = new SerialPort({
 // BMS port
 const port5 = new SerialPort({
     path: '/dev/ttyAMA5',
-    baudRate: 9600,
+    baudRate: 115200,
 })
 
 const cs125CurrentADCChan = adc.open(0, {speedHz: 20000}, err => {

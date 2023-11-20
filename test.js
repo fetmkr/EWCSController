@@ -9,30 +9,15 @@ import modbus from 'modbus-serial'
 import shell from 'shelljs'
 import internal from 'stream';
 import crc16ccitt from 'crc/crc16ccitt';
+import { crc16modbus } from 'crc';
 
 let utcTime = 0
 
 import * as url from 'url';
+import { builtinModules } from 'module';
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 
-const client = new modbus()
-client.connectAsciiSerial("/dev/ttyAMA5",{baudRate:9600})
-function writeModbus() {
-    client.setID(1);
-
-    // write the values 0, 0xffff to registers starting at address 5
-    // on device number 1.
-    client.writeRegisters(5, [0 , 0xffff])
-        .then(read);
-}
-
-function read() {
-    // read the 2 registers starting at address 5
-    // on device number 1.
-    client.readHoldingRegisters(5, 2)
-        .then(console.log);
-}
 
 const LED = new Gpio(16, 'out')
 const rs485txEn = new Gpio(23, 'out')
@@ -109,15 +94,49 @@ port3.on('data', function(data){
     console.log("port3: "+ data)
 })
 
-// rs485
-// const port5 = new SerialPort({
-//     path: '/dev/ttyAMA5',
-//     baudRate: 9600,
-// })
-// port5.on('data', function(data){
-//     console.log("port5: "+  data)
-// })
+// solar charger ID 11,12,13,14 (0x0B, 0x0C, 0x0D, 0x0E)
+//rs485
+const port5 = new SerialPort({
+    path: '/dev/ttyAMA5',
+    baudRate: 115200,
+})
 
+port5.on('data', function(data){
+    console.log("port5: ")
+    console.log(data)
+}) 
+
+
+
+// something is wrong.. Serial port issues keeps coming
+// 먼 setTimeout 하고 port5 write를 같이 쓰면 안되나????
+
+function getSolarBettery(id) {
+    //8byte*90us = 720us ~=1ms
+    
+    // voltage
+    // let buff = Buffer.from([id, 0x04, 0x33, 0x1A, 0x00, 0x01])
+    // Battey status
+    let buff = Buffer.from([id, 0x04, 0x32, 0x00, 0x00, 0x02])
+    let crc16modBuff = Buffer.allocUnsafe(2)
+    crc16modBuff.writeUInt16LE(Number(crc16modbus(buff)))
+    buff = Buffer.concat([buff,Buffer.from([crc16modBuff[0],crc16modBuff[1]])])
+
+
+    console.log('writing 485 data')
+    rs485txEn.writeSync(1)
+    port5.write(buff)
+    //setTimeout(()=>{rs485txEn.writeSync(0)},1)
+    //await new Promise(resolve => setTimeout(resolve, 1))
+    
+
+}
+
+// function getSolarBettery() {
+//     console.log('something is wrong')
+//     port5.write('11') 
+
+// }
 
 
 
@@ -215,6 +234,7 @@ let imageBuffer = Buffer.alloc(0)
 let started = false
 let remainingBytesSize = 0;
 let isSaved = false
+
 const portCamera = new SerialPort({
     path: '/dev/ttyUSB0',
     baudRate: 115200,
@@ -417,8 +437,9 @@ function testEWCSController(){
     //readTempHumidity()
     //readADC()
     //readRPI4Temp()
-    captureImage()
+    //captureImage()
+    getSolarBettery(11)
 }
 
 
-setInterval(testEWCSController,100);
+setInterval(testEWCSController,1000);
