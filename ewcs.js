@@ -27,7 +27,7 @@ let ewcsDataSave = true
 const job = new CronJob.CronJob(
 	'0 * * * * ',
 	function() {
-        //sendIridium();
+        sendIridium();
 		console.log('Iridium Message Every Hour: '+ Date(Date.now()));
 	},
 	null,
