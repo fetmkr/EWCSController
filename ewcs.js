@@ -743,6 +743,34 @@ function saveConfig(key, value)
    return true;
 }
 
+function setIpAddress(ip,gateway){
+    ewcsStatus.ipAddress = ip;
+    ewcsStatus.gateway = gateway
+
+    fs.readFile('config.json', 'utf8', (error, data) => {
+        if(error){
+           console.log(error);
+           return;
+        }
+       // console.log(JSON.parse(data));
+        const parsedData = JSON.parse(data);
+        parsedData.ipAddress = ip;
+        parsedData.gateway = gateway;
+        fs.writeFileSync('config.json', JSON.stringify(parsedData),'utf8',function (err) {
+            if (err) {
+              console.log(err);
+              return false
+            }
+            console.log("set ip address to "+ip);
+            console.log("set gateway to "+gateway);
+          });
+        
+      })
+}
+
+function getIpAddress(){
+    return ewcsStatus.ipAddress
+}
 
 function setCameraIpAddress(ip) {
     ewcsStatus.cameraIpAddress = ip;
@@ -1241,5 +1269,5 @@ initEWCS();
 setInterval(sendHeartbeat, 1000);
 setInterval(checkNetworkConnection, 5000);
 
-export {EWCS, readADC, updateSHT45, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium,cameraOn, cameraOff, powerSaveOn, powerSaveOff,setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress};
+export {EWCS, readADC, updateSHT45, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium,cameraOn, cameraOff, powerSaveOn, powerSaveOff,setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress, setIpAddress,getIpAddress};
 

@@ -1,6 +1,7 @@
-import { readFile, writeFile } from "fs";
+import { readFile, writeFile } from 'fs';
 import { publicIpv4 } from 'public-ip';
 import localIpAddress from 'local-ip-address';
+import { setIpAddress } from './ewcs.js';
 
 export const changeSystemIp = (ip, gateway) => {
   // Change IP and Gateway in /etc/dhcpcd.conf 
@@ -20,25 +21,8 @@ export const changeSystemIp = (ip, gateway) => {
       }
     });
   });
-  fs.readFile('config.json', 'utf8', (error, data) => {
-    if(error){
-       console.log(error);
-       return;
-    }
-   // console.log(JSON.parse(data));
-    const parsedData = JSON.parse(data);
-    parsedData.ipAddress = ip;
-    parsedData.gateway = gateway;
-    fs.writeFileSync('config.json', JSON.stringify(parsedData),'utf8',function (err) {
-        if (err) {
-          console.log(err);
-          return false
-        }
-      });
-    console.log("changed ip and gateway address saved");   
-  })
-  console.log("set ip address to "+ip);
-  console.log("set gateway to "+gateway);
+  setIpAddress(ip,gateway)
+
   return true
 };
 

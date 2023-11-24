@@ -199,16 +199,16 @@ export default function ApiServer(ewcsData, ewcsImageData) {
         const ip = req.query.ip
         const gateway = req.query.gateway
         let result1 = false;
-        let result2 = false;
+        //let result2 = false;
         console.log("asked to set ip address to "+ip);
         console.log("asked to set gateway to "+gateway);
         if (ip && gateway) {
           result1 = changeSystemIp(`${ip}`, `${gateway}`);
           //Not using ths time. Only local address is needed
           //result2 = changeCouchDbIp(`${ip}`);
-          if (result1 && result2) reboot();
+          //if (result1 && result2) reboot();
         }
-      return res.json({ result: `new raspberry pi is ${result1}, ${result2}` })
+      return res.json({ result: `new raspberry pi is ip & gateway set = ${result1}` })
      });
 
      router.get('/set/camera/ip', function(req, res) {
