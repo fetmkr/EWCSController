@@ -1151,7 +1151,7 @@ function saveImage(imageBuffer) {
 
       console.log(`Image saved as ${filePath}`);
       const ewcsImageData = await new DB().create('ewcs-image')
-      new DB().insertAsync(ewcsImageData, { timestamp: timestamp, value: `${urlPath}.jpg` });
+      new DB().insertAsync(ewcsImageData, { timestamp: timestamp, value: `${urlPath}` });
       console.log("ewcs image saved to image database at: ", Date(Date.now()));
       ewcsData.lastImage = urlPath
       isSaved = true
