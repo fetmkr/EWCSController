@@ -48,13 +48,15 @@ function DB() {
   }
   
   const insert_doc_async = (db, doc) => {
-    db.insert(doc, function (e, b, h) {
+    db.insert(doc, async function (e, b, h) {
       if (e) {
         console.log(e.message);
         return;
       }
       //console.log(b);
-      console.log("data inserted to couchdb database.")
+      const dbinfo = await db.info()
+      console.log(dbinfo.db_name + " data inserted to couchdb database at: "+ Date(Date.now()))
+    
     })
   }
   

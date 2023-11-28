@@ -577,7 +577,7 @@ function sendIridium(){
             ewcsStatus.iridiumIsSending = 0
             console.log("failed to send iridium data!");
         }
-    }, 5*60*1000);
+    }, 60*1000); // should be called every minute
 
 }
 
@@ -1149,10 +1149,10 @@ function saveImage(imageBuffer) {
     fs.writeFile(filePath, imageBuffer, async function (err) {
       if (err) throw err;
 
-      console.log(`Image saved as ${filePath}`);
+      console.log(`Captured image saved to folder: ${filePath}`);
       const ewcsImageData = await new DB().create('ewcs-image')
       new DB().insertAsync(ewcsImageData, { timestamp: timestamp, value: `${urlPath}` });
-      console.log("ewcs image saved to image database at: ", Date(Date.now()));
+      //console.log("ewcs image saved to image database at: ", Date(Date.now()));
       ewcsData.lastImage = urlPath
       isSaved = true
       captureState =0
@@ -1216,8 +1216,8 @@ function captureImage(){
     else if (captureState == 3){
         // write file
 
-        console.log("snapshot size "+snapshotSize)
-        console.log("image buffer length "+imageBuffer.length)
+        //console.log("snapshot size "+snapshotSize)
+        //console.log("image buffer length "+imageBuffer.length)
         if(isSaved == false){
             clearInterval(packetCaptureIntervalID);
             if(snapshotSize == imageBuffer.length)
