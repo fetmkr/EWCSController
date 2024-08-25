@@ -138,7 +138,7 @@ port0.on('data', function(data){
             let timeCommand = "sudo timedatectl set-time '"+(data[1]+2000).toString()+"-"+ data[2].toString()+"-"+data[3].toString()+" "+data[4].toString()+":"+data[5].toString()+":"+data[6].toString()+"'"
             console.log(timeCommand)
             shell.exec(timeCommand)
-
+            setEWCSTime()
             // setSystemTime(year, month, date, hour, min, sec);
 
         }
@@ -181,6 +181,7 @@ function timeSyncRequest()
     // time sync request    
     port0.write('T')
     console.log("Time Sync Requested")
+    return true
 }
 
 
@@ -1269,5 +1270,5 @@ initEWCS();
 setInterval(sendHeartbeat, 1000);
 setInterval(checkNetworkConnection, 5000);
 
-export {EWCS, readADC, updateSHT45, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium,cameraOn, cameraOff, powerSaveOn, powerSaveOff,setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress, setIpAddress,getIpAddress};
+export {EWCS, readADC, updateSHT45, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium,cameraOn, cameraOff, powerSaveOn, powerSaveOff,setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress, setIpAddress,getIpAddress,timeSyncRequest};
 

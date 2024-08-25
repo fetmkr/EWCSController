@@ -1,6 +1,6 @@
 import express from 'express';
 import { DB } from './db.js';
-import { iridiumOn,iridiumOff , powerSaveOn, powerSaveOff,setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,cameraOn,cameraOff,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod } from './ewcs.js';
+import { iridiumOn,iridiumOff , powerSaveOn, powerSaveOff,setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,cameraOn,cameraOff,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod,timeSyncRequest } from './ewcs.js';
 import { reboot } from './reboot.js';
 import { changeSystemIp, changeCouchDbIp, getPublicIp,getLocalIp} from './ip.js';
 
@@ -294,6 +294,15 @@ export default function ApiServer(ewcsData, ewcsImageData) {
       router.get('/get/station/mode', async function (req, res) {
         const mode = getMode();
         return res.json({mode: `${mode}`});
+      });
+
+      router.get('/set/synctime', async function (req, res) {
+        
+        const val = timeSyncRequest();
+        
+        return res.json({'time sync requested': `${val}`});
+        
+      
       });
 
 
