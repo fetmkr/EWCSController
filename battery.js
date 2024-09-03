@@ -13,7 +13,13 @@ const port5 = new SerialPort({
     path: '/dev/ttyACM0',
     baudRate: 115200,lock: false
 })
-const parser = port5.pipe(new ByteLengthParser({ length: 7 }))
+
+// data를 36개 받기위한 파서 36*2 + 5 = 77
+// epever 문서 참조
+// 한번에 길게 받을라고 하는데 파서가 잘되서
+// 18개씩 2번 받아야할듯
+// 18*2 + 5 = 41
+const parser = port5.pipe(new ByteLengthParser({ length: 41 }))
 
 // port5.on('data', function(data){
 //     console.log("port5: ")
@@ -27,25 +33,36 @@ async function getSolarBettery(id) {
     //8byte*90us = 720us ~=1ms
     
     // PV Voltage
-    const PVVol = Buffer.from([id, 0x04, 0x31, 0x00, 0x00, 0x01])
+    //const PVVol = Buffer.from([id, 0x04, 0x31, 0x00, 0x00, 0x01])
     // PV Current
-    const PVCur = Buffer.from([id, 0x04, 0x31, 0x01, 0x00, 0x01])
+    //const PVCur = Buffer.from([id, 0x04, 0x31, 0x01, 0x00, 0x01])
     // PV Power L
-    const PVPowL = Buffer.from([id, 0x04, 0x31, 0x02, 0x00, 0x01])
+    //const PVPowL = Buffer.from([id, 0x04, 0x31, 0x02, 0x00, 0x01])
     // PV Power H
-    const PVPowH = Buffer.from([id, 0x04, 0x31, 0x03, 0x00, 0x01])
+    //const PVPowH = Buffer.from([id, 0x04, 0x31, 0x03, 0x00, 0x01])
+    // 
 
     // Battey status
     //Buffer.from([id, 0x04, 0x32, 0x00, 0x00, 0x02])
 
 
+    // PV Real Time Data
+    // 0x3100 부터 18개 데이터들 한번에 받기
+    const PVRTData1 = Buffer.from([id, 0x04, 0x31, 0x00, 0x00, 0x12])
+
+    // 0x3305 부터 18개 데이터들 한번에 받기
+    const PVRTData2 = Buffer.from([id, 0x04, 0x33, 0x05, 0x00, 0x12])
+
 
     console.log(Date())
 
-    await writeAndRead(addCRC(PVVol))
-    await writeAndRead(addCRC(PVCur))
-    await writeAndRead(addCRC(PVPowL))
-    await writeAndRead(addCRC(PVPowH))
+    // await writeAndRead(addCRC(PVVol))
+    // await writeAndRead(addCRC(PVCur))
+    // await writeAndRead(addCRC(PVPowL))
+    // await writeAndRead(addCRC(PVPowH))
+    await writeAndRead(addCRC(PVRTData1))
+    await writeAndRead(addCRC(PVRTData2))
+
 }
 
 function addCRC(buf)
@@ -93,4 +110,4 @@ async function testEPEVER(){
     getSolarBettery(0x0B);
 }
 
-setInterval(testEPEVER,1000);
+setInterval(testEPEVER,3000);
