@@ -108,17 +108,48 @@ async function writeAndRead(dataToSend) {
       // 한 번만 데이터를 받는 이벤트 리스너
       parser.once('data', (data) => {
 
-
-
         if(addrBytes.equals(Buffer.from([0x31,0x00]))){
           console.log('first data')
+          const dataBytes = data.slice(3,-2)
+          solarChargerData.PVVol = dataBytes.readUInt16BE(0) / 100
+          solarChargerData.PVCur = dataBytes.readUInt16BE(2) / 100
+          solarChargerData.PVPower = (dataBytes.readUInt16BE(4) | (dataBytes.readUInt16BE(6)<<16) )/100
+          solarChargerData.LoadVol = dataBytes.readUInt16BE(8) / 100
+          solarChargerData.LoadCur = dataBytes.readUInt16BE(10) / 100
+          solarChargerData.LoadPower = (dataBytes.readUInt16BE(12) | (dataBytes.readUInt16BE(14)<<16) )/100
+          solarChargerData.BatTemp = dataBytes.readUInt16BE(16) / 100
+          solarChargerData.DevTemp = dataBytes.readUInt16BE(18) / 100
+          solarChargerData.BatSOC = dataBytes.readUInt16BE(20)
+          solarChargerData.BatRatedVol = dataBytes.readUInt16BE(22) / 100
+          solarChargerData.BatStat = dataBytes.readUInt16BE(24)
+          solarChargerData.ChargEquipStat = dataBytes.readUInt16BE(26)
+          solarChargerData.DischgEquipStat = dataBytes.readUInt16BE(28)
+          solarChargerData.BatMaxVolToday = dataBytes.readUInt16BE(30) / 100
+          solarChargerData.BatMinVolToday = dataBytes.readUInt16BE(32) / 100
+          solarChargerData.ConEnergyToday = dataBytes.readUInt16BE(34) 
+      
+
         } else if (addrBytes.equals(Buffer.from([0x33,0x05]))){
           console.log('second data')
+          const dataBytes = data.slice(3,-2)
+          solarChargerData.ConEnergyToday = (solarChargerData.ConEnergyToday | (dataBytes.readUInt16BE(0)<<16) )/100
+          solarChargerData.ConEnergyMonth = (dataBytes.readUInt16BE(2) | (dataBytes.readUInt16BE(4)<<16) )/100
+          solarChargerData.ConEnergyYear = (dataBytes.readUInt16BE(6) | (dataBytes.readUInt16BE(8)<<16) )/100
+          solarChargerData.ConEnergyTotal = (dataBytes.readUInt16BE(10) | (dataBytes.readUInt16BE(12)<<16) )/100
+          solarChargerData.GenEnergyToday = (dataBytes.readUInt16BE(14) | (dataBytes.readUInt16BE(16)<<16) )/100
+          solarChargerData.GenEnergyMonth = (dataBytes.readUInt16BE(18) | (dataBytes.readUInt16BE(20)<<16) )/100
+          solarChargerData.GenEnergyYear = (dataBytes.readUInt16BE(22) | (dataBytes.readUInt16BE(24)<<16) )/100
+          solarChargerData.GenEnergyTotal = (dataBytes.readUInt16BE(26) | (dataBytes.readUInt16BE(28)<<16) )/100
+          solarChargerData.BatVol = dataBytes.readUInt16BE(30) / 100
+          solarChargerData.BatCur = (dataBytes.readUInt16BE(32) | (dataBytes.readUInt16BE(34)<<16) )/100
         }
         console.log('data received')
         console.log(data)
         console.log('')
-        
+
+        console.log(solarChargerData)
+        console.log('')
+
         
         resolve(data); // 수신된 41바이트 데이터를 resolve
       });
