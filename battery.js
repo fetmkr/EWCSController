@@ -7,6 +7,34 @@ import modbus from 'modbus-serial'
 import crc16ccitt from 'crc/crc16ccitt';
 import { crc16modbus } from 'crc';
 
+let solarChargerData = {
+  PVVol:0,
+  PVCur:0,
+  PVPower:0,
+  LoadVol:0,
+  LoadCur:0,
+  LoadPower:0, 
+  BatTemp:0,
+  DevTemp:0,
+  BatSOC:0,
+  BatRatedVol:0,
+  BatStat:0,
+  ChargEquipStat:0,
+  DischgEquipStat:0,
+  BatMaxVolToday:0,
+  BatMinVolToday:0,
+  ConEnergyToday:0,
+  ConEnergyMonth:0,
+  ConEnergyYear:0,
+  ConEnergyTotal:0,
+  GenEnergyToday:0,
+  GenEnergyMonth:0,
+  GenEnergyYear:0,
+  GenEnergyTotal:0,
+  BatVol:0,
+  BatCur:0
+}
+
 // solar charger ID 11,12,13,14 (0x0B, 0x0C, 0x0D, 0x0E)
 //rs485
 const port5 = new SerialPort({
@@ -34,16 +62,7 @@ async function getSolarBettery(id) {
     
     // PV Voltage
     //const PVVol = Buffer.from([id, 0x04, 0x31, 0x00, 0x00, 0x01])
-    // PV Current
-    //const PVCur = Buffer.from([id, 0x04, 0x31, 0x01, 0x00, 0x01])
-    // PV Power L
-    //const PVPowL = Buffer.from([id, 0x04, 0x31, 0x02, 0x00, 0x01])
-    // PV Power H
-    //const PVPowH = Buffer.from([id, 0x04, 0x31, 0x03, 0x00, 0x01])
-    // 
-
-    // Battey status
-    //Buffer.from([id, 0x04, 0x32, 0x00, 0x00, 0x02])
+    
 
 
     // PV Real Time Data
@@ -57,11 +76,12 @@ async function getSolarBettery(id) {
     console.log(Date())
 
     // await writeAndRead(addCRC(PVVol))
-    // await writeAndRead(addCRC(PVCur))
-    // await writeAndRead(addCRC(PVPowL))
-    // await writeAndRead(addCRC(PVPowH))
     await writeAndRead(addCRC(PVRTData1))
+    await delay(100)
+
     await writeAndRead(addCRC(PVRTData2))
+    await delay(100)
+
 
 }
 
@@ -80,15 +100,27 @@ function delay(ms) {
 }
 
 async function writeAndRead(dataToSend) {
-    await delay(100)
 
     return new Promise((resolve, reject) => {
+
+      // 보내는 주소 추출
+      const addrBytes = dataToSend.slice(2,4)
       // 한 번만 데이터를 받는 이벤트 리스너
       parser.once('data', (data) => {
+
+
+
+        if(addrBytes.equals(Buffer.from([0x31,0x00]))){
+          console.log('first data')
+        } else if (addrBytes.equals(Buffer.from([0x33,0x05]))){
+          console.log('second data')
+        }
         console.log('data received')
         console.log(data)
         console.log('')
-        resolve(data); // 수신된 7바이트 데이터를 resolve
+        
+        
+        resolve(data); // 수신된 41바이트 데이터를 resolve
       });
   
       // 데이터를 시리얼 포트에 씀
