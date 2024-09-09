@@ -14,6 +14,7 @@ import extractFrame  from 'ffmpeg-extract-frame';
 import * as url from 'url';
 import shell from 'shelljs'
 import { crc16modbus } from 'crc';
+import {solarChargerDataNow} from './battery.js'
 
 
 
@@ -53,7 +54,11 @@ let ewcsData = {
     rpiTemp: 0,
     batteryVoltage : 0,
     lastImage: "", // added
-    mode: "normal" 
+    mode: "normal",
+    PVVol: 0,
+    PVCur: 0,
+    LoadVol: 0,
+    LoadCur:0
 };
 
 let ewcsStatus = {
@@ -487,6 +492,22 @@ function sendIridium(){
     }
     modeBuffer.writeInt32BE(modeVal);
 
+
+    // solar charger data added
+    let solarPVVolBuffer = Buffer.allocUnsafe(4);
+    solarPVVolBuffer.writeFloatBE(Number(ewcsData.PVVol));
+
+    let solarPVCurBuffer = Buffer.allocUnsafe(4);
+    solarPVCurBuffer.writeFloatBE(Number(ewcsData.PVCur));
+
+    let solarLoadVolBuffer = Buffer.allocUnsafe(4);
+    solarLoadVolBuffer.writeFloatBE(Number(ewcsData.LoadVol));
+
+    let solarLoadCurBuffer = Buffer.allocUnsafe(4);
+    solarLoadCurBuffer.writeFloatBE(Number(ewcsData.LoadCur));
+
+
+
     let iridiumData = Buffer.concat([
     Buffer.from(ewcsData.stationName),
     Buffer.from(':'),
@@ -502,7 +523,11 @@ function sendIridium(){
     cameraCurrentBuffer,
     rpiTempBuffer,
     batteryVoltageBuffer,
-    modeBuffer
+    modeBuffer,
+    solarPVVolBuffer,
+    solarPVCurBuffer,
+    solarLoadVolBuffer,
+    solarLoadCurBuffer,
     ]);
 
 
@@ -893,6 +918,13 @@ function EWCS(db) {
 EWCS.prototype.updateState = function () {
     readADC();
     updateSHT45()
+    ewcsData.PVVol= solarChargerDataNow().PVVol
+    ewcsData.PVCur = solarChargerDataNow().PVCur
+    ewcsData.LoadVol = solarChargerDataNow().LoadVol
+    ewcsData.LoadCur = solarChargerDataNow().LoadCur
+    ewcsData.BatVol = solarChargerDataNow().BatVol
+    ewcsData.BatCur = solarChargerDataNow().BatCur
+
     this.state["ewcs.cs125.current"] = ewcsData.cs125Current;
     this.state["ewcs.cs125.visibility"] = ewcsData.cs125Visibility;
     this.state["ewcs.cs125.SYNOP"] = ewcsData.cs125SYNOP;

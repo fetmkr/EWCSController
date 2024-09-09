@@ -1,8 +1,4 @@
 import { SerialPort, ReadlineParser  } from 'serialport';
-import { ByteLengthParser } from '@serialport/parser-byte-length'
-
-
-
 import modbus from 'modbus-serial'
 import crc16ccitt from 'crc/crc16ccitt';
 import { crc16modbus } from 'crc';
@@ -42,23 +38,15 @@ const port5 = new SerialPort({
     baudRate: 115200,lock: false
 })
 
-// data를 36개 받기위한 파서 36*2 + 5 = 77
-// epever 문서 참조
-// 한번에 길게 받을라고 하는데 파서가 잘되서
-// 18개씩 2번 받아야할듯
-// 18*2 + 5 = 41
-const parser = port5.pipe(new ByteLengthParser({ length: 41 }))
 
-// port5.on('data', function(data){
-//     console.log("port5: ")
-//     console.log(data)
-// }) 
 
 // something is wrong.. Serial port issues keeps coming
 // lock: false를 open 할때 했더니 이상한 이슈 사라짐
 
+
+
+
 async function getSolarBettery(id) {
-    //8byte*90us = 720us ~=1ms
     
     // PV Voltage
     //const PVVol = Buffer.from([id, 0x04, 0x31, 0x00, 0x00, 0x01])
@@ -66,22 +54,113 @@ async function getSolarBettery(id) {
 
 
     // PV Real Time Data
-    // 0x3100 부터 18개 데이터들 한번에 받기
-    const PVRTData1 = Buffer.from([id, 0x04, 0x31, 0x00, 0x00, 0x12])
+    // PV array data
+    // 0x3100 부터 4개 데이터들 한번에 받기
+    const PVArrayData = Buffer.from([id, 0x04, 0x31, 0x00, 0x00, 0x04])
 
-    // 0x3305 부터 18개 데이터들 한번에 받기
-    const PVRTData2 = Buffer.from([id, 0x04, 0x33, 0x05, 0x00, 0x12])
+    // Load data
+    // 0x310C 부터 4개 데이터 한번에 받기
+    const PVLoadData = Buffer.from([id, 0x04, 0x31, 0x0C, 0x00, 0x04])
+
+    // Temp data
+    // 0x3110 부터 2개 데이터 한번에 받기
+    const PVTempData = Buffer.from([id, 0x04, 0x31, 0x10, 0x00, 0x02])
+
+    // Battery SOC
+    // 0x311A 부터 1개 데이터 한번에 받기
+    const PVBatSOC = Buffer.from([id, 0x04, 0x31, 0x1A, 0x00, 0x01])  
+
+    // Battery real reated voltage
+    // 0x311D 부터 1개 데이터 한번에 받기
+    const PVBatRated = Buffer.from([id, 0x04, 0x31, 0x1D, 0x00, 0x01])
+
+    // Status
+    // 0x3200 부터 3개 데이터 한번에 받기
+    const PVStatusData = Buffer.from([id, 0x04, 0x32, 0x00, 0x00, 0x03]) 
+
+    
+    // Consumption
+    // 0x3302 부터 18개 데이터들 한번에 받기
+    const PVConData = Buffer.from([id, 0x04, 0x33, 0x02, 0x00, 0x12])
+
+    // Real time
+    // 0x331A 부터 3개 데이터 한번에 받기
+    const PVBatRealTime = Buffer.from([id, 0x04, 0x33, 0x1A, 0x00, 0x03]) 
 
 
-    console.log(Date())
+    // console.log(Date())
 
     // await writeAndRead(addCRC(PVVol))
-    await writeAndRead(addCRC(PVRTData1))
-    await delay(100)
+    const response1 = await writeAndRead(addCRC(PVArrayData))
+    // console.log(response1)
+    const data1 = response1.slice(3,-2)
+    solarChargerData.PVVol = data1.readUInt16BE(0) / 100
+    solarChargerData.PVCur = data1.readUInt16BE(2) / 100
+    solarChargerData.PVPower = (data1.readUInt16BE(4) | (data1.readUInt16BE(6)<<16) )/100
+    await delay(50)
 
-    await writeAndRead(addCRC(PVRTData2))
-    await delay(100)
+    const response2 = await writeAndRead(addCRC(PVLoadData))
+    // console.log(response2)
+    const data2 = response2.slice(3,-2)
+    solarChargerData.LoadVol = data2.readUInt16BE(0) / 100
+    solarChargerData.LoadCur = data2.readUInt16BE(2) / 100
+    solarChargerData.LoadPower = (data2.readUInt16BE(4) | (data2.readUInt16BE(6)<<16) )/100
+    await delay(50)
 
+    const response3 = await writeAndRead(addCRC(PVTempData))
+    // console.log(response3)
+    const data3 = response3.slice(3,-2)
+    solarChargerData.BatTemp = data3.readUInt16BE(0) / 100
+    solarChargerData.DevTemp = data3.readUInt16BE(2) / 100
+
+    await delay(50)
+
+    const response4 = await writeAndRead(addCRC(PVBatSOC))
+    // console.log(response4)
+    const data4 = response4.slice(3,-2)
+    solarChargerData.BatSOC = data4.readUInt16BE(0)
+    await delay(50)
+
+    const response5 = await writeAndRead(addCRC(PVBatRated))
+    // console.log(response5)
+    const data5 = response5.slice(3,-2)
+    solarChargerData.BatRatedVol = data5.readUInt16BE(0) / 100
+
+    await delay(50)
+
+    const response6 = await writeAndRead(addCRC(PVStatusData))
+    // console.log(response6)
+    const data6 = response6.slice(3,-2)
+    solarChargerData.BatStat = data6.readUInt16BE(0)
+    solarChargerData.ChargEquipStat = data6.readUInt16BE(2)
+    solarChargerData.DischgEquipStat = data6.readUInt16BE(4)
+
+    await delay(50)
+
+    const response7 = await writeAndRead(addCRC(PVConData))
+    // console.log(response7)
+    const data7 = response7.slice(3,-2)
+    solarChargerData.BatMaxVolToday = data7.readUInt16BE(0) / 100
+    solarChargerData.BatMinVolToday = data7.readUInt16BE(2) / 100
+    solarChargerData.ConEnergyToday = (data7.readUInt16BE(4) | (data7.readUInt16BE(6)<<16) )/100
+    solarChargerData.ConEnergyMonth = (data7.readUInt16BE(8) | (data7.readUInt16BE(10)<<16) )/100
+    solarChargerData.ConEnergyYear = (data7.readUInt16BE(12) | (data7.readUInt16BE(14)<<16) )/100
+    solarChargerData.ConEnergyTotal = (data7.readUInt16BE(16) | (data7.readUInt16BE(18)<<16) )/100
+    solarChargerData.GenEnergyToday = (data7.readUInt16BE(20) | (data7.readUInt16BE(22)<<16) )/100
+    solarChargerData.GenEnergyMonth = (data7.readUInt16BE(24) | (data7.readUInt16BE(26)<<16) )/100
+    solarChargerData.GenEnergyYear = (data7.readUInt16BE(28) | (data7.readUInt16BE(30)<<16) )/100
+    solarChargerData.GenEnergyTotal = (data7.readUInt16BE(32) | (data7.readUInt16BE(34)<<16) )/100    
+    await delay(50)
+
+    const response8 = await writeAndRead(addCRC(PVBatRealTime))
+    // console.log(response8)
+    const data8 = response8.slice(3,-2)
+    solarChargerData.BatVol = data8.readUInt16BE(0) / 100
+    solarChargerData.BatCur = (data8.readUInt16BE(2) | (data8.readUInt16BE(4)<<16) )/100
+
+    await delay(50)
+
+    //console.log(solarChargerData)
 
 }
 
@@ -99,73 +178,46 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+
+
+// 데이터를 보내고, 응답을 읽는 함수
 async function writeAndRead(dataToSend) {
+  return new Promise((resolve, reject) => {
+    let buffer = Buffer.alloc(0);
 
-    return new Promise((resolve, reject) => {
+    // 데이터를 쓴 후 응답을 기다림
+    port5.write(dataToSend, (err) => {
+      if (err) {
+        return reject(err);
+      }
 
-      // 보내는 주소 추출
-      const addrBytes = dataToSend.slice(2,4)
-      // 한 번만 데이터를 받는 이벤트 리스너
-      parser.once('data', (data) => {
+      // 데이터가 들어오면 호출되는 이벤트
+      const onData = (data) => {
+        buffer = Buffer.concat([buffer, data]);
 
-        if(addrBytes.equals(Buffer.from([0x31,0x00]))){
-          console.log('first data')
-          const dataBytes = data.slice(3,-2)
-          solarChargerData.PVVol = dataBytes.readUInt16BE(0) / 100
-          solarChargerData.PVCur = dataBytes.readUInt16BE(2) / 100
-          solarChargerData.PVPower = (dataBytes.readUInt16BE(4) | (dataBytes.readUInt16BE(6)<<16) )/100
-          solarChargerData.LoadVol = dataBytes.readUInt16BE(8) / 100
-          solarChargerData.LoadCur = dataBytes.readUInt16BE(10) / 100
-          solarChargerData.LoadPower = (dataBytes.readUInt16BE(12) | (dataBytes.readUInt16BE(14)<<16) )/100
-          solarChargerData.BatTemp = dataBytes.readUInt16BE(16) / 100
-          solarChargerData.DevTemp = dataBytes.readUInt16BE(18) / 100
-          solarChargerData.BatSOC = dataBytes.readUInt16BE(20)
-          solarChargerData.BatRatedVol = dataBytes.readUInt16BE(22) / 100
-          solarChargerData.BatStat = dataBytes.readUInt16BE(24)
-          solarChargerData.ChargEquipStat = dataBytes.readUInt16BE(26)
-          solarChargerData.DischgEquipStat = dataBytes.readUInt16BE(28)
-          solarChargerData.BatMaxVolToday = dataBytes.readUInt16BE(30) / 100
-          solarChargerData.BatMinVolToday = dataBytes.readUInt16BE(32) / 100
-          solarChargerData.ConEnergyToday = dataBytes.readUInt16BE(34) 
-      
+        // 3번째 바이트가 도착했는지 확인
+        if (buffer.length >= 3) {
+          const lengthByte = buffer[2]; // 3번째 바이트 값
+          const totalPacketLength = 3 + lengthByte + 2; // 3바이트(헤더) + 데이터 길이 + 2바이트(CRC)
 
-        } else if (addrBytes.equals(Buffer.from([0x33,0x05]))){
-          console.log('second data')
-          const dataBytes = data.slice(3,-2)
-          solarChargerData.ConEnergyToday = (solarChargerData.ConEnergyToday | (dataBytes.readUInt16BE(0)<<16) )/100
-          solarChargerData.ConEnergyMonth = (dataBytes.readUInt16BE(2) | (dataBytes.readUInt16BE(4)<<16) )/100
-          solarChargerData.ConEnergyYear = (dataBytes.readUInt16BE(6) | (dataBytes.readUInt16BE(8)<<16) )/100
-          solarChargerData.ConEnergyTotal = (dataBytes.readUInt16BE(10) | (dataBytes.readUInt16BE(12)<<16) )/100
-          solarChargerData.GenEnergyToday = (dataBytes.readUInt16BE(14) | (dataBytes.readUInt16BE(16)<<16) )/100
-          solarChargerData.GenEnergyMonth = (dataBytes.readUInt16BE(18) | (dataBytes.readUInt16BE(20)<<16) )/100
-          solarChargerData.GenEnergyYear = (dataBytes.readUInt16BE(22) | (dataBytes.readUInt16BE(24)<<16) )/100
-          solarChargerData.GenEnergyTotal = (dataBytes.readUInt16BE(26) | (dataBytes.readUInt16BE(28)<<16) )/100
-          solarChargerData.BatVol = dataBytes.readUInt16BE(30) / 100
-          solarChargerData.BatCur = (dataBytes.readUInt16BE(32) | (dataBytes.readUInt16BE(34)<<16) )/100
+          // 필요한 패킷의 전체 길이가 도착했는지 확인
+          if (buffer.length >= totalPacketLength) {
+            port5.off('data', onData); // 데이터 수신 이벤트 리스너 제거
+            const packet = buffer.slice(0, totalPacketLength); // 패킷 추출
+            resolve(packet); // 패킷 처리 완료
+          }
         }
-        console.log('data received')
-        console.log(data)
-        console.log('')
+      };
 
-        console.log(solarChargerData)
-        console.log('')
-
-        
-        resolve(data); // 수신된 41바이트 데이터를 resolve
-      });
-  
-      // 데이터를 시리얼 포트에 씀
-      port5.write(dataToSend, (err) => {
-        console.log('data sent')
-        console.log(dataToSend)
-        if (err) {
-            
-          reject(err); // 오류 발생 시 reject
-        }
-      });
+      // 데이터를 수신할 때마다 이벤트 발생
+      port5.on('data', onData);
     });
+  });
 }
 
+export function solarChargerDataNow(){
+  return solarChargerData
+}
 
 
 
@@ -173,4 +225,4 @@ async function testEPEVER(){
     getSolarBettery(0x0B);
 }
 
-setInterval(testEPEVER,3000);
+setInterval(testEPEVER,1000);

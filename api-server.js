@@ -3,6 +3,8 @@ import { DB } from './db.js';
 import { iridiumOn,iridiumOff , powerSaveOn, powerSaveOff,setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,cameraOn,cameraOff,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod,timeSyncRequest } from './ewcs.js';
 import { reboot } from './reboot.js';
 import { changeSystemIp, changeCouchDbIp, getPublicIp,getLocalIp} from './ip.js';
+import {solarChargerDataNow} from './battery.js'
+
 
 export default function ApiServer(ewcsData, ewcsImageData) {
   var router = express.Router();
@@ -189,6 +191,12 @@ export default function ApiServer(ewcsData, ewcsImageData) {
         const status = ewcsStatusNow();
         return res.json({ewcsstatus: status});
       });
+
+      router.get('/get/now/solarchargerdata', async function(req,res){
+        const data = solarChargerDataNow();
+        return res.json({solarchargerdata: data});
+      });
+
       
       router.get('/reboot', function(req, res) {
           const result = reboot();
