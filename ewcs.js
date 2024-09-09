@@ -132,7 +132,7 @@ port0.on('data', function(data){
         }
 
     }else{
-        console.log("time data")
+        console.log("sync data")
         // 'T' = 84
         if(data[0] == 84 ){
             // for(let i = 0; i< data.length ; i++){
@@ -146,6 +146,12 @@ port0.on('data', function(data){
             setEWCSTime()
             // setSystemTime(year, month, date, hour, min, sec);
 
+            // isCS125On data[7]
+            // isIridiumOn data[8]
+            // isCameraOn data[9]
+            // emergency mode data[10]
+            // on time min data[11]
+            // off time min data[12]
         }
         
     }
@@ -153,7 +159,7 @@ port0.on('data', function(data){
 
 })
 
-function shutdown(){
+export function shutdown(){
     // stop all the updating and saving activities
     // check ewcsStatus.cameraIsSaving == 0 && ewcsStatus.iridiumIsSending == 0
     // stop all the update and saving
@@ -308,6 +314,11 @@ const batteryVoltageADCChan = adc.open(3, {speedHz: 20000}, err => {
     if (err) throw err;
 });
 
+export function sendSyncRequest() {
+    timeSyncRequest()
+
+    return true;
+}
 
 function sendHeartbeat() {
     port0.write('R');
@@ -922,8 +933,6 @@ EWCS.prototype.updateState = function () {
     ewcsData.PVCur = solarChargerDataNow().PVCur
     ewcsData.LoadVol = solarChargerDataNow().LoadVol
     ewcsData.LoadCur = solarChargerDataNow().LoadCur
-    ewcsData.BatVol = solarChargerDataNow().BatVol
-    ewcsData.BatCur = solarChargerDataNow().BatCur
 
     this.state["ewcs.cs125.current"] = ewcsData.cs125Current;
     this.state["ewcs.cs125.visibility"] = ewcsData.cs125Visibility;
@@ -1024,7 +1033,7 @@ async function initEWCS()
         cs125On();
         iridiumOn();
         CS125HoodHeaterOff();
-        timeSyncRequest();
+        sendSyncRequest();
    })
 
 }

@@ -1,6 +1,6 @@
 import express from 'express';
 import { DB } from './db.js';
-import { iridiumOn,iridiumOff , powerSaveOn, powerSaveOff,setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,cameraOn,cameraOff,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod,timeSyncRequest } from './ewcs.js';
+import { iridiumOn,iridiumOff , powerSaveOn, powerSaveOff,setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus,cameraOn,cameraOff,setMode,getMode,getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus,setCameraIpAddress, getCameraIpAddress, ewcsDataNow,ewcsStatusNow, setDataSavePeriod,getDataSavePeriod,setImageSavePeriod,getImageSavePeriod,timeSyncRequest,shutdown,,sendSyncRequest } from './ewcs.js';
 import { reboot } from './reboot.js';
 import { changeSystemIp, changeCouchDbIp, getPublicIp,getLocalIp} from './ip.js';
 import {solarChargerDataNow} from './battery.js'
@@ -203,6 +203,11 @@ export default function ApiServer(ewcsData, ewcsImageData) {
         return res.json({ result: `request reboot of raspberry pi is ${result}` })
       });
 
+      router.get('/shutdown', function(req, res) {
+        const result = shutdown();
+      return res.json({ result:`Shutdown of EWCS controller requested`})
+    });
+      
       router.get('/set/ip', function(req, res) {
         const ip = req.query.ip
         const gateway = req.query.gateway
@@ -304,11 +309,11 @@ export default function ApiServer(ewcsData, ewcsImageData) {
         return res.json({mode: `${mode}`});
       });
 
-      router.get('/set/synctime', async function (req, res) {
+      router.get('/set/sync', async function (req, res) {
         
-        const val = timeSyncRequest();
+        const val = sendSyncRequest();
         
-        return res.json({'time sync requested': `${val}`});
+        return res.json({'sync requested': `${val}`});
         
       
       });
