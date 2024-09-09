@@ -138,18 +138,28 @@ port0.on('data', function(data){
             // for(let i = 0; i< data.length ; i++){
             //     console.log(data[i])
             // }
-            console.log(new Date(data[1]+2000,data[2],data[3],data[4],data[5],data[6]))
-            console.log(new Date(data[1]+2000,data[2],data[3],data[4],data[5],data[6]).getTime())
+            console.log(data)
+            // month는 0부터 시작..
+            console.log(new Date(data[1]+2000,data[2]-1,data[3],data[4],data[5],data[6]))
+            console.log(new Date(data[1]+2000,data[2]-1,data[3],data[4],data[5],data[6]).getTime())
             let timeCommand = "sudo timedatectl set-time '"+(data[1]+2000).toString()+"-"+ data[2].toString()+"-"+data[3].toString()+" "+data[4].toString()+":"+data[5].toString()+":"+data[6].toString()+"'"
             console.log(timeCommand)
             shell.exec(timeCommand)
             setEWCSTime()
             // setSystemTime(year, month, date, hour, min, sec);
 
-            // isCS125On data[7]
+
+            // pic24의 상태를 가져와 ewcsStatus를 업데이트 해놓는다
+            // pic24는 살아 있는데 rpi가 꺼졌다 켜졌을때 다시 상태를 싱크하기 위하여
+            //ewcsStatus.isCS125On data[7]
+            //ewcsStatus.cs125OnStatus
             // isIridiumOn data[8]
+            //ewcsStatus.iridiumOnStatus
             // isCameraOn data[9]
+            //ewcsStatus.cameraOnStatus
             // emergency mode data[10]
+            //ewcsStatus.powerSaveOnStatus
+
             // on time min data[11]
             // off time min data[12]
         }
@@ -1309,6 +1319,7 @@ initEWCS();
 
 // 주기적으로 실행하기
 setInterval(sendHeartbeat, 1000);
+setInterval(sendSyncRequest,5000);
 setInterval(checkNetworkConnection, 5000);
 
 export {EWCS, readADC, updateSHT45, setEWCSTime, ewcsDataNow, ewcsStatusNow, setStationName, getStationName, cs125On, cs125Off, CS125HoodHeaterOn, CS125HoodHeaterOff, CS125GetStatus, iridiumOn, iridiumOff, sendIridium,cameraOn, cameraOff, powerSaveOn, powerSaveOff,setMode, getMode, getCs125OnStatus,getCs125HoodHeaterStatus, getCameraOnStatus,getIridiumOnStatus, setCameraIpAddress, getCameraIpAddress, setIpAddress,getIpAddress,timeSyncRequest};

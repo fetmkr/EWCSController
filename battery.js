@@ -97,7 +97,7 @@ async function getSolarBettery(id) {
     solarChargerData.PVVol = data1.readUInt16BE(0) / 100
     solarChargerData.PVCur = data1.readUInt16BE(2) / 100
     solarChargerData.PVPower = (data1.readUInt16BE(4) | (data1.readUInt16BE(6)<<16) )/100
-    await delay(50)
+    await delay(100)
 
     const response2 = await writeAndRead(addCRC(PVLoadData))
     // console.log(response2)
@@ -105,7 +105,7 @@ async function getSolarBettery(id) {
     solarChargerData.LoadVol = data2.readUInt16BE(0) / 100
     solarChargerData.LoadCur = data2.readUInt16BE(2) / 100
     solarChargerData.LoadPower = (data2.readUInt16BE(4) | (data2.readUInt16BE(6)<<16) )/100
-    await delay(50)
+    await delay(100)
 
     const response3 = await writeAndRead(addCRC(PVTempData))
     // console.log(response3)
@@ -113,20 +113,20 @@ async function getSolarBettery(id) {
     solarChargerData.BatTemp = data3.readUInt16BE(0) / 100
     solarChargerData.DevTemp = data3.readUInt16BE(2) / 100
 
-    await delay(50)
+    await delay(100)
 
     const response4 = await writeAndRead(addCRC(PVBatSOC))
     // console.log(response4)
     const data4 = response4.slice(3,-2)
     solarChargerData.BatSOC = data4.readUInt16BE(0)
-    await delay(50)
+    await delay(100)
 
     const response5 = await writeAndRead(addCRC(PVBatRated))
     // console.log(response5)
     const data5 = response5.slice(3,-2)
     solarChargerData.BatRatedVol = data5.readUInt16BE(0) / 100
 
-    await delay(50)
+    await delay(100)
 
     const response6 = await writeAndRead(addCRC(PVStatusData))
     // console.log(response6)
@@ -135,10 +135,10 @@ async function getSolarBettery(id) {
     solarChargerData.ChargEquipStat = data6.readUInt16BE(2)
     solarChargerData.DischgEquipStat = data6.readUInt16BE(4)
 
-    await delay(50)
+    await delay(100)
 
     const response7 = await writeAndRead(addCRC(PVConData))
-    // console.log(response7)
+    //console.log(response7)
     const data7 = response7.slice(3,-2)
     solarChargerData.BatMaxVolToday = data7.readUInt16BE(0) / 100
     solarChargerData.BatMinVolToday = data7.readUInt16BE(2) / 100
@@ -150,7 +150,7 @@ async function getSolarBettery(id) {
     solarChargerData.GenEnergyMonth = (data7.readUInt16BE(24) | (data7.readUInt16BE(26)<<16) )/100
     solarChargerData.GenEnergyYear = (data7.readUInt16BE(28) | (data7.readUInt16BE(30)<<16) )/100
     solarChargerData.GenEnergyTotal = (data7.readUInt16BE(32) | (data7.readUInt16BE(34)<<16) )/100    
-    await delay(50)
+    await delay(100)
 
     const response8 = await writeAndRead(addCRC(PVBatRealTime))
     // console.log(response8)
@@ -158,7 +158,7 @@ async function getSolarBettery(id) {
     solarChargerData.BatVol = data8.readUInt16BE(0) / 100
     solarChargerData.BatCur = (data8.readUInt16BE(2) | (data8.readUInt16BE(4)<<16) )/100
 
-    await delay(50)
+    await delay(100)
 
     //console.log(solarChargerData)
 
@@ -225,4 +225,4 @@ async function testEPEVER(){
     getSolarBettery(0x0B);
 }
 
-setInterval(testEPEVER,1000);
+setInterval(testEPEVER,5000);
