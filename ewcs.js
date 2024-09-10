@@ -108,7 +108,7 @@ async function updateSHT45(){
 // });
 
 
-// dsPic port
+// pic24 port
 const port0 = new SerialPort({
     path: '/dev/ttyAMA0',
     baudRate: 115200,
@@ -152,13 +152,13 @@ port0.on('data', function(data){
             // pic24의 상태를 가져와 ewcsStatus를 업데이트 해놓는다
             // pic24는 살아 있는데 rpi가 꺼졌다 켜졌을때 다시 상태를 싱크하기 위하여
             //ewcsStatus.isCS125On data[7]
-            //ewcsStatus.cs125OnStatus
+            ewcsStatus.cs125OnStatus = Number(data[7])
             // isIridiumOn data[8]
-            //ewcsStatus.iridiumOnStatus
+            ewcsStatus.iridiumOnStatus = Number(data[8])
             // isCameraOn data[9]
-            //ewcsStatus.cameraOnStatus
+            ewcsStatus.cameraOnStatus = Number(data[9])
             // emergency mode data[10]
-            //ewcsStatus.powerSaveOnStatus
+            ewcsStatus.powerSaveOnStatus = Number(data[10])
 
             // on time min data[11]
             // off time min data[12]
