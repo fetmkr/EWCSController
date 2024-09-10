@@ -115,7 +115,7 @@ const port0 = new SerialPort({
 })
 
 port0.on('data', function(data){
-    console.log("port0: "+ data)
+    //console.log("port0: "+ data)
 
     if(data.length == 1){
     if(data == 'Q')
@@ -132,18 +132,18 @@ port0.on('data', function(data){
         }
 
     }else{
-        console.log("sync data")
+        //console.log("sync data")
         // 'T' = 84
         if(data[0] == 84 ){
             // for(let i = 0; i< data.length ; i++){
             //     console.log(data[i])
             // }
-            console.log(data)
+            //console.log(data)
             // month는 0부터 시작..
-            console.log(new Date(data[1]+2000,data[2]-1,data[3],data[4],data[5],data[6]))
-            console.log(new Date(data[1]+2000,data[2]-1,data[3],data[4],data[5],data[6]).getTime())
+            //console.log(new Date(data[1]+2000,data[2]-1,data[3],data[4],data[5],data[6]))
+            //console.log(new Date(data[1]+2000,data[2]-1,data[3],data[4],data[5],data[6]).getTime())
             let timeCommand = "sudo timedatectl set-time '"+(data[1]+2000).toString()+"-"+ data[2].toString()+"-"+data[3].toString()+" "+data[4].toString()+":"+data[5].toString()+":"+data[6].toString()+"'"
-            console.log(timeCommand)
+            //console.log(timeCommand)
             shell.exec(timeCommand)
             setEWCSTime()
             // setSystemTime(year, month, date, hour, min, sec);
@@ -185,10 +185,13 @@ export function shutdown(){
 
             // turn off all the devices
             // after stopping the software
-            cs125Off()
-            iridiumOff()
-            cameraOff()
+            // cs125Off()
+            // iridiumOff()
+            // cameraOff()
             setTimeout(()=>{
+                cs125Off()
+                iridiumOff()
+                cameraOff()
                 shell.exec("sudo halt")
             },5000); 
         }
@@ -201,7 +204,7 @@ function timeSyncRequest()
 {
     // time sync request    
     port0.write('T')
-    console.log("Time Sync Requested")
+    //console.log("Time Sync Requested")
     return true
 }
 
