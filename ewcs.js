@@ -58,7 +58,11 @@ let ewcsData = {
     PVVol: 0,
     PVCur: 0,
     LoadVol: 0,
-    LoadCur:0
+    LoadCur:0,
+    BatTemp:0,
+    DevTemp:0,
+    ChargEquipStat:0,
+    DischgEquipStat:0 
 };
 
 let ewcsStatus = {
@@ -946,6 +950,11 @@ EWCS.prototype.updateState = function () {
     ewcsData.PVCur = solarChargerDataNow().PVCur
     ewcsData.LoadVol = solarChargerDataNow().LoadVol
     ewcsData.LoadCur = solarChargerDataNow().LoadCur
+
+    ewcsData.BatTemp = solarChargerDataNow().BatTemp
+    ewcsData.DevTemp = solarChargerDataNow().DevTemp
+    ewcsData.ChargEquipStat = solarChargerDataNow().ChargEquipStat
+    ewcsData.DischgEquipStat = solarChargerDataNow().DischgEquipStat
 
     this.state["ewcs.cs125.current"] = ewcsData.cs125Current;
     this.state["ewcs.cs125.visibility"] = ewcsData.cs125Visibility;
