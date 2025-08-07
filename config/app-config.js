@@ -21,8 +21,25 @@ class AppConfig {
         ...this.getEnvironmentConfig()
       };
     } catch (error) {
-      console.warn('Config file not found or invalid, using defaults:', error.message);
-      return this.getDefaultConfig();
+      if (error.code === 'ENOENT') {
+        console.log('Config file not found, creating default config.json...');
+        this.createDefaultConfigFile();
+        return this.getDefaultConfig();
+      } else {
+        console.warn('Config file invalid, using defaults:', error.message);
+        return this.getDefaultConfig();
+      }
+    }
+  }
+
+  createDefaultConfigFile() {
+    try {
+      const defaultConfig = this.getDefaultConfig();
+      const configJson = JSON.stringify(defaultConfig, null, 2);
+      fs.writeFileSync(this.configPath, configJson, 'utf8');
+      console.log('Default config.json created successfully');
+    } catch (error) {
+      console.error('Failed to create config.json:', error.message);
     }
   }
 
@@ -56,7 +73,7 @@ class AppConfig {
         pic24: '/dev/ttyAMA0',
         cs125: '/dev/ttyAMA2', 
         iridium: '/dev/ttyAMA3',
-        bms: '/dev/ttyAMA5',
+        bms: '/dev/ttyACM0',
         camera: '/dev/ttyUSB0'
       },
       

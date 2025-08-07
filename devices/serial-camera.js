@@ -33,13 +33,15 @@ class SerialCamera extends EventEmitter {
       totalImages: 0
     };
     
-    // Capture state variables
-    this.captureState = 0; // 0: idle, 1: capturing
+    // Capture state variables - exact ewcs.js variables
+    this.captureState = 0; // 0: idle, 1: packet request, 2: wait, 3: save
     this.started = false;
     this.isSaved = false;
     this.packetCounter = 0;
     this.packetSize = this.config.packetSize || 768;
     this.packetNum = 0;
+    this.snapshotSize = 0;
+    this.remainingBytesSize = 0;
     this.dataBuffer = Buffer.alloc(0);
     this.imageBuffer = Buffer.alloc(0);
     this.cameraTryCount = 0;
@@ -66,6 +68,9 @@ class SerialCamera extends EventEmitter {
       
       // Start current monitoring
       this.startCurrentMonitoring();
+      
+      // Start connection monitoring
+      this.startConnectionMonitoring();
       
     } catch (error) {
       console.error('Serial Camera initialization failed:', error);
@@ -120,29 +125,70 @@ class SerialCamera extends EventEmitter {
   handleSerialData(data) {
     this.dataBuffer = Buffer.concat([this.dataBuffer, data]);
     
-    // Process packets if we're in capture mode
+    // Check for start sequence 0x90, 0xEB, 0x01, 0x49 if not started
+    if (!this.started) {
+      for (let i = 0; i < this.dataBuffer.length - 3; i++) {
+        if (this.dataBuffer[i] === 0x90 && this.dataBuffer[i + 1] === 0xEB && this.dataBuffer[i + 2] === 0x01 && this.dataBuffer[i + 3] === 0x49) {
+          this.started = true;
+          this.dataBuffer = this.dataBuffer.slice(i); // Start from the sequence
+          break;
+        }
+      }
+    }
+    
+    // If started, check if we have read at least 776 bytes
     if (this.started && this.dataBuffer.length >= this.packetSize + 8) {
       this.processPacket();
+    }
+    
+    // capture ready - exact ewcs.js logic
+    if(data[0] == 0x90 && data[1] == 0xeb && data[3] == 0x40 && data.length == 19 && this.captureState == 0) {
+      this.packetCounter = 0;
+      console.log("Capture ready signal received");
+      console.log(data);
+      
+      this.snapshotSize = data.readInt32LE(7);
+      console.log("snapshot size: " + this.snapshotSize);
+      
+      this.remainingBytesSize = (this.snapshotSize % this.packetSize);
+      this.packetNum = Math.floor(this.snapshotSize / this.packetSize);
+      console.log("Packets: " + this.packetNum);
+      console.log("remainingBytes size: " + this.remainingBytesSize);
+      
+      this.captureState = 1;
     }
   }
 
   processPacket() {
     try {
+      // Process your 768 bytes here
       let receivedData = this.dataBuffer.slice(0, this.packetSize + 8);
       let requiredData = this.dataBuffer.slice(6, this.packetSize + 6);
-      
+
       this.imageBuffer = Buffer.concat([this.imageBuffer, requiredData]);
-      
-      // Remove processed packet from buffer
+
+      // Reset for the next message
       this.dataBuffer = this.dataBuffer.slice(this.packetSize + 8);
-      
-      // Update packet counter
+
+      // count packet counter - exact ewcs.js logic
       if (this.packetCounter < this.packetNum - 1) {
         this.packetCounter++;
-      } else if (this.packetCounter === this.packetNum - 1) {
-        // Last packet received, save image
-        this.saveImage();
+        this.captureState = 1;
       }
+      else if(this.packetCounter == this.packetNum - 1) {
+        // time to get the remaining bytes
+        this.packetCounter++;
+        this.packetSize = this.remainingBytesSize;
+        this.captureState = 1;
+      }
+      else if(this.packetCounter >= this.packetNum) {
+        //finish getting subpacket 
+        //go to write file state
+        this.packetSize = 768;
+        this.captureState = 3;
+      }
+
+      this.started = false;
       
     } catch (error) {
       console.error('Packet processing error:', error);
@@ -150,41 +196,53 @@ class SerialCamera extends EventEmitter {
     }
   }
 
+  ensureDirectoryExistence(filePath) {
+    const dirname = path.dirname(filePath);
+    if (fs.existsSync(dirname)) {
+      return true;
+    }
+    this.ensureDirectoryExistence(dirname);
+    fs.mkdirSync(dirname);
+  }
+
   async saveImage() {
     try {
-      const now = Date.now();
-      const filename = `${now}.jpg`;
-      const imagePath = path.join(this.imageConfig.directory, filename);
+      const now = new Date();
+      const year = now.getUTCFullYear();
+      const month = String(now.getUTCMonth() + 1).padStart(2, '0'); // Months are zero-indexed
       
-      // Ensure directory exists
-      const imageDir = path.dirname(imagePath);
-      if (!fs.existsSync(imageDir)) {
-        fs.mkdirSync(imageDir, { recursive: true });
-      }
+      const baseDirectory = path.join(process.cwd(), 'ewcs-image');
+      const directoryPath = path.join(baseDirectory, `${year}-${month}`);
+      const timestamp = Date.now(); // Epoch timestamp in UTC
+      const filePath = path.join(directoryPath, `${timestamp}.jpg`);
+      const urlPath = path.join(`${year}-${month}`, `${timestamp}.jpg`);
+      
+      this.ensureDirectoryExistence(filePath);
       
       // Save image buffer to file
-      fs.writeFileSync(imagePath, this.imageBuffer);
+      fs.writeFileSync(filePath, this.imageBuffer);
       
       // Update status
-      this.data.lastImage = filename;
+      this.data.lastImage = urlPath;
       this.data.totalImages++;
-      this.status.lastCapture = now;
+      this.status.lastCapture = timestamp;
       this.isSaved = true;
       
-      console.log(`Image saved: ${filename} (${this.imageBuffer.length} bytes)`);
+      console.log(`Captured image saved to folder: ${filePath}`);
+      console.log(`[Camera] Total images captured: ${this.data.totalImages}`);
       
       // Reset capture state
-      this.resetCaptureState();
+      this.captureState = 0;
       
       // Emit capture event
       this.emit('imageCaptured', {
-        filename: filename,
-        path: imagePath,
+        filename: `${timestamp}.jpg`,
+        path: filePath,
         size: this.imageBuffer.length,
-        timestamp: now
+        timestamp: timestamp
       });
       
-      return { success: true, filename, path: imagePath };
+      return { success: true, filename: `${timestamp}.jpg`, path: filePath };
       
     } catch (error) {
       console.error('Image save error:', error);
@@ -198,10 +256,13 @@ class SerialCamera extends EventEmitter {
     this.captureState = 0;
     this.packetCounter = 0;
     this.packetNum = 0;
+    this.snapshotSize = 0;
+    this.remainingBytesSize = 0;
     this.imageBuffer = Buffer.alloc(0);
     this.dataBuffer = Buffer.alloc(0);
     this.isSaved = false;
     this.status.isSaving = false;
+    this.packetSize = 768; // reset to default
     
     if (this.packetCaptureInterval) {
       clearInterval(this.packetCaptureInterval);
@@ -210,28 +271,68 @@ class SerialCamera extends EventEmitter {
   }
 
   captureImage() {
-    if (this.captureState === 0) {
+    console.log(`Camera capture attempt ${this.cameraTryCount + 1}, state: ${this.captureState}`);
+
+    if(this.captureState == 0) {
       this.cameraTryCount++;
-      
-      if (this.cameraTryCount > this.config.maxRetryCount) {
-        console.error('Camera capture failed after maximum retries');
-        this.resetCaptureState();
-        this.emit('captureError', new Error('Maximum retry count exceeded'));
+
+      if (this.cameraTryCount > 5) {
+        this.cameraTryCount = 0;
+        if (this.packetCaptureInterval) {
+          clearInterval(this.packetCaptureInterval);
+          this.packetCaptureInterval = null;
+        }
+        console.log("check serial camera connection");
         return;
+      }   
+      
+      this.imageBuffer = Buffer.alloc(0);
+      let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x40, 0x04, 0x00, 0x00, 0x02, 0x05, 0x05, 0xc1, 0xc2]);
+      console.log("Sending capture command:", cmd.toString('hex'));
+      this.cameraPort.write(cmd);
+    }
+    else if (this.captureState == 1) {
+      this.isSaved = false;
+
+      let startAddr = this.packetCounter * 768;
+      let addrBuf = Buffer.allocUnsafe(4);
+      // console.log("start address: " + startAddr);
+      addrBuf.writeInt32LE(Number(startAddr));
+      
+      let cmd = Buffer.from([0x90, 0xeb, 0x01, 0x48, 0x06, 0x00]);
+      cmd = Buffer.concat([cmd, addrBuf, Buffer.from([0x00, 0x03, 0xc1, 0xc2])]);
+      // console.log("Requesting packet", this.packetCounter, "cmd:", cmd.toString('hex'));
+      this.cameraPort.write(cmd);
+      this.captureState = 2;
+    }
+    else if (this.captureState == 2) {
+      // wait to get subpacket
+      // console.log("Waiting for subpacket...");
+    }
+    else if (this.captureState == 3) {
+      // write file
+      // console.log("snapshot size " + this.snapshotSize);
+      // console.log("image buffer length " + this.imageBuffer.length);
+      if(this.isSaved == false) {
+        if (this.packetCaptureInterval) {
+          clearInterval(this.packetCaptureInterval);
+          this.packetCaptureInterval = null;
+        }
+        if(this.snapshotSize == this.imageBuffer.length) {
+          console.log("Image complete, saving...");
+          this.saveImage();
+        }
+        else {
+          console.log("serial camera image save failed - size mismatch");
+        }
       }
-      
-      // Send capture command
-      const captureCommand = Buffer.from([0x90, 0xEB, 0x01, 0x01, 0x01, 0x01, 0x94, 0xEB]);
-      this.cameraPort.write(captureCommand);
-      
-      console.log(`Camera capture attempt ${this.cameraTryCount}`);
-      this.captureState = 1;
     }
   }
 
   async startCapture(interval = 100) {
     if (this.status.isSaving) {
-      throw new Error('Camera is already capturing');
+      console.log('Camera is already capturing, skipping...');
+      return { success: false, reason: 'already_capturing' };
     }
     
     try {
@@ -240,19 +341,12 @@ class SerialCamera extends EventEmitter {
       this.status.isSaving = true;
       this.cameraTryCount = 0;
       
-      // Start periodic capture attempts
+      console.log('ewcs image saving..');
+      
+      // Start periodic capture attempts - exact ewcs.js timing
       this.packetCaptureInterval = setInterval(() => {
         this.captureImage();
-      }, interval);
-      
-      // Set timeout for capture
-      const captureTimeout = setTimeout(() => {
-        if (this.captureState === 1 && !this.isSaved) {
-          console.error('Camera capture timeout');
-          this.resetCaptureState();
-          this.emit('captureError', new Error('Capture timeout'));
-        }
-      }, this.config.captureTimeout || 6000);
+      }, 100); // 100ms interval like ewcs.js
       
       console.log('Camera capture started');
       return { success: true };
@@ -327,6 +421,23 @@ class SerialCamera extends EventEmitter {
     readCurrent();
   }
 
+  startConnectionMonitoring() {
+    // Check camera response periodically
+    this.connectionCheckInterval = setInterval(() => {
+      if (!this.cameraPort || !this.cameraPort.isOpen) {
+        if (this.status.connected) {
+          console.warn(`[Camera] Serial port disconnected`);
+          this.status.connected = false;
+        }
+      } else {
+        if (!this.status.connected) {
+          console.log(`[Camera] Serial connection restored`);
+        }
+        this.status.connected = true;
+      }
+    }, 30000);
+  }
+
   getStatus() {
     return {
       ...this.status,
@@ -371,6 +482,11 @@ class SerialCamera extends EventEmitter {
       if (this.currentInterval) {
         clearInterval(this.currentInterval);
         this.currentInterval = null;
+      }
+      
+      if (this.connectionCheckInterval) {
+        clearInterval(this.connectionCheckInterval);
+        this.connectionCheckInterval = null;
       }
 
       // Reset capture state

@@ -49,6 +49,9 @@ class EWCSApp {
       // Start data collection
       this.startDataCollection();
       
+      // Start image collection (원래 ewcs.js 방식)
+      this.startImageCollection();
+      
       // Start server
       this.startServer();
       
@@ -78,38 +81,76 @@ class EWCSApp {
   }
 
   async initializeDevices() {
+    const deviceInitResults = {};
+
+    // Initialize GPIO controller
     try {
-      // Initialize GPIO controller
       this.devices.gpio = GPIOController;
       await this.devices.gpio.initialize();
-      
-      // Initialize SHT45 sensor
+      deviceInitResults.gpio = 'success';
+    } catch (error) {
+      console.warn('GPIO initialization failed:', error.message);
+      deviceInitResults.gpio = 'failed';
+    }
+    
+    // Initialize SHT45 sensor
+    try {
       this.devices.sht45 = SHT45Sensor;
       await this.devices.sht45.initialize();
-      
-      // Initialize ADC reader
+      deviceInitResults.sht45 = 'success';
+    } catch (error) {
+      console.warn('SHT45 sensor initialization failed:', error.message);
+      deviceInitResults.sht45 = 'failed';
+    }
+    
+    // Initialize ADC reader
+    try {
       this.devices.adc = ADCReader;
       await this.devices.adc.initialize();
       await this.devices.adc.startAllContinuousReading();
-      
-      // Initialize CS125 sensor
+      deviceInitResults.adc = 'success';
+    } catch (error) {
+      console.warn('ADC reader initialization failed:', error.message);
+      deviceInitResults.adc = 'failed';
+    }
+    
+    // Initialize CS125 sensor
+    try {
       this.devices.cs125 = new CS125Sensor(this.controlPort);
       await this.devices.cs125.initialize();
-      
-      // Initialize serial camera
+      deviceInitResults.cs125 = 'success';
+    } catch (error) {
+      console.warn('CS125 sensor initialization failed:', error.message);
+      deviceInitResults.cs125 = 'failed';
+      this.devices.cs125 = null;
+    }
+    
+    // Initialize serial camera
+    try {
       this.devices.camera = new SerialCamera(this.controlPort);
       await this.devices.camera.initialize();
-      
-      // Initialize BMS controller
+      deviceInitResults.camera = 'success';
+    } catch (error) {
+      console.warn('Serial camera initialization failed:', error.message);
+      deviceInitResults.camera = 'failed';
+      this.devices.camera = null;
+    }
+    
+    // Initialize BMS controller
+    try {
       this.devices.bms = BMSController;
       await this.devices.bms.initialize();
-      
-      console.log('All devices initialized');
-      
+      deviceInitResults.bms = 'success';
     } catch (error) {
-      console.error('Device initialization error:', error);
-      throw error;
+      console.warn('BMS controller initialization failed:', error.message);
+      deviceInitResults.bms = 'failed';
     }
+    
+    const successCount = Object.values(deviceInitResults).filter(status => status === 'success').length;
+    const totalCount = Object.keys(deviceInitResults).length;
+    
+    console.log(`Device initialization complete: ${successCount}/${totalCount} devices initialized successfully`);
+    console.log('Device status:', deviceInitResults);
   }
 
   setupRoutes() {
@@ -171,7 +212,9 @@ class EWCSApp {
         };
         
         await database.insertEwcsData(ewcsData);
-        console.log('Data saved to database');
+        console.log(`[DATA] Saved to database - CS125: ${ewcsData.cs125Current}mA, SHT45: ${ewcsData.SHT45Temp}°C/${ewcsData.SHT45Humidity}%RH, ADC: ${ewcsData.adcVoltage}V`);
+        console.log(`[DATA] CS125 Visibility: ${ewcsData.cs125Visibility}m, SYNOP: ${ewcsData.cs125SYNOP}`);
+        
         
       } catch (error) {
         console.error('Data collection error:', error);
@@ -179,6 +222,31 @@ class EWCSApp {
     }, savePeriod);
     
     console.log(`Data collection started (${savePeriod/1000}s interval)`);
+  }
+
+  startImageCollection() {
+    // 원래 ewcs.js의 imageSavePeriod = 100초
+    const imagePeriod = 100 * 1000; // 100초
+    
+    const captureImage = async () => {
+      try {
+        if (this.devices.camera) {
+          const captureResult = await this.devices.camera.startCapture();
+          if (captureResult.success) {
+            console.log(`[CAMERA] Capture process started`);
+          }
+        }
+      } catch (cameraError) {
+        console.error('[CAMERA] Capture failed:', cameraError.message);
+      }
+      
+      // 다음 캡처 스케줄
+      setTimeout(captureImage, imagePeriod);
+    };
+    
+    // 첫 번째 이미지 캡처 시작
+    setTimeout(captureImage, imagePeriod);
+    console.log(`Image collection started (${imagePeriod/1000}s interval)`);
   }
 
   startServer() {
@@ -202,7 +270,7 @@ class EWCSApp {
       // Close devices
       for (const [name, device] of Object.entries(this.devices)) {
         try {
-          if (device.close) {
+          if (device && device.close) {
             await device.close();
             console.log(`${name} closed`);
           }

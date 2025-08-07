@@ -69,9 +69,9 @@ class SHT45Sensor extends EventEmitter {
     }
 
     try {
-      const reading = await this.thermostat.readTemperatureAndHumidity();
+      const reading = await this.thermostat.measurements();
       
-      this.data.temperature = parseFloat(reading.temperature.toFixed(2));
+      this.data.temperature = parseFloat(((reading.temperature - 32) * 5/9).toFixed(2));
       this.data.humidity = parseFloat(reading.humidity.toFixed(2));
       this.data.lastReading = Date.now();
       this.data.readingCount++;

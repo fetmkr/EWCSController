@@ -124,6 +124,11 @@ class ADCReader extends EventEmitter {
           channel.data.lastReading = Date.now();
           channel.data.readingCount++;
 
+          // Log periodic readings (every 10th reading to avoid spam)
+          if (channel.data.readingCount % 10 === 0) {
+            console.log(`ADC CH${channelNum} (${channel.config.name}): ${channel.data.voltage}V, Raw=${channel.data.rawValue}`);
+          }
+
           // Reset error count on successful reading
           if (channel.status.errorCount > 0) {
             channel.status.errorCount = 0;

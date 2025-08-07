@@ -51,6 +51,9 @@ class CS125Sensor extends EventEmitter {
       // Start periodic current readings
       this.startCurrentMonitoring();
       
+      // Start connection monitoring
+      this.startConnectionMonitoring();
+      
     } catch (error) {
       console.error('CS125 Sensor initialization failed:', error);
       throw error;
@@ -114,13 +117,16 @@ class CS125Sensor extends EventEmitter {
         this.data.humidity = parseFloat(data[25]) || 0;
         this.data.lastReading = Date.now();
 
-        console.log(`CS125 Data - Temp: ${this.data.temperature}°C, Humidity: ${this.data.humidity}%`);
+        console.log(`CS125 Data - Temp: ${this.data.temperature}°C, Humidity: ${this.data.humidity}%, Vis: ${this.data.visibility}m`);
 
         // Check hood heater status based on temperature
         this.updateHoodHeaterStatus();
 
         // Emit data event
         this.emit('data', { ...this.data });
+      } else {
+        // CS125가 연결되어 있지 않거나 잘못된 데이터
+        console.log(`[CS125] Received incomplete data: ${rawData.toString().trim()}`);
       }
     } catch (error) {
       console.error('CS125 data parsing error:', error);
@@ -156,6 +162,7 @@ class CS125Sensor extends EventEmitter {
         // Convert ADC reading to current (mA)
         const voltage = (reading.rawValue * this.adcConfig.vref) / this.adcConfig.resolution;
         this.data.current = parseFloat((voltage * this.adcConfig.conversionFactor).toFixed(3));
+        console.log(`CS125: Current=${this.data.current}mA, Raw=${reading.rawValue}`);
       });
     };
 
@@ -164,6 +171,25 @@ class CS125Sensor extends EventEmitter {
     
     // Initial reading
     readCurrent();
+  }
+
+  startConnectionMonitoring() {
+    // Check for data timeout every 30 seconds
+    this.connectionCheckInterval = setInterval(() => {
+      const now = Date.now();
+      const dataAge = now - this.data.lastReading;
+      const maxAge = 30000; // 30 seconds
+      
+      if (dataAge > maxAge) {
+        console.warn(`[CS125] No data received for ${Math.round(dataAge/1000)}s - connection may be lost`);
+        this.status.connected = false;
+      } else {
+        if (!this.status.connected) {
+          console.log(`[CS125] Connection restored`);
+        }
+        this.status.connected = true;
+      }
+    }, 30000);
   }
 
   async turnOn() {
@@ -259,6 +285,11 @@ class CS125Sensor extends EventEmitter {
       if (this.currentInterval) {
         clearInterval(this.currentInterval);
         this.currentInterval = null;
+      }
+
+      if (this.connectionCheckInterval) {
+        clearInterval(this.connectionCheckInterval);
+        this.connectionCheckInterval = null;
       }
 
       if (this.currentADC) {
