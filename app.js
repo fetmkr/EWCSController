@@ -6,7 +6,7 @@ import database from './database/sqlite-db.js';
 
 // Device modules
 import CS125Sensor from './devices/cs125-sensor.js';
-import SerialCamera from './devices/serial-camera.js';
+import SpinelCamera from './spinel-serial-camera.js';
 import BMSController from './devices/bms-controller.js';
 import SHT45Sensor from './devices/sht45-sensor.js';
 import GPIOController from './devices/gpio-controller.js';
@@ -125,13 +125,27 @@ class EWCSApp {
       this.devices.cs125 = null;
     }
     
-    // Initialize serial camera
+    // Initialize spinel camera
     try {
-      this.devices.camera = new SerialCamera(this.controlPort);
-      await this.devices.camera.initialize();
-      deviceInitResults.camera = 'success';
+      this.devices.camera = new SpinelCamera(config.get('serialPorts.camera'), 115200);
+      
+      // Camera power control will be handled by app.js via PIC24
+      console.log('[CAMERA] Testing connection at startup...');
+      await this.turnOnCamera();
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for camera boot
+      
+      const testResult = await this.testCameraConnection();
+      if (testResult.success) {
+        console.log(`[CAMERA] Startup test successful - ID: 0x${testResult.cameraId.toString(16).padStart(2, '0')}`);
+        deviceInitResults.camera = 'success';
+      } else {
+        console.warn(`[CAMERA] Startup test failed: ${testResult.reason}`);
+        deviceInitResults.camera = 'test_failed';
+      }
+      
+      await this.turnOffCamera();
     } catch (error) {
-      console.warn('Serial camera initialization failed:', error.message);
+      console.warn('Spinel camera initialization failed:', error.message);
       deviceInitResults.camera = 'failed';
       this.devices.camera = null;
     }
@@ -231,13 +245,25 @@ class EWCSApp {
     const captureImage = async () => {
       try {
         if (this.devices.camera) {
+          // Turn on camera via PIC24
+          await this.turnOnCamera();
+          
+          // Wait for camera to power up
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
           const captureResult = await this.devices.camera.startCapture();
           if (captureResult.success) {
             console.log(`[CAMERA] Capture process started`);
           }
+          
+          // Turn off camera after capture to save power
+          setTimeout(() => {
+            this.turnOffCamera();
+          }, 30000); // 30초 후 카메라 전원 차단
         }
       } catch (cameraError) {
         console.error('[CAMERA] Capture failed:', cameraError.message);
+        await this.turnOffCamera(); // 에러 발생시도 전원 차단
       }
       
       // 다음 캡처 스케줄
@@ -247,6 +273,48 @@ class EWCSApp {
     // 첫 번째 이미지 캡처 시작
     setTimeout(captureImage, imagePeriod);
     console.log(`Image collection started (${imagePeriod/1000}s interval)`);
+  }
+
+  // PIC24를 통한 카메라 전원 제어
+  async turnOnCamera() {
+    if (!this.controlPort) {
+      throw new Error('Control port not available for camera power control');
+    }
+
+    try {
+      this.controlPort.write('P'); // PIC24에 카메라 ON 명령 전송
+      console.log('[CAMERA] Power ON via PIC24');
+      return { success: true };
+    } catch (error) {
+      console.error('[CAMERA] Failed to turn on camera:', error);
+      throw error;
+    }
+  }
+
+  async turnOffCamera() {
+    if (!this.controlPort) {
+      throw new Error('Control port not available for camera power control');
+    }
+
+    try {
+      this.controlPort.write('p'); // PIC24에 카메라 OFF 명령 전송 (소문자)
+      console.log('[CAMERA] Power OFF via PIC24');
+      return { success: true };
+    } catch (error) {
+      console.error('[CAMERA] Failed to turn off camera:', error);
+      throw error;
+    }
+  }
+
+  // 카메라 연결 테스트 (0x01 테스트 명령 사용)
+  async testCameraConnection() {
+    if (!this.devices.camera) {
+      console.error('[CAMERA] Camera device not initialized');
+      return { success: false, reason: 'device_not_initialized' };
+    }
+
+    console.log('[CAMERA] Testing connection...');
+    return await this.devices.camera.testConnection();
   }
 
   startServer() {
