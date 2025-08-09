@@ -232,22 +232,6 @@ class SpinelCamera {
     return this.buildCommand(0x44, data);
   }
 
-  /**
-   * Baud Rate 숫자를 프로토콜 파라미터로 변환하는 헬퍼 함수
-   * @param {number} baudRate - Baud Rate 값 (9600, 19200, 28800, 38400, 57600, 115200)
-   * @returns {number} 프로토콜 파라미터 (0x01~0x06)
-   */
-  getBaudRateParam(baudRate) {
-    const baudRateMap = {
-      9600: 0x01,     // 9600 bps
-      19200: 0x02,    // 19200 bps
-      28800: 0x03,    // 28800 bps
-      38400: 0x04,    // 38400 bps
-      57600: 0x05,    // 57600 bps
-      115200: 0x06    // 115200 bps (현재 사용중)
-    };
-    return baudRateMap[baudRate] || 0x00; // 지원하지 않는 속도면 변경없음
-  }
 
   /**
    * 이미지 데이터 읽기 명령 생성 (0x48)
@@ -607,20 +591,6 @@ class SpinelCamera {
     }
   }
 
-  /**
-   * 이미지 캡처 중지 (공개 메소드)
-   * 진행중인 캡처 프로세스를 중지하고 상태 초기화
-   */
-  stopCapture() {
-    if (this.captureIntervalId) {
-      clearInterval(this.captureIntervalId);
-      this.captureIntervalId = null;
-    }
-    
-    this.captureState = 0;
-    this.isSaved = false;
-    console.log('Capture stopped');
-  }
 
   /**
    * 포트 열림 이벤트 처리
@@ -634,21 +604,6 @@ class SpinelCamera {
     // setTimeout(() => { this.startCapture(); }, 3000);  // 제거됨
   }
 
-  /**
-   * 카메라 상태 정보 조회 (공개 메소드)
-   * @returns {Object} 현재 카메라 상태
-   */
-  getStatus() {
-    return {
-      isCapturing: this.captureIntervalId !== null,
-      captureState: this.captureState,
-      packetCounter: this.packetCounter,
-      totalPackets: this.packetNum,
-      imageSize: this.imageBuffer.length,
-      expectedSize: this.snapshotSize,
-      lastUpdate: Date.now()
-    };
-  }
 
   /**
    * 카메라 설정 정보 조회 (공개 메소드)
