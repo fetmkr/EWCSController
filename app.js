@@ -6,7 +6,7 @@ import database from './database/sqlite-db.js';
 
 // Device modules
 import CS125Sensor from './devices/cs125-sensor.js';
-import SpinelCamera from './spinel-serial-camera.js';
+import SpinelCamera from './devices/spinel-serial-camera.js';
 import BMSController from './devices/bms-controller.js';
 import SHT45Sensor from './devices/sht45-sensor.js';
 import GPIOController from './devices/gpio-controller.js';
