@@ -24,6 +24,55 @@ class EWCSApp {
     this.devices = {};
     this.controlPort = null;
     this.dataCollectionInterval = null;
+    this.lastImageFilename = "";
+    
+    // EWCS 데이터 구조 (원래 ewcs.js와 동일한 필드)
+    this.ewcsData = {
+      stationName: "",
+      timestamp: 0,
+      mode: "normal",
+      // CS125 센서 데이터
+      cs125Current: 0,
+      cs125Visibility: 0,
+      cs125SYNOP: 0,
+      cs125Temp: 0,
+      cs125Humidity: 0,
+      // 환경 센서 데이터
+      SHT45Temp: 0,
+      SHT45Humidity: 0,
+      rpiTemp: 0,
+      // 전력 모니터링 데이터
+      iridiumCurrent: 0,
+      cameraCurrent: 0,
+      batteryVoltage: 0,
+      // 태양광 충전기 데이터
+      PVVol: 0,
+      PVCur: 0,
+      LoadVol: 0,
+      LoadCur: 0,
+      BatTemp: 0,
+      DevTemp: 0,
+      ChargEquipStat: 0,
+      DischgEquipStat: 0,
+      // 이미지 정보
+      lastImage: ""
+    };
+    
+    // EWCS 상태 정보 (시스템 상태 추적용)
+    this.ewcsStatus = {
+      cs125OnStatus: 0,
+      cs125HoodHeaterStatus: 0,
+      cameraOnStatus: 0,
+      cameraIsSaving: 0,
+      iridiumOnStatus: 0,
+      iridiumIsSending: 0,
+      powerSaveOnStatus: 0,
+      ipAddress: "",
+      gateway: "",
+      cameraIpAddress: "",
+      dataSavePeriod: 60,
+      imageSavePeriod: 100
+    };
   }
 
   async initialize() {
@@ -208,27 +257,11 @@ class EWCSApp {
     
     this.dataCollectionInterval = setInterval(async () => {
       try {
-        const ewcsData = {
-          timestamp: Date.now(),
-          stationName: config.get('stationName'),
-          // CS125 data
-          cs125Current: this.devices.cs125.data.current,
-          cs125Visibility: this.devices.cs125.data.visibility,
-          cs125SYNOP: this.devices.cs125.data.synop,
-          cs125Temp: this.devices.cs125.data.temperature,
-          cs125Humidity: this.devices.cs125.data.humidity,
-          // SHT45 data
-          SHT45Temp: this.devices.sht45.data.temperature,
-          SHT45Humidity: this.devices.sht45.data.humidity,
-          // ADC data
-          adcReading: this.devices.adc.getChannelData(0)?.data.rawValue || 0,
-          adcVoltage: this.devices.adc.getChannelData(0)?.data.voltage || 0
-        };
+        this.updateEwcsData();
         
-        await database.insertEwcsData(ewcsData);
-        console.log(`[DATA] Saved to database - CS125: ${ewcsData.cs125Current}mA, SHT45: ${ewcsData.SHT45Temp}°C/${ewcsData.SHT45Humidity}%RH, ADC: ${ewcsData.adcVoltage}V`);
-        console.log(`[DATA] CS125 Visibility: ${ewcsData.cs125Visibility}m, SYNOP: ${ewcsData.cs125SYNOP}`);
-        
+        await database.insertEwcsData(this.ewcsData);
+        console.log(`[DATA] Saved to database - CS125: ${this.ewcsData.cs125Current}mA, SHT45: ${this.ewcsData.SHT45Temp}°C/${this.ewcsData.SHT45Humidity}%RH`);
+        console.log(`[DATA] CS125 Visibility: ${this.ewcsData.cs125Visibility}m, SYNOP: ${this.ewcsData.cs125SYNOP}`);
         
       } catch (error) {
         console.error('Data collection error:', error);
@@ -236,6 +269,53 @@ class EWCSApp {
     }, savePeriod);
     
     console.log(`Data collection started (${savePeriod/1000}s interval)`);
+  }
+
+  // EWCS 데이터 업데이트 함수
+  updateEwcsData() {
+    this.ewcsData.timestamp = Date.now();
+    this.ewcsData.stationName = config.get('stationName');
+    
+    // CS125 센서 데이터
+    if (this.devices.cs125?.data) {
+      this.ewcsData.cs125Current = this.devices.cs125.data.current || 0;
+      this.ewcsData.cs125Visibility = this.devices.cs125.data.visibility || 0;
+      this.ewcsData.cs125SYNOP = this.devices.cs125.data.synop || 0;
+      this.ewcsData.cs125Temp = this.devices.cs125.data.temperature || 0;
+      this.ewcsData.cs125Humidity = this.devices.cs125.data.humidity || 0;
+    }
+    
+    // SHT45 환경 센서 데이터
+    if (this.devices.sht45?.data) {
+      this.ewcsData.SHT45Temp = this.devices.sht45.data.temperature || 0;
+      this.ewcsData.SHT45Humidity = this.devices.sht45.data.humidity || 0;
+    }
+    
+    // ADC 전력 모니터링 데이터 (원래 ewcs.js 방식)
+    if (this.devices.adc) {
+      // CH1: Iridium current, CH2: Camera current, CH3: Battery voltage
+      this.ewcsData.iridiumCurrent = this.devices.adc.getChannelData(1)?.data.voltage || 0;
+      this.ewcsData.cameraCurrent = this.devices.adc.getChannelData(2)?.data.voltage || 0;  
+      this.ewcsData.batteryVoltage = this.devices.adc.getChannelData(3)?.data.voltage || 0;
+    }
+    
+    // BMS 태양광 충전기 데이터
+    if (this.devices.bms?.data) {
+      this.ewcsData.PVVol = this.devices.bms.data.PVVol || 0;
+      this.ewcsData.PVCur = this.devices.bms.data.PVCur || 0;
+      this.ewcsData.LoadVol = this.devices.bms.data.LoadVol || 0;
+      this.ewcsData.LoadCur = this.devices.bms.data.LoadCur || 0;
+      this.ewcsData.BatTemp = this.devices.bms.data.BatTemp || 0;
+      this.ewcsData.DevTemp = this.devices.bms.data.DevTemp || 0;
+      this.ewcsData.ChargEquipStat = this.devices.bms.data.ChargEquipStat || 0;
+      this.ewcsData.DischgEquipStat = this.devices.bms.data.DischgEquipStat || 0;
+    }
+    
+    // 이미지 정보
+    this.ewcsData.lastImage = this.lastImageFilename || "";
+    
+    // RPi 온도는 별도 함수로 구현 예정
+    // this.ewcsData.rpiTemp = this.getRPiTemperature();
   }
 
   startImageCollection() {
