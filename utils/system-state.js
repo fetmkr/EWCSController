@@ -30,6 +30,15 @@ class SystemState {
         power_save_mode: false,
         last_updated: new Date().toISOString()
       },
+      device_status: {
+        cs125: false,
+        spinel_camera: false,
+        oasc_camera: false,
+        bms: false,
+        sht45: false,
+        adc: false,
+        last_check: new Date().toISOString()
+      },
       settings: {
         data_save_period: 60,
         image_save_period: 100,
@@ -154,6 +163,44 @@ class SystemState {
   logSystemShutdown() {
     this.addEvent('System shutdown');
     this.saveState();
+  }
+
+  // 디바이스 상태 업데이트
+  updateDeviceStatus(deviceStatus) {
+    if (!this.state.device_status) {
+      this.state.device_status = {
+        cs125: false,
+        spinel_camera: false,
+        oasc_camera: false,
+        bms: false,
+        sht45: false,
+        adc: false,
+        last_check: new Date().toISOString()
+      };
+    }
+    
+    this.state.device_status = {
+      ...deviceStatus,
+      last_check: new Date().toISOString()
+    };
+    
+    this.saveState();
+  }
+
+  // 디바이스 상태 가져오기
+  getDeviceStatus() {
+    if (!this.state.device_status) {
+      return {
+        cs125: false,
+        spinel_camera: false,
+        oasc_camera: false,
+        bms: false,
+        sht45: false,
+        adc: false,
+        last_check: new Date().toISOString()
+      };
+    }
+    return this.state.device_status;
   }
 }
 
