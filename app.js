@@ -3,6 +3,7 @@ import expressWs from 'express-ws';
 import { SerialPort } from 'serialport';
 import config from './config/app-config.js';
 import database from './database/sqlite-db.js';
+import systemState from './utils/system-state.js';
 
 // Device modules
 import CS125Sensor from './devices/cs125-sensor.js';
@@ -11,11 +12,14 @@ import BMSController from './devices/bms-controller.js';
 import SHT45Sensor from './devices/sht45-sensor.js';
 import GPIOController from './devices/gpio-controller.js';
 import ADCReader from './devices/adc-reader.js';
+import OASCCamera from './devices/oasc-camera.js';
 
 // API routes
 import createDeviceRoutes from './api/routes/device-routes.js';
 import createSensorRoutes from './api/routes/sensor-routes.js';
 import createSystemRoutes from './api/routes/system-routes.js';
+import createEwcsRoutes from './api/routes/ewcs-routes.js';
+import createOascRoutes from './api/routes/oasc-routes.js';
 
 class EWCSApp {
   constructor() {
@@ -79,11 +83,14 @@ class EWCSApp {
     try {
       console.log('EWCS Controller starting...');
       
+      // Log system start
+      systemState.logSystemStart();
+      
       // Setup Express
       this.setupExpress();
       
       // Initialize database
-      await database.initialize();
+      database.initialize();
       console.log('Database initialized');
       
       // Initialize control port (PIC24)
@@ -209,6 +216,25 @@ class EWCSApp {
       deviceInitResults.bms = 'failed';
     }
     
+    // Initialize OASC camera
+    try {
+      this.devices.oascCamera = new OASCCamera();
+      await this.devices.oascCamera.initialize();
+      
+      // Connect to camera after initialization
+      const connected = await this.devices.oascCamera.connect();
+      if (connected) {
+        console.log('[OASC] Camera connected successfully');
+        deviceInitResults.oascCamera = 'success';
+      } else {
+        console.warn('[OASC] Camera initialized but connection failed');
+        deviceInitResults.oascCamera = 'connection_failed';
+      }
+    } catch (error) {
+      console.warn('OASC camera initialization failed:', error.message);
+      deviceInitResults.oascCamera = 'failed';
+    }
+    
     const successCount = Object.values(deviceInitResults).filter(status => status === 'success').length;
     const totalCount = Object.keys(deviceInitResults).length;
     
@@ -221,6 +247,8 @@ class EWCSApp {
     this.app.use('/api/device', createDeviceRoutes(this.devices));
     this.app.use('/api/sensor', createSensorRoutes(database, this.devices));
     this.app.use('/api/system', createSystemRoutes());
+    this.app.use('/api', createEwcsRoutes(database));
+    this.app.use('/api', createOascRoutes(database, this.devices));
     
     // Health check
     this.app.get('/health', (req, res) => {
@@ -259,12 +287,13 @@ class EWCSApp {
       try {
         this.updateEwcsData();
         
-        await database.insertEwcsData(this.ewcsData);
+        database.insertEwcsData(this.ewcsData);
         console.log(`[DATA] Saved to database - CS125: ${this.ewcsData.cs125Current}mA, SHT45: ${this.ewcsData.SHT45Temp}°C/${this.ewcsData.SHT45Humidity}%RH`);
         console.log(`[DATA] CS125 Visibility: ${this.ewcsData.cs125Visibility}m, SYNOP: ${this.ewcsData.cs125SYNOP}`);
         
       } catch (error) {
         console.error('Data collection error:', error);
+        systemState.logError('data_collection', error);
       }
     }, savePeriod);
     
@@ -334,6 +363,14 @@ class EWCSApp {
           const captureResult = await this.devices.camera.startCapture();
           if (captureResult.success) {
             console.log(`[CAMERA] Capture process started`);
+            // Save image metadata to database if filename is returned
+            if (captureResult.filename) {
+              database.insertImageData({
+                timestamp: Date.now(),
+                filename: captureResult.filename
+              });
+              this.lastImageFilename = captureResult.filename;
+            }
           }
           
           // Turn off camera after capture to save power
@@ -343,6 +380,7 @@ class EWCSApp {
         }
       } catch (cameraError) {
         console.error('[CAMERA] Capture failed:', cameraError.message);
+        systemState.logError('camera_capture', cameraError);
         await this.turnOffCamera(); // 에러 발생시도 전원 차단
       }
       
@@ -363,10 +401,12 @@ class EWCSApp {
 
     try {
       this.controlPort.write('P'); // PIC24에 카메라 ON 명령 전송
+      systemState.setCameraPower(true);
       console.log('[CAMERA] Power ON via PIC24');
       return { success: true };
     } catch (error) {
       console.error('[CAMERA] Failed to turn on camera:', error);
+      systemState.logError('camera', error);
       throw error;
     }
   }
@@ -378,10 +418,12 @@ class EWCSApp {
 
     try {
       this.controlPort.write('p'); // PIC24에 카메라 OFF 명령 전송 (소문자)
+      systemState.setCameraPower(false);
       console.log('[CAMERA] Power OFF via PIC24');
       return { success: true };
     } catch (error) {
       console.error('[CAMERA] Failed to turn off camera:', error);
+      systemState.logError('camera', error);
       throw error;
     }
   }
@@ -408,6 +450,7 @@ class EWCSApp {
 
   async shutdown() {
     console.log('Shutting down EWCS Controller...');
+    systemState.logSystemShutdown();
     
     try {
       // Stop data collection
@@ -433,7 +476,7 @@ class EWCSApp {
       }
       
       // Close database
-      await database.close();
+      database.close();
       
       // Close server
       if (this.server) {

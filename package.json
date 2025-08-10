@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/fetmkr/EWCSController#readme",
   "dependencies": {
+    "better-sqlite3": "^9.6.0",
     "crc": "^4.3.2",
     "cron": "^3.1.6",
     "express": "^4.18.2",
@@ -31,7 +32,7 @@
     "modbus-serial": "^8.0.13",
     "onoff": "^6.0.3",
     "serialport": "^12.0.0",
-    "sht4x": "^1.0.3",
-    "sqlite3": "^5.1.7"
+    "sharp": "^0.34.3",
+    "sht4x": "^1.0.3"
   }
 }

@@ -1,0 +1,1 @@
+cmd_Release/sx_camera.node := ln -f "Release/obj.target/sx_camera.node" "Release/sx_camera.node" 2>/dev/null || (rm -rf "Release/sx_camera.node" && cp -af "Release/obj.target/sx_camera.node" "Release/sx_camera.node")

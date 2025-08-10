@@ -1,0 +1,1 @@
+cmd_Release/obj.target/sx_camera.node := g++ -o Release/obj.target/sx_camera.node -shared -pthread -rdynamic  -Wl,-soname=sx_camera.node -Wl,--start-group Release/obj.target/sx_camera/sx-camera.o Release/obj.target/../node_modules/node-addon-api/nothing.a -Wl,--end-group -lusb-1.0
