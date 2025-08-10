@@ -6,7 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 class SystemState {
   constructor() {
-    this.statePath = path.join(__dirname, '../data/system_state.json');
+    this.statePath = path.join(__dirname, '../data/ewcs_status.json');
     this.state = this.loadState();
   }
 

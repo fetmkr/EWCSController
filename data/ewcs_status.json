@@ -5,7 +5,7 @@
     "cs125_hood_heater_on": false,
     "iridium_on": false,
     "power_save_mode": false,
-    "last_updated": "2025-08-10T12:58:17.169Z"
+    "last_updated": "2025-08-10T13:03:58.421Z"
   },
   "settings": {
     "data_save_period": 60,
@@ -13,6 +13,30 @@
     "station_name": "EWCS_STATION"
   },
   "recent_events": [
+    {
+      "timestamp": "2025-08-10T13:03:58.422Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-08-10T13:03:26.414Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-08-10T13:02:16.414Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-08-10T13:01:44.407Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-08-10T13:00:34.405Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-08-10T13:00:02.394Z",
+      "event": "Camera power ON"
+    },
     {
       "timestamp": "2025-08-10T12:58:17.170Z",
       "event": "Camera power OFF"
@@ -387,30 +411,6 @@
     },
     {
       "timestamp": "2025-08-10T12:57:53.533Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T12:57:53.530Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T12:57:53.523Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T12:57:53.520Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T12:57:53.515Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T12:57:53.510Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T12:57:53.507Z",
       "event": "System shutdown"
     }
   ]
