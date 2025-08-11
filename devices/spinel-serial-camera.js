@@ -459,7 +459,7 @@ class SpinelCamera {
           // 이미지 크기 검증 후 저장
           if (this.snapshotSize === this.imageBuffer.length) {
             console.log("Image complete, saving...");
-            this.saveImage();
+            this.saveImage(this.customSaveDir, this.customSaveFilename);
           } else {
             console.error(`Size mismatch: expected ${this.snapshotSize}, got ${this.imageBuffer.length}`);
           }
@@ -471,8 +471,10 @@ class SpinelCamera {
   /**
    * 이미지 파일 저장 처리
    * 수신한 이미지 데이터를 JPEG 파일로 저장하고 성능 통계 출력
+   * @param {string} customDir - 사용자 지정 저장 폴더 (옵션)
+   * @param {string} customFilename - 사용자 지정 파일명 (옵션)
    */
-  saveImage() {
+  saveImage(customDir = null, customFilename = null) {
     this.captureEndTime = Date.now(); // 성능 측정 종료
     const captureTime = this.captureEndTime - this.captureStartTime;
     
@@ -480,10 +482,25 @@ class SpinelCamera {
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
     
-    const baseDirectory = './ewcs-image';
-    const directoryPath = `${baseDirectory}/${year}-${month}`;
-    const timestamp = Date.now();
-    const fileName = `${timestamp}.jpg`;
+    // 저장 디렉토리 결정
+    let baseDirectory, directoryPath;
+    if (customDir) {
+      baseDirectory = customDir;
+      directoryPath = `${baseDirectory}/${year}-${month}`;
+    } else {
+      baseDirectory = './ewcs-image';
+      directoryPath = `${baseDirectory}/${year}-${month}`;
+    }
+    
+    // 파일명 결정
+    let fileName;
+    if (customFilename) {
+      fileName = customFilename.endsWith('.jpg') ? customFilename : `${customFilename}.jpg`;
+    } else {
+      const timestamp = Date.now();
+      fileName = `${timestamp}.jpg`;
+    }
+    
     const filePath = `${directoryPath}/${fileName}`;
     
     // 이미지 디렉토리 생성
@@ -557,40 +574,124 @@ class SpinelCamera {
 
   /**
    * 이미지 캡처 시작 (공개 메소드)
-   * 외부에서 호출하여 사진 촬영을 시작
+   * 외부에서 호출하여 사진 촬영 후 파일 저장 완료까지 기다림
    * @param {number} interval - 캡처 시도 간격 (기본: 100ms)
-   * @returns {Object} 시작 결과
+   * @param {string} customDir - 사용자 지정 저장 폴더 (옵션)
+   * @param {string} customFilename - 사용자 지정 파일명 (옵션)
+   * @returns {Promise<Object>} 캡처 및 저장 완료 결과 { success, filename?, savedPath?, reason? }
    */
-  async startCapture(interval = 100) {
+  async startCapture(interval = 100, customDir = null, customFilename = null) {
     if (this.captureIntervalId) {
       console.log('Camera is already capturing, skipping...');
       return { success: false, reason: 'already_capturing' };
     }
     
-    try {
-      // 상태 초기화
-      this.captureState = 0;
-      this.packetCounter = 0;
-      this.tryCount = 0;
-      this.isSaved = false;
-      this.imageBuffer = Buffer.alloc(0);
-      this.dataBuffer = Buffer.alloc(0);
-      
-      console.log('Starting image capture...');
-      
-      // 주기적 캡처 프로세스 시작 (100ms 간격)
-      this.captureIntervalId = setInterval(() => {
-        this.captureImage();
-      }, interval);
-      
-      return { success: true };
-      
-    } catch (error) {
-      this.stopCapture();
-      throw error;
-    }
+    return new Promise((resolve) => {
+      try {
+        // 상태 초기화
+        this.captureState = 0;
+        this.packetCounter = 0;
+        this.tryCount = 0;
+        this.isSaved = false;
+        this.imageBuffer = Buffer.alloc(0);
+        this.dataBuffer = Buffer.alloc(0);
+        
+        // 저장 옵션 설정
+        this.customSaveDir = customDir;
+        this.customSaveFilename = customFilename;
+        
+        console.log('Starting image capture with 15s timeout...');
+        
+        // 15초 타임아웃 설정 - 15초 안에 이미지 파일이 생성되지 않으면 실패로 처리
+        const captureTimeout = setTimeout(() => {
+          if (this.captureIntervalId) {
+            clearInterval(this.captureIntervalId);
+            this.captureIntervalId = null;
+          }
+          console.log('Image capture timed out after 15 seconds');
+          resolve({ success: false, reason: 'timeout' });
+        }, 15000);
+        
+        // 파일 저장 완료 체크를 위한 변수들
+        let expectedFilePath = null;
+        let checkSavedInterval = null;
+        
+        // 주기적 캡처 프로세스 시작 (100ms 간격)
+        this.captureIntervalId = setInterval(() => {
+          this.captureImage();
+        }, interval);
+        
+        // 파일 저장 완료 확인 - 1초마다 파일 존재 여부 체크
+        checkSavedInterval = setInterval(async () => {
+          if (this.isSaved && expectedFilePath) {
+            // 파일이 실제로 존재하는지 확인
+            const { existsSync } = await import('fs');
+            if (existsSync(expectedFilePath)) {
+              // 저장 완료! 모든 타이머 정리하고 성공 반환
+              clearTimeout(captureTimeout);
+              clearInterval(checkSavedInterval);
+              if (this.captureIntervalId) {
+                clearInterval(this.captureIntervalId);
+                this.captureIntervalId = null;
+              }
+              
+              const path = await import('path');
+              const filename = path.default.basename(expectedFilePath);
+              console.log(`Image capture completed successfully: ${filename}`);
+              resolve({ 
+                success: true, 
+                filename: filename,
+                savedPath: expectedFilePath
+              });
+            }
+          } else if (this.isSaved) {
+            // isSaved가 true이지만 expectedFilePath가 없는 경우, 경로 생성 시도
+            expectedFilePath = this.getExpectedFilePath();
+          }
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Error starting capture:', error);
+        resolve({ success: false, reason: 'start_error', error: error.message });
+      }
+    });
   }
 
+  /**
+   * 예상 파일 경로 생성 (내부 메소드)
+   * saveImage 메소드와 동일한 로직으로 저장될 파일 경로를 예측
+   * @returns {string} 예상 파일 경로
+   */
+  getExpectedFilePath() {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+
+    // 디렉토리 경로 결정 (saveImage와 동일한 로직)
+    let baseDirectory, directoryPath;
+    if (this.customSaveDir) {
+      baseDirectory = this.customSaveDir;
+      directoryPath = `${baseDirectory}/${year}-${month}`;
+    } else {
+      baseDirectory = './ewcs-image';
+      directoryPath = `${baseDirectory}/${year}-${month}`;
+    }
+
+    // 파일명 결정 (saveImage와 동일한 로직)
+    let fileName;
+    if (this.customSaveFilename) {
+      fileName = this.customSaveFilename.endsWith('.jpg') ? 
+                 this.customSaveFilename : 
+                 `${this.customSaveFilename}.jpg`;
+    } else {
+      // 기본 타임스탬프 방식 - 정확한 타임스탬프는 실제 저장 시점에 결정되므로
+      // 여기서는 대략적인 경로만 제공 (실제로는 saveImage에서 Date.now() 사용)
+      const timestamp = Date.now();
+      fileName = `${timestamp}.jpg`;
+    }
+
+    return `${directoryPath}/${fileName}`;
+  }
 
   /**
    * 포트 열림 이벤트 처리
@@ -620,7 +721,10 @@ class SpinelCamera {
   async close() {
     try {
       // 캡처 중지
-      this.stopCapture();
+      if (this.captureIntervalId) {
+        clearInterval(this.captureIntervalId);
+        this.captureIntervalId = null;
+      }
 
       // 시리얼 포트 닫기
       if (this.port && this.port.isOpen) {
@@ -637,6 +741,63 @@ class SpinelCamera {
     } catch (error) {
       console.error('Camera close error:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 카메라 연결 상태 확인 (실제 통신 테스트)
+   * @returns {Promise<boolean>} 연결 상태
+   */
+  async checkConnection() {
+    try {
+      if (!this.port || !this.port.isOpen) {
+        return false;
+      }
+
+      return new Promise((resolve) => {
+        let responseBuffer = Buffer.alloc(0);
+        
+        // 타임아웃 설정 (3초)
+        const timeout = setTimeout(() => {
+          this.port.removeAllListeners('data');
+          resolve(false);
+        }, 3000);
+
+        // 응답 핸들러
+        const onData = (data) => {
+          responseBuffer = Buffer.concat([responseBuffer, data]);
+          
+          // 응답 분석 (최소 9바이트)
+          if (responseBuffer.length >= 9) {
+            console.log('Test response received:', responseBuffer.toString('hex'));
+            
+            // 응답 데이터 확인: data[6] === 0x00 && data[7] === 0xAA && data[8] === 0x55
+            if (responseBuffer[6] === 0x00 && responseBuffer[7] === 0xAA && responseBuffer[8] === 0x55) {
+              const cameraId = responseBuffer[2];
+              console.log(`[CAMERA] Test OK - Camera ID: 0x${cameraId.toString(16).padStart(2, '0')} connected`);
+              clearTimeout(timeout);
+              this.port.removeListener('data', onData);
+              resolve(true);
+            } else {
+              console.log('[CAMERA] Test response data mismatch');
+              clearTimeout(timeout);
+              this.port.removeListener('data', onData);
+              resolve(false);
+            }
+          }
+        };
+
+        // 데이터 리스너 등록
+        this.port.on('data', onData);
+        
+        // 테스트 명령 전송
+        const testCmd = this.buildTestCommand();
+        console.log(`[CAMERA] Sending test command: ${testCmd.toString('hex')}`);
+        this.port.write(testCmd);
+      });
+    } catch (error) {
+      console.error('[CAMERA] Connection check failed:', error.message);
+      return false;
     }
   }
 

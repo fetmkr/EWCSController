@@ -1,11 +1,11 @@
 {
   "current_status": {
     "cs125_on": false,
-    "camera_on": false,
+    "camera_on": true,
     "cs125_hood_heater_on": false,
     "iridium_on": false,
     "power_save_mode": false,
-    "last_updated": "2025-08-10T13:03:58.421Z"
+    "last_updated": "2025-08-11T09:38:02.198Z"
   },
   "settings": {
     "data_save_period": 60,
@@ -14,404 +14,414 @@
   },
   "recent_events": [
     {
-      "timestamp": "2025-08-10T13:03:58.422Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-08-10T13:03:26.414Z",
+      "timestamp": "2025-08-11T09:38:02.199Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-08-10T13:02:16.414Z",
+      "timestamp": "2025-08-11T09:36:17.114Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-08-10T13:01:44.407Z",
+      "timestamp": "2025-08-11T09:36:14.070Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-08-10T13:00:34.405Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-08-10T13:00:02.394Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-08-10T12:58:17.170Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-08-10T12:58:14.136Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-08-10T12:58:14.046Z",
+      "timestamp": "2025-08-11T09:36:14.020Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.917Z",
-      "event": "System shutdown"
+      "timestamp": "2025-08-11T09:20:41.358Z",
+      "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.913Z",
-      "event": "System shutdown"
+      "timestamp": "2025-08-11T09:20:38.313Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-08-11T09:20:38.271Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-08-11T08:28:17.139Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: this.devices.adc.getChannelData is not a function"
+    },
+    {
+      "timestamp": "2025-08-11T08:27:14.067Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-08-11T08:27:11.034Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-08-11T08:27:10.991Z",
+      "event": "System started"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.906Z",
+      "timestamp": "2025-08-10T14:58:04.216Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.904Z",
+      "timestamp": "2025-08-10T14:58:04.209Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.900Z",
+      "timestamp": "2025-08-10T14:58:04.206Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.895Z",
+      "timestamp": "2025-08-10T14:58:04.202Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.892Z",
+      "timestamp": "2025-08-10T14:58:04.197Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.889Z",
+      "timestamp": "2025-08-10T14:58:04.193Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.880Z",
+      "timestamp": "2025-08-10T14:58:04.190Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.877Z",
+      "timestamp": "2025-08-10T14:58:04.184Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.874Z",
+      "timestamp": "2025-08-10T14:58:04.180Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.869Z",
+      "timestamp": "2025-08-10T14:58:04.176Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.865Z",
+      "timestamp": "2025-08-10T14:58:04.171Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.863Z",
+      "timestamp": "2025-08-10T14:58:04.167Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.856Z",
+      "timestamp": "2025-08-10T14:58:04.164Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.853Z",
+      "timestamp": "2025-08-10T14:58:04.157Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.848Z",
+      "timestamp": "2025-08-10T14:58:04.154Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.842Z",
+      "timestamp": "2025-08-10T14:58:04.150Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.834Z",
+      "timestamp": "2025-08-10T14:58:04.145Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.830Z",
+      "timestamp": "2025-08-10T14:58:04.141Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.823Z",
+      "timestamp": "2025-08-10T14:58:04.138Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.820Z",
+      "timestamp": "2025-08-10T14:58:04.131Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.817Z",
+      "timestamp": "2025-08-10T14:58:04.128Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.811Z",
+      "timestamp": "2025-08-10T14:58:04.124Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.808Z",
+      "timestamp": "2025-08-10T14:58:04.119Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.805Z",
+      "timestamp": "2025-08-10T14:58:04.115Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.799Z",
+      "timestamp": "2025-08-10T14:58:04.112Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.796Z",
+      "timestamp": "2025-08-10T14:58:04.105Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.793Z",
+      "timestamp": "2025-08-10T14:58:04.102Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.787Z",
+      "timestamp": "2025-08-10T14:58:04.098Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.784Z",
+      "timestamp": "2025-08-10T14:58:04.093Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.781Z",
+      "timestamp": "2025-08-10T14:58:04.090Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.774Z",
+      "timestamp": "2025-08-10T14:58:04.087Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.771Z",
+      "timestamp": "2025-08-10T14:58:04.080Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.767Z",
+      "timestamp": "2025-08-10T14:58:04.077Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.763Z",
+      "timestamp": "2025-08-10T14:58:04.073Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.759Z",
+      "timestamp": "2025-08-10T14:58:04.068Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.756Z",
+      "timestamp": "2025-08-10T14:58:04.064Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.749Z",
+      "timestamp": "2025-08-10T14:58:04.061Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.746Z",
+      "timestamp": "2025-08-10T14:58:04.054Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.743Z",
+      "timestamp": "2025-08-10T14:58:04.051Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.738Z",
+      "timestamp": "2025-08-10T14:58:04.047Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.735Z",
+      "timestamp": "2025-08-10T14:58:04.042Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.732Z",
+      "timestamp": "2025-08-10T14:58:04.038Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.725Z",
+      "timestamp": "2025-08-10T14:58:04.035Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.722Z",
+      "timestamp": "2025-08-10T14:58:04.028Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.718Z",
+      "timestamp": "2025-08-10T14:58:04.025Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.713Z",
+      "timestamp": "2025-08-10T14:58:04.021Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.710Z",
+      "timestamp": "2025-08-10T14:58:04.016Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.707Z",
+      "timestamp": "2025-08-10T14:58:04.012Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.700Z",
+      "timestamp": "2025-08-10T14:58:04.009Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.697Z",
+      "timestamp": "2025-08-10T14:58:04.002Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.694Z",
+      "timestamp": "2025-08-10T14:58:03.999Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.688Z",
+      "timestamp": "2025-08-10T14:58:00.943Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.685Z",
+      "timestamp": "2025-08-10T14:58:00.938Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.682Z",
+      "timestamp": "2025-08-10T14:58:00.934Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.675Z",
+      "timestamp": "2025-08-10T14:58:00.931Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.671Z",
+      "timestamp": "2025-08-10T14:58:00.924Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.668Z",
+      "timestamp": "2025-08-10T14:58:00.921Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.662Z",
+      "timestamp": "2025-08-10T14:58:00.917Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.658Z",
+      "timestamp": "2025-08-10T14:58:00.912Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.656Z",
+      "timestamp": "2025-08-10T14:58:00.908Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.649Z",
+      "timestamp": "2025-08-10T14:58:00.905Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.646Z",
+      "timestamp": "2025-08-10T14:58:00.898Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.643Z",
+      "timestamp": "2025-08-10T14:58:00.895Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.637Z",
+      "timestamp": "2025-08-10T14:58:00.891Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.634Z",
+      "timestamp": "2025-08-10T14:58:00.886Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.631Z",
+      "timestamp": "2025-08-10T14:58:00.882Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.623Z",
+      "timestamp": "2025-08-10T14:58:00.879Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.620Z",
+      "timestamp": "2025-08-10T14:58:00.872Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.617Z",
+      "timestamp": "2025-08-10T14:58:00.869Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.611Z",
+      "timestamp": "2025-08-10T14:58:00.865Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.608Z",
+      "timestamp": "2025-08-10T14:58:00.860Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.605Z",
+      "timestamp": "2025-08-10T14:58:00.856Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.599Z",
+      "timestamp": "2025-08-10T14:58:00.853Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.596Z",
+      "timestamp": "2025-08-10T14:58:00.846Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.593Z",
+      "timestamp": "2025-08-10T14:58:00.843Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.587Z",
+      "timestamp": "2025-08-10T14:58:00.839Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.583Z",
+      "timestamp": "2025-08-10T14:58:00.834Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.580Z",
+      "timestamp": "2025-08-10T14:58:00.830Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.573Z",
+      "timestamp": "2025-08-10T14:58:00.827Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.571Z",
+      "timestamp": "2025-08-10T14:58:00.820Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.567Z",
+      "timestamp": "2025-08-10T14:58:00.818Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.562Z",
+      "timestamp": "2025-08-10T14:58:00.814Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.558Z",
+      "timestamp": "2025-08-10T14:58:00.809Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.555Z",
+      "timestamp": "2025-08-10T14:58:00.805Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.548Z",
+      "timestamp": "2025-08-10T14:58:00.802Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.546Z",
+      "timestamp": "2025-08-10T14:58:00.795Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.542Z",
+      "timestamp": "2025-08-10T14:58:00.792Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.536Z",
+      "timestamp": "2025-08-10T14:58:00.788Z",
       "event": "System shutdown"
     },
     {
-      "timestamp": "2025-08-10T12:57:53.533Z",
+      "timestamp": "2025-08-10T14:58:00.783Z",
       "event": "System shutdown"
     }
-  ]
+  ],
+  "device_status": {
+    "cs125": false,
+    "spinel_camera": true,
+    "oasc_camera": false,
+    "epever": false,
+    "sht45": true,
+    "adc": true,
+    "last_check": "2025-08-11T09:36:22.153Z"
+  }
 }

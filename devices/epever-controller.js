@@ -1,9 +1,15 @@
+// EPEVER Solar Charge Controller Module - Singleton Pattern
+// Tested with EPEVER Tracer2606BP model
+// Uses singleton because there is only one physical EPEVER solar charge controller on the hardware
+// Multiple instances would conflict when accessing the same serial port
+// This module communicates with EPEVER Tracer series controllers via Modbus RTU protocol
+
 import { SerialPort } from 'serialport';
 import { crc16modbus } from 'crc';
 import config from '../config/app-config.js';
 import { EventEmitter } from 'events';
 
-class BMSController extends EventEmitter {
+class EPEVERController extends EventEmitter {
   constructor() {
     super();
     
@@ -63,13 +69,12 @@ class BMSController extends EventEmitter {
     try {
       await this.initializeSerialPort();
       this.isInitialized = true;
-      console.log('BMS Controller initialized');
+      console.log('EPEVER Controller initialized');
       
-      // Start periodic polling - 원래 battery.js처럼 5초마다
-      this.startPolling();
+      // 폴링 제거 - 온디맨드 방식으로 변경
       
     } catch (error) {
-      console.error('BMS Controller initialization failed:', error);
+      console.error('EPEVER Controller initialization failed:', error);
       throw error;
     }
   }
@@ -85,50 +90,46 @@ class BMSController extends EventEmitter {
         lock: false  // 원래 battery.js의 중요한 설정
       }, (err) => {
         if (err) {
-          console.error('BMS serial port error:', err);
+          console.error('EPEVER serial port error:', err);
           reject(err);
           return;
         }
       });
 
       this.port.on('error', (err) => {
-        console.error('BMS serial port error:', err);
+        console.error('EPEVER serial port error:', err);
         this.status.connected = false;
         this.status.errorCount++;
         this.emit('error', err);
       });
 
       this.port.on('open', () => {
-        console.log('BMS serial port opened:', portPath);
+        console.log('EPEVER serial port opened:', portPath);
         this.status.connected = true;
         this.status.errorCount = 0;
         resolve();
       });
 
       this.port.on('close', () => {
-        console.log('BMS serial port closed');
+        console.log('EPEVER serial port closed');
         this.status.connected = false;
       });
     });
   }
 
-  startPolling() {
-    // 원래 battery.js처럼 5초마다 실행
-    this.pollInterval = setInterval(() => {
-      this.testEPEVER();
-    }, 5000);
-  }
+  // 폴링 함수 제거 - 온디맨드 방식으로 변경
 
-  async testEPEVER() {
-    if (!this.status.connected) return;
-
+  // 안전한 버퍼 읽기 헬퍼 함수
+  safeReadUInt16BE(buffer, offset, defaultValue = 0) {
     try {
-      await this.getSolarBattery(0x0B);
-      this.status.lastPoll = Date.now();
+      if (!buffer || buffer.length < offset + 2) {
+        console.warn(`[EPEVER] Buffer too small (${buffer?.length || 0} bytes) for offset ${offset}, using default value ${defaultValue}`);
+        return defaultValue;
+      }
+      return buffer.readUInt16BE(offset);
     } catch (error) {
-      console.error('BMS polling error:', error);
-      this.status.errorCount++;
-      this.emit('pollError', error);
+      console.warn(`[EPEVER] Error reading buffer at offset ${offset}:`, error.message, ', using default value', defaultValue);
+      return defaultValue;
     }
   }
 
@@ -171,62 +172,63 @@ class BMSController extends EventEmitter {
 
     const response1 = await this.writeAndRead(this.addCRC(PVArrayData))
     const data1 = response1.slice(3,-2)
-    this.data.PVVol = data1.readUInt16BE(0) / 100
-    this.data.PVCur = data1.readUInt16BE(2) / 100
-    this.data.PVPower = (data1.readUInt16BE(4) | (data1.readUInt16BE(6)<<16) )/100
+    console.log(`[EPEVER] PVArrayData response length: ${response1?.length || 0}, data length: ${data1?.length || 0}`);
+    this.data.PVVol = this.safeReadUInt16BE(data1, 0) / 100
+    this.data.PVCur = this.safeReadUInt16BE(data1, 2) / 100
+    this.data.PVPower = (this.safeReadUInt16BE(data1, 4) | (this.safeReadUInt16BE(data1, 6)<<16) )/100
     await this.delay(100)
 
     const response2 = await this.writeAndRead(this.addCRC(PVLoadData))
     const data2 = response2.slice(3,-2)
-    this.data.LoadVol = data2.readUInt16BE(0) / 100
-    this.data.LoadCur = data2.readUInt16BE(2) / 100
-    this.data.LoadPower = (data2.readUInt16BE(4) | (data2.readUInt16BE(6)<<16) )/100
+    this.data.LoadVol = this.safeReadUInt16BE(data2, 0) / 100
+    this.data.LoadCur = this.safeReadUInt16BE(data2, 2) / 100
+    this.data.LoadPower = (this.safeReadUInt16BE(data2, 4) | (this.safeReadUInt16BE(data2, 6)<<16) )/100
     await this.delay(100)
 
     const response3 = await this.writeAndRead(this.addCRC(PVTempData))
     const data3 = response3.slice(3,-2)
-    this.data.BatTemp = data3.readUInt16BE(0) / 100
-    this.data.DevTemp = data3.readUInt16BE(2) / 100
+    this.data.BatTemp = this.safeReadUInt16BE(data3, 0) / 100
+    this.data.DevTemp = this.safeReadUInt16BE(data3, 2) / 100
 
     await this.delay(100)
 
     const response4 = await this.writeAndRead(this.addCRC(PVBatSOC))
     const data4 = response4.slice(3,-2)
-    this.data.BatSOC = data4.readUInt16BE(0)
+    this.data.BatSOC = this.safeReadUInt16BE(data4, 0)
     await this.delay(100)
 
     const response5 = await this.writeAndRead(this.addCRC(PVBatRated))
     const data5 = response5.slice(3,-2)
-    this.data.BatRatedVol = data5.readUInt16BE(0) / 100
+    this.data.BatRatedVol = this.safeReadUInt16BE(data5, 0) / 100
 
     await this.delay(100)
 
     const response6 = await this.writeAndRead(this.addCRC(PVStatusData))
     const data6 = response6.slice(3,-2)
-    this.data.BatStat = data6.readUInt16BE(0)
-    this.data.ChargEquipStat = data6.readUInt16BE(2)
-    this.data.DischgEquipStat = data6.readUInt16BE(4)
+    this.data.BatStat = this.safeReadUInt16BE(data6, 0)
+    this.data.ChargEquipStat = this.safeReadUInt16BE(data6, 2)
+    this.data.DischgEquipStat = this.safeReadUInt16BE(data6, 4)
 
     await this.delay(100)
 
     const response7 = await this.writeAndRead(this.addCRC(PVConData))
     const data7 = response7.slice(3,-2)
-    this.data.BatMaxVolToday = data7.readUInt16BE(0) / 100
-    this.data.BatMinVolToday = data7.readUInt16BE(2) / 100
-    this.data.ConEnergyToday = (data7.readUInt16BE(4) | (data7.readUInt16BE(6)<<16) )/100
-    this.data.ConEnergyMonth = (data7.readUInt16BE(8) | (data7.readUInt16BE(10)<<16) )/100
-    this.data.ConEnergyYear = (data7.readUInt16BE(12) | (data7.readUInt16BE(14)<<16) )/100
-    this.data.ConEnergyTotal = (data7.readUInt16BE(16) | (data7.readUInt16BE(18)<<16) )/100
-    this.data.GenEnergyToday = (data7.readUInt16BE(20) | (data7.readUInt16BE(22)<<16) )/100
-    this.data.GenEnergyMonth = (data7.readUInt16BE(24) | (data7.readUInt16BE(26)<<16) )/100
-    this.data.GenEnergyYear = (data7.readUInt16BE(28) | (data7.readUInt16BE(30)<<16) )/100
-    this.data.GenEnergyTotal = (data7.readUInt16BE(32) | (data7.readUInt16BE(34)<<16) )/100    
+    this.data.BatMaxVolToday = this.safeReadUInt16BE(data7, 0) / 100
+    this.data.BatMinVolToday = this.safeReadUInt16BE(data7, 2) / 100
+    this.data.ConEnergyToday = (this.safeReadUInt16BE(data7, 4) | (this.safeReadUInt16BE(data7, 6)<<16) )/100
+    this.data.ConEnergyMonth = (this.safeReadUInt16BE(data7, 8) | (this.safeReadUInt16BE(data7, 10)<<16) )/100
+    this.data.ConEnergyYear = (this.safeReadUInt16BE(data7, 12) | (this.safeReadUInt16BE(data7, 14)<<16) )/100
+    this.data.ConEnergyTotal = (this.safeReadUInt16BE(data7, 16) | (this.safeReadUInt16BE(data7, 18)<<16) )/100
+    this.data.GenEnergyToday = (this.safeReadUInt16BE(data7, 20) | (this.safeReadUInt16BE(data7, 22)<<16) )/100
+    this.data.GenEnergyMonth = (this.safeReadUInt16BE(data7, 24) | (this.safeReadUInt16BE(data7, 26)<<16) )/100
+    this.data.GenEnergyYear = (this.safeReadUInt16BE(data7, 28) | (this.safeReadUInt16BE(data7, 30)<<16) )/100
+    this.data.GenEnergyTotal = (this.safeReadUInt16BE(data7, 32) | (this.safeReadUInt16BE(data7, 34)<<16) )/100    
     await this.delay(100)
 
     const response8 = await this.writeAndRead(this.addCRC(PVBatRealTime))
     const data8 = response8.slice(3,-2)
-    this.data.BatVol = data8.readUInt16BE(0) / 100
-    this.data.BatCur = (data8.readUInt16BE(2) | (data8.readUInt16BE(4)<<16) )/100
+    this.data.BatVol = this.safeReadUInt16BE(data8, 0) / 100
+    this.data.BatCur = (this.safeReadUInt16BE(data8, 2) | (this.safeReadUInt16BE(data8, 4)<<16) )/100
 
     await this.delay(100)
 
@@ -237,8 +239,8 @@ class BMSController extends EventEmitter {
       this.status.activeDevices.push(id);
     }
 
-    console.log(`BMS data updated from device ${id.toString(16)}: SOC=${this.data.BatSOC}%, Bat=${this.data.BatVol}V, PV=${this.data.PVVol}V/${this.data.PVCur}A, Load=${this.data.LoadVol}V/${this.data.LoadCur}A`);
-    console.log(`BMS Energy: GenToday=${this.data.GenEnergyToday}Wh, ConToday=${this.data.ConEnergyToday}Wh, Total=${this.data.GenEnergyTotal}Wh`);
+    // console.log(`EPEVER data updated from device ${id.toString(16)}: SOC=${this.data.BatSOC}%, Bat=${this.data.BatVol}V, PV=${this.data.PVVol}V/${this.data.PVCur}A, Load=${this.data.LoadVol}V/${this.data.LoadCur}A`);
+    // console.log(`EPEVER Energy: GenToday=${this.data.GenEnergyToday}Wh, ConToday=${this.data.ConEnergyToday}Wh, Total=${this.data.GenEnergyTotal}Wh`);
     
     // Emit data event
     this.emit('data', { 
@@ -334,7 +336,7 @@ class BMSController extends EventEmitter {
       if (this.port && this.port.isOpen) {
         await new Promise((resolve) => {
           this.port.close((err) => {
-            if (err) console.error('BMS port close error:', err);
+            if (err) console.error('EPEVER port close error:', err);
             resolve();
           });
         });
@@ -342,10 +344,10 @@ class BMSController extends EventEmitter {
 
       this.isInitialized = false;
       this.status.connected = false;
-      console.log('BMS Controller closed');
+      console.log('EPEVER Controller closed');
       
     } catch (error) {
-      console.error('BMS close error:', error);
+      console.error('EPEVER close error:', error);
       throw error;
     }
   }
@@ -368,6 +370,60 @@ class BMSController extends EventEmitter {
     };
   }
 
+  // EWCS 패턴에 맞는 getData 함수 (온디맨드 데이터 수집)
+  async getData() {
+    return new Promise((resolve) => {
+      // 10초 타임아웃 설정
+      const timeout = setTimeout(() => {
+        console.warn('[EPEVER] getData timed out after 10 seconds');
+        this.status.connected = false;
+        // 타임아웃 시 데이터를 저장하지 않음 (lastUpdate: 0)
+        resolve({
+          ...this.data,
+          lastUpdate: 0
+        });
+      }, 10000);
+
+      const executeGetData = async () => {
+        try {
+          if (!this.status.connected) {
+            clearTimeout(timeout);
+            console.log('[EPEVER] Not connected - skipping data collection');
+            return resolve({
+              ...this.data,
+              lastUpdate: 0
+            });
+          }
+
+          // 실시간으로 EPEVER 데이터 수집
+          await this.getSolarBattery(0x0B);
+          
+          clearTimeout(timeout);
+          resolve({
+            ...this.data,
+            lastUpdate: this.data.lastUpdate
+          });
+          
+        } catch (error) {
+          clearTimeout(timeout);
+          console.warn('[EPEVER] getData failed:', error.message);
+          
+          // 연결 실패 시 상태 업데이트
+          this.status.connected = false;
+          this.status.errorCount++;
+          
+          // 실패 시 데이터를 저장하지 않음 (lastUpdate: 0)
+          resolve({
+            ...this.data,
+            lastUpdate: 0
+          });
+        }
+      };
+
+      executeGetData();
+    });
+  }
+
   // Manual device poll for testing
   async pollDevice(deviceId) {
     if (typeof deviceId === 'string') {
@@ -376,15 +432,75 @@ class BMSController extends EventEmitter {
     
     return await this.getSolarBattery(deviceId);
   }
+
+  // 배터리 전압만 읽어오는 함수
+  async getBatteryVoltage() {
+    try {
+      if (!this.port || !this.port.isOpen) {
+        throw new Error('Serial port not open');
+      }
+
+      const deviceId = 0x01;  // 기본 device ID
+      
+      // Battery voltage only
+      // 0x331A 주소에서 1개 데이터만 읽기
+      const PVBatVoltage = Buffer.from([deviceId, 0x04, 0x33, 0x1A, 0x00, 0x01]);
+      
+      const response = await this.writeAndRead(this.addCRC(PVBatVoltage));
+      const data = response.slice(3, -2);
+      
+      const batteryVoltage = data.readUInt16BE(0) / 100;
+      
+      return {
+        voltage: batteryVoltage,
+        timestamp: Date.now()
+      };
+      
+    } catch (error) {
+      console.error('[EPEVER] Error reading battery voltage:', error.message);
+      throw error;
+    }
+  }
+
+  // EPEVER 연결 상태 확인 함수
+  async checkConnection() {
+    try {
+      if (!this.port || !this.port.isOpen) {
+        return false;
+      }
+
+      const deviceId = this.deviceIds[0];  // 첫 번째 device ID 사용 (0x0B)
+      
+      // Battery voltage 읽기로 연결 테스트
+      // 0x331A 주소에서 1개 데이터만 읽기
+      const PVBatVoltage = Buffer.from([deviceId, 0x04, 0x33, 0x1A, 0x00, 0x01]);
+      
+      const response = await this.writeAndRead(this.addCRC(PVBatVoltage));
+      
+      console.log('[EPEVER] checkConnection response:', response ? response.toString('hex') : 'null', 'length:', response ? response.length : 0);
+      
+      // Modbus 응답 검증: 첫 바이트는 deviceId, 두 번째는 0x04 (function code)
+      if (response && response.length > 2 && response[0] === deviceId && response[1] === 0x04) {
+        console.log('[EPEVER] Valid Modbus response - connected');
+        return true;
+      }
+      
+      console.log('[EPEVER] Invalid Modbus response - disconnected');
+      return false;
+      
+    } catch (error) {
+      console.error('[EPEVER] Connection check failed:', error.message);
+      return false;
+    }
+  }
 }
 
 // Export function to maintain compatibility with existing code
 export function solarChargerDataNow() {
-  return bmsController.getData();
+  return epeverController.getData();
 }
 
 // Singleton instance
-const bmsController = new BMSController();
+const epeverController = new EPEVERController();
 
-export default bmsController;
-export { BMSController };
+export default epeverController;

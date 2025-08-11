@@ -1,19 +1,22 @@
+// CS125 Sensor - Singleton Pattern  
+// Uses singleton because there is only one physical CS125 visibility sensor on the hardware
+// Multiple instances would conflict when accessing the same serial port
 import { SerialPort, ReadlineParser } from 'serialport';
-import adc from 'mcp-spi-adc';
 import config from '../config/app-config.js';
 import { EventEmitter } from 'events';
+import { crc16ccitt } from 'crc';
 
 class CS125Sensor extends EventEmitter {
-  constructor(controlPort = null) {
+  constructor() {
     super();
     
     this.config = config.get('cs125');
-    this.adcConfig = config.get('adc');
     this.serialConfig = config.get('serialPorts');
     
-    this.controlPort = controlPort; // PIC24 control port
+    // CS125 sensor ID (can be changed if needed)
+    this.sensorId = 0;
+    
     this.dataPort = null;
-    this.currentADC = null;
     
     this.status = {
       isOn: false,
@@ -22,13 +25,15 @@ class CS125Sensor extends EventEmitter {
     };
     
     this.data = {
-      current: 0,
       visibility: 0,
       synop: 0,
       temperature: 0,
       humidity: 0,
       lastReading: 0
     };
+
+    // Connection status (shared from app.js)
+    this.isConnected = false;
 
     this.isInitialized = false;
     this.retryCount = 0;
@@ -42,14 +47,8 @@ class CS125Sensor extends EventEmitter {
       // Initialize serial port for CS125 data
       await this.initializeDataPort();
       
-      // Initialize ADC for current measurement
-      await this.initializeCurrentADC();
-      
       this.isInitialized = true;
       console.log('CS125 Sensor initialized');
-      
-      // Start periodic current readings
-      this.startCurrentMonitoring();
       
       // Start connection monitoring
       this.startConnectionMonitoring();
@@ -91,20 +90,6 @@ class CS125Sensor extends EventEmitter {
     });
   }
 
-  async initializeCurrentADC() {
-    return new Promise((resolve, reject) => {
-      this.currentADC = adc.open(this.adcConfig.channel, 
-        { speedHz: this.adcConfig.speedHz || 1000000 }, 
-        (err) => {
-          if (err) {
-            console.error('CS125 ADC initialization error:', err);
-            reject(err);
-            return;
-          }
-          resolve();
-        });
-    });
-  }
 
   handleSerialData(rawData) {
     try {
@@ -119,9 +104,6 @@ class CS125Sensor extends EventEmitter {
 
         console.log(`CS125 Data - Temp: ${this.data.temperature}°C, Humidity: ${this.data.humidity}%, Vis: ${this.data.visibility}m`);
 
-        // Check hood heater status based on temperature
-        this.updateHoodHeaterStatus();
-
         // Emit data event
         this.emit('data', { ...this.data });
       } else {
@@ -134,43 +116,188 @@ class CS125Sensor extends EventEmitter {
     }
   }
 
-  updateHoodHeaterStatus() {
-    // Hood heater logic based on temperature
-    if (this.data.temperature < -10) { // Below -10°C
-      if (!this.status.hoodHeaterOn) {
-        console.log("CS125 hood heater is ON");
-        this.status.hoodHeaterOn = true;
-      }
-    } else { // Above -10°C  
-      if (this.status.hoodHeaterOn) {
-        console.log("CS125 hood heater is OFF");
-        this.status.hoodHeaterOn = false;
-      }
+  // CS125 Hood Heater ON command
+  async hoodHeaterOn() {
+    try {
+      let hoodOnBuffer = Buffer.concat([
+        Buffer.from([0x02]),
+        Buffer.from(`SET:${this.sensorId}:0 0 0 10000 0 0 1000 2 3442 M 1 0 5 0 1 1 0 0 1 0 7.0 80`)
+      ]);
+      const crc = crc16ccitt(hoodOnBuffer).toString(16);
+      hoodOnBuffer = Buffer.concat([
+        hoodOnBuffer,
+        Buffer.from(':'),
+        Buffer.from(crc),
+        Buffer.from(':'),
+        Buffer.from([0x03, 0x0D, 0x0A])
+      ]);
+      
+      this.dataPort.write(hoodOnBuffer);
+      this.status.hoodHeaterOn = true;
+      console.log("[CS125] Hood heater turned ON");
+      return true;
+    } catch (error) {
+      console.error('[CS125] Failed to turn on hood heater:', error);
+      return false;
     }
   }
 
-  startCurrentMonitoring() {
-    if (!this.currentADC) return;
+  // CS125 Hood Heater OFF command  
+  async hoodHeaterOff() {
+    try {
+      let hoodOffBuffer = Buffer.concat([
+        Buffer.from([0x02]),
+        Buffer.from(`SET:${this.sensorId}:0 0 0 10000 0 0 1000 2 3442 M 1 0 5 0 1 1 0 1 1 0 7.0 80`)
+      ]);
+      const crc = crc16ccitt(hoodOffBuffer).toString(16);
+      hoodOffBuffer = Buffer.concat([
+        hoodOffBuffer,
+        Buffer.from(':'),
+        Buffer.from(crc),
+        Buffer.from(':'),
+        Buffer.from([0x03, 0x0D, 0x0A])
+      ]);
+      
+      this.dataPort.write(hoodOffBuffer);
+      this.status.hoodHeaterOn = false;
+      console.log("[CS125] Hood heater turned OFF");
+      return true;
+    } catch (error) {
+      console.error('[CS125] Failed to turn off hood heater:', error);
+      return false;
+    }
+  }
 
-    const readCurrent = () => {
-      this.currentADC.read((err, reading) => {
-        if (err) {
-          console.error('CS125 current ADC read error:', err);
-          return;
-        }
-
-        // Convert ADC reading to current (mA)
-        const voltage = (reading.rawValue * this.adcConfig.vref) / this.adcConfig.resolution;
-        this.data.current = parseFloat((voltage * this.adcConfig.conversionFactor).toFixed(3));
-        console.log(`CS125: Current=${this.data.current}mA, Raw=${reading.rawValue}`);
+  // CS125 Get Hood Heater Status command (also used for connection check)
+  async getHoodHeaterStatus() {
+    try {
+      let getBuffer = Buffer.from([0x02]);
+      getBuffer = Buffer.concat([getBuffer, Buffer.from(`GET:${this.sensorId}:0`)]);
+      const crc = crc16ccitt(getBuffer).toString(16);
+      getBuffer = Buffer.concat([
+        getBuffer,
+        Buffer.from(':'),
+        Buffer.from(crc),
+        Buffer.from(':'),
+        Buffer.from([0x03, 0x0D, 0x0A])
+      ]);
+      
+      this.dataPort.write(getBuffer);
+      console.log("[CS125] GET command sent");
+      
+      // Wait for response with timeout
+      return new Promise((resolve) => {
+        let timeout = setTimeout(() => {
+          console.log("[CS125] GET response timeout - no response");
+          resolve(false);
+        }, 5000);
+        
+        // Setup one-time listener for response
+        const responseHandler = (line) => {
+          clearTimeout(timeout);
+          
+          try {
+            const data = line.split(" ");
+            
+            // Check if this is a valid GET response
+            // data[0][1] should be sensor ID
+            if (data[0] && data[0].length > 1 && parseInt(data[0][1]) === this.sensorId) {
+              console.log("[CS125] Valid GET response received");
+              
+              // Parse hood heater status from data[18] (19th field)
+              if (data.length > 18 && data[18] !== undefined) {
+                const hoodHeaterOverride = parseInt(data[18]);
+                if (hoodHeaterOverride === 0) {
+                  console.log("[CS125] Hood heater is ON (auto control enabled)");
+                  this.status.hoodHeaterOn = true;
+                } else {
+                  console.log("[CS125] Hood heater is OFF (manual override)");
+                  this.status.hoodHeaterOn = false;
+                }
+              }
+              
+              resolve(true);
+            } else {
+              console.log("[CS125] Invalid GET response format");
+              resolve(false);
+            }
+          } catch (err) {
+            console.error("[CS125] Error parsing GET response:", err);
+            resolve(false);
+          }
+        };
+        
+        // Listen for parsed line data
+        this.dataPort.once('data', responseHandler);
       });
-    };
+    } catch (error) {
+      console.error('[CS125] GET command error:', error);
+      return false;
+    }
+  }
 
-    // Read current every 5 seconds
-    this.currentInterval = setInterval(readCurrent, 5000);
-    
-    // Initial reading
-    readCurrent();
+  // Check CS125 connection using GET command
+  async checkConnection() {
+    try {
+      if (!this.dataPort || !this.dataPort.isOpen) {
+        return false;
+      }
+      
+      let getBuffer = Buffer.from([0x02]);
+      getBuffer = Buffer.concat([getBuffer, Buffer.from(`GET:${this.sensorId}:0`)]);
+      const crc = crc16ccitt(getBuffer).toString(16);
+      getBuffer = Buffer.concat([
+        getBuffer,
+        Buffer.from(':'),
+        Buffer.from(crc),
+        Buffer.from(':'),
+        Buffer.from([0x03, 0x0D, 0x0A])
+      ]);
+      
+      this.dataPort.write(getBuffer);
+      
+      // Wait for GET response
+      return new Promise((resolve) => {
+        let timeout = setTimeout(() => {
+          resolve(false);
+        }, 3000);
+        
+        const responseHandler = (line) => {
+          clearTimeout(timeout);
+          
+          console.log('[CS125] GET response received:', line.toString('hex'), 'as string:', line.toString());
+          
+          const data = line.split(" ");
+          // Check if data[0][0] is 0x02 (STX) and data[0][1] is sensor ID
+          if (data[0] && data[0].length > 1 && 
+              data[0].charCodeAt(0) === 0x02 && 
+              parseInt(data[0][1]) === this.sensorId) {
+            console.log('[CS125] Valid GET response - connected');
+            resolve(true);
+          } else {
+            console.log('[CS125] Invalid GET response - disconnected');
+            resolve(false);
+          }
+        };
+        
+        this.dataPort.once('data', responseHandler);
+      });
+    } catch (error) {
+      console.error('[CS125] Connection check failed:', error);
+      return false;
+    }
+  }
+
+  // Connection status management
+  setConnectionStatus(connected) {
+    this.isConnected = connected;
+    if (!connected) {
+      // Reset data when disconnected
+      this.data.visibility = 0;
+      this.data.synop = 0;
+      this.data.temperature = 0;
+      this.data.humidity = 0;
+    }
   }
 
   startConnectionMonitoring() {
@@ -192,67 +319,6 @@ class CS125Sensor extends EventEmitter {
     }, 30000);
   }
 
-  async turnOn() {
-    if (!this.controlPort) {
-      throw new Error('Control port not available for CS125');
-    }
-
-    try {
-      this.controlPort.write('C'); // Send command to PIC24
-      this.status.isOn = true;
-      console.log('CS125 sensor turned ON');
-      
-      this.emit('statusChange', { device: 'cs125', status: 'on' });
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to turn on CS125:', error);
-      throw error;
-    }
-  }
-
-  async turnOff() {
-    if (!this.controlPort) {
-      throw new Error('Control port not available for CS125');
-    }
-
-    try {
-      this.controlPort.write('c'); // Send lowercase command to PIC24
-      this.status.isOn = false;
-      console.log('CS125 sensor turned OFF');
-      
-      this.emit('statusChange', { device: 'cs125', status: 'off' });
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to turn off CS125:', error);
-      throw error;
-    }
-  }
-
-  async setHoodHeater(enable) {
-    if (!this.controlPort) {
-      throw new Error('Control port not available for CS125 hood heater');
-    }
-
-    try {
-      const command = enable ? 'H' : 'h';
-      this.controlPort.write(command);
-      this.status.hoodHeaterOn = enable;
-      
-      console.log(`CS125 hood heater turned ${enable ? 'ON' : 'OFF'}`);
-      
-      this.emit('statusChange', { 
-        device: 'cs125_hood_heater', 
-        status: enable ? 'on' : 'off' 
-      });
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to control CS125 hood heater:', error);
-      throw error;
-    }
-  }
 
   getStatus() {
     return {
@@ -273,28 +339,15 @@ class CS125Sensor extends EventEmitter {
       serialPort: {
         connected: this.dataPort?.isOpen || false,
         path: this.serialConfig.cs125
-      },
-      adc: {
-        initialized: this.currentADC !== null
       }
     };
   }
 
   async close() {
     try {
-      if (this.currentInterval) {
-        clearInterval(this.currentInterval);
-        this.currentInterval = null;
-      }
-
       if (this.connectionCheckInterval) {
         clearInterval(this.connectionCheckInterval);
         this.connectionCheckInterval = null;
-      }
-
-      if (this.currentADC) {
-        // ADC cleanup if needed
-        this.currentADC = null;
       }
 
       if (this.dataPort && this.dataPort.isOpen) {
@@ -326,7 +379,7 @@ class CS125Sensor extends EventEmitter {
       lastData: this.data.lastReading,
       dataAge: dataAge,
       serialConnected: this.dataPort?.isOpen || false,
-      adcInitialized: this.currentADC !== null
+      connectionStatus: this.isConnected
     };
   }
 }

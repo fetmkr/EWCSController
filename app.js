@@ -8,7 +8,7 @@ import systemState from './utils/system-state.js';
 // Device modules
 import CS125Sensor from './devices/cs125-sensor.js';
 import SpinelCamera from './devices/spinel-serial-camera.js';
-import BMSController from './devices/bms-controller.js';
+import EPEVERController from './devices/epever-controller.js';
 import SHT45Sensor from './devices/sht45-sensor.js';
 import GPIOController from './devices/gpio-controller.js';
 import ADCReader from './devices/adc-reader.js';
@@ -99,6 +99,9 @@ class EWCSApp {
       // Initialize devices
       await this.initializeDevices();
       
+      // Initial device health check after initialization
+      await this.checkDeviceHealth();
+      
       // Setup API routes
       this.setupRoutes();
       
@@ -163,7 +166,7 @@ class EWCSApp {
     try {
       this.devices.adc = ADCReader;
       await this.devices.adc.initialize();
-      await this.devices.adc.startAllContinuousReading();
+      // ADC 단순화로 인해 continuous reading 불필요
       deviceInitResults.adc = 'success';
     } catch (error) {
       console.warn('ADC reader initialization failed:', error.message);
@@ -172,7 +175,7 @@ class EWCSApp {
     
     // Initialize CS125 sensor
     try {
-      this.devices.cs125 = new CS125Sensor(this.controlPort);
+      this.devices.cs125 = new CS125Sensor();
       await this.devices.cs125.initialize();
       deviceInitResults.cs125 = 'success';
     } catch (error) {
@@ -190,12 +193,12 @@ class EWCSApp {
       await this.turnOnCamera();
       await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for camera boot
       
-      const testResult = await this.testCameraConnection();
-      if (testResult.success) {
-        console.log(`[CAMERA] Startup test successful - ID: 0x${testResult.cameraId.toString(16).padStart(2, '0')}`);
+      const isConnected = await this.devices.camera.checkConnection();
+      if (isConnected) {
+        console.log(`[CAMERA] Startup test successful - ID: 0x${this.devices.camera.config.cameraId.toString(16).padStart(2, '0')}`);
         deviceInitResults.camera = 'success';
       } else {
-        console.warn(`[CAMERA] Startup test failed: ${testResult.reason}`);
+        console.warn(`[CAMERA] Startup test failed: no response`);
         deviceInitResults.camera = 'test_failed';
       }
       
@@ -206,14 +209,14 @@ class EWCSApp {
       this.devices.camera = null;
     }
     
-    // Initialize BMS controller
+    // Initialize EPEVER controller
     try {
-      this.devices.bms = BMSController;
-      await this.devices.bms.initialize();
-      deviceInitResults.bms = 'success';
+      this.devices.epever = EPEVERController;
+      await this.devices.epever.initialize();
+      deviceInitResults.epever = 'success';
     } catch (error) {
-      console.warn('BMS controller initialization failed:', error.message);
-      deviceInitResults.bms = 'failed';
+      console.warn('EPEVER controller initialization failed:', error.message);
+      deviceInitResults.epever = 'failed';
     }
     
     // Initialize OASC camera
@@ -285,10 +288,10 @@ class EWCSApp {
     
     this.dataCollectionInterval = setInterval(async () => {
       try {
-        // 데이터 수집 전 디바이스 상태 체크
-        await this.checkDeviceHealth();
+        // 데이터 수집용 디바이스만 체크
+        await this.checkDataCollectionDevices();
         
-        this.updateEwcsData();
+        await this.updateEwcsData();
         
         database.insertEwcsData(this.ewcsData);
         console.log(`[DATA] Saved to database - CS125: ${this.ewcsData.cs125Current}mA, SHT45: ${this.ewcsData.SHT45Temp}°C/${this.ewcsData.SHT45Humidity}%RH`);
@@ -303,8 +306,8 @@ class EWCSApp {
     console.log(`Data collection started (${savePeriod/1000}s interval)`);
   }
 
-  // EWCS 데이터 업데이트 함수
-  updateEwcsData() {
+  // EWCS 데이터 업데이트 함수 (비동기)
+  async updateEwcsData() {
     this.ewcsData.timestamp = Date.now();
     this.ewcsData.stationName = config.get('stationName');
     
@@ -340,19 +343,49 @@ class EWCSApp {
       console.log('[ADC] Disconnected - skipping power monitoring data');
     }
     
-    // BMS 태양광 충전기 데이터
-    if (this.devices.bms?.data) {
-      console.log('[BMS] Connected - collecting solar charger data');
-      this.ewcsData.PVVol = this.devices.bms.data.PVVol || 0;
-      this.ewcsData.PVCur = this.devices.bms.data.PVCur || 0;
-      this.ewcsData.LoadVol = this.devices.bms.data.LoadVol || 0;
-      this.ewcsData.LoadCur = this.devices.bms.data.LoadCur || 0;
-      this.ewcsData.BatTemp = this.devices.bms.data.BatTemp || 0;
-      this.ewcsData.DevTemp = this.devices.bms.data.DevTemp || 0;
-      this.ewcsData.ChargEquipStat = this.devices.bms.data.ChargEquipStat || 0;
-      this.ewcsData.DischgEquipStat = this.devices.bms.data.DischgEquipStat || 0;
+    // EPEVER 태양광 충전기 데이터 (실시간 수집)
+    if (this.devices.epever) {
+      try {
+        console.log('[EPEVER] Collecting real-time solar charger data');
+        const epeverData = await this.devices.epever.getData();
+        
+        // lastUpdate가 0이면 연결 실패 또는 타임아웃으로 데이터 저장하지 않음
+        if (epeverData.lastUpdate && epeverData.lastUpdate > 0) {
+          console.log('[EPEVER] Connected - using real-time data');
+          this.ewcsData.PVVol = epeverData.PVVol || 0;
+          this.ewcsData.PVCur = epeverData.PVCur || 0;
+          this.ewcsData.LoadVol = epeverData.LoadVol || 0;
+          this.ewcsData.LoadCur = epeverData.LoadCur || 0;
+          this.ewcsData.BatTemp = epeverData.BatTemp || 0;
+          this.ewcsData.DevTemp = epeverData.DevTemp || 0;
+          this.ewcsData.ChargEquipStat = epeverData.ChargEquipStat || 0;
+          this.ewcsData.DischgEquipStat = epeverData.DischgEquipStat || 0;
+        } else {
+          console.log('[EPEVER] Data collection failed - using default values');
+          // 연결 실패 시 기본값 사용
+          this.ewcsData.PVVol = 0;
+          this.ewcsData.PVCur = 0;
+          this.ewcsData.LoadVol = 0;
+          this.ewcsData.LoadCur = 0;
+          this.ewcsData.BatTemp = 0;
+          this.ewcsData.DevTemp = 0;
+          this.ewcsData.ChargEquipStat = 0;
+          this.ewcsData.DischgEquipStat = 0;
+        }
+      } catch (error) {
+        console.log('[EPEVER] Real-time data collection failed:', error.message);
+        // 예외 발생 시에도 기본값 사용
+        this.ewcsData.PVVol = 0;
+        this.ewcsData.PVCur = 0;
+        this.ewcsData.LoadVol = 0;
+        this.ewcsData.LoadCur = 0;
+        this.ewcsData.BatTemp = 0;
+        this.ewcsData.DevTemp = 0;
+        this.ewcsData.ChargEquipStat = 0;
+        this.ewcsData.DischgEquipStat = 0;
+      }
     } else {
-      console.log('[BMS] Disconnected - skipping solar charger data');
+      console.log('[EPEVER] Disconnected - skipping solar charger data');
     }
     
     // 이미지 정보
@@ -368,10 +401,11 @@ class EWCSApp {
     
     const captureImage = async () => {
       try {
-        // 이미지 캡처 전 카메라 상태 체크
-        await this.checkDeviceHealth();
+        // 이미지 수집용 디바이스만 체크
+        const deviceStatus = await this.checkImageCollectionDevices();
         
-        if (this.devices.camera && systemState.getDeviceStatus().spinel_camera) {
+        // Spinel Camera 촬영
+        if (this.devices.camera && deviceStatus.spinel_camera) {
           console.log('[CAMERA] Spinel camera connected - starting capture');
           // Turn on camera via PIC24
           await this.turnOnCamera();
@@ -381,15 +415,18 @@ class EWCSApp {
           
           const captureResult = await this.devices.camera.startCapture();
           if (captureResult.success) {
-            console.log(`[CAMERA] Capture process started`);
-            // Save image metadata to database if filename is returned
-            if (captureResult.filename) {
+            console.log(`[CAMERA] Spinel image captured and saved: ${captureResult.filename}`);
+            // 파일 저장이 완료된 후에만 데이터베이스에 저장
+            if (captureResult.filename && captureResult.savedPath) {
               database.insertImageData({
                 timestamp: Date.now(),
-                filename: captureResult.filename
+                filename: captureResult.filename,
+                camera: 'spinel'
               });
               this.lastImageFilename = captureResult.filename;
             }
+          } else {
+            console.error(`[CAMERA] Spinel capture failed: ${captureResult.reason}`);
           }
           
           // Turn off camera after capture to save power
@@ -397,8 +434,31 @@ class EWCSApp {
             this.turnOffCamera();
           }, 30000); // 30초 후 카메라 전원 차단
         } else {
-          console.log('[CAMERA] Spinel camera disconnected - skipping image capture');
+          console.log('[CAMERA] Spinel camera disconnected - skipping spinel capture');
         }
+
+        // OASC Camera 촬영
+        if (this.devices.oascCamera && deviceStatus.oasc_camera) {
+          console.log('[OASC] OASC camera connected - starting capture');
+          
+          const captureResult = await this.devices.oascCamera.captureImage();
+          if (captureResult.success) {
+            console.log(`[OASC] Image captured and saved: ${captureResult.filename}`);
+            // 파일 저장이 완료된 후에만 데이터베이스에 저장
+            if (captureResult.filename && captureResult.savedPath) {
+              database.insertImageData({
+                timestamp: Date.now(),
+                filename: captureResult.filename,
+                camera: 'oasc'
+              });
+            }
+          } else {
+            console.error(`[OASC] Capture failed: ${captureResult.reason}`);
+          }
+        } else {
+          console.log('[OASC] OASC camera disconnected - skipping OASC capture');
+        }
+
       } catch (cameraError) {
         console.error('[CAMERA] Capture failed:', cameraError.message);
         systemState.logError('camera_capture', cameraError);
@@ -449,85 +509,146 @@ class EWCSApp {
     }
   }
 
-  // 카메라 연결 테스트 (0x01 테스트 명령 사용)
-  async testCameraConnection() {
-    if (!this.devices.camera) {
-      console.error('[CAMERA] Camera device not initialized');
-      return { success: false, reason: 'device_not_initialized' };
+  // PIC24를 통한 CS125 전원 제어
+  async turnOnCS125() {
+    if (!this.controlPort) {
+      throw new Error('Control port not available for CS125 power control');
     }
 
-    console.log('[CAMERA] Testing connection...');
-    return await this.devices.camera.testConnection();
+    try {
+      this.controlPort.write('C'); // PIC24에 CS125 ON 명령 전송
+      console.log('[CS125] Power ON via PIC24');
+      return { success: true };
+    } catch (error) {
+      console.error('[CS125] Failed to turn on CS125:', error);
+      systemState.logError('cs125', error);
+      throw error;
+    }
   }
 
-  // 디바이스 헬스 체크
+  async turnOffCS125() {
+    if (!this.controlPort) {
+      throw new Error('Control port not available for CS125 power control');
+    }
+
+    try {
+      this.controlPort.write('c'); // PIC24에 CS125 OFF 명령 전송 (소문자)
+      console.log('[CS125] Power OFF via PIC24');
+      return { success: true };
+    } catch (error) {
+      console.error('[CS125] Failed to turn off CS125:', error);
+      systemState.logError('cs125', error);
+      throw error;
+    }
+  }
+
+  // PIC24를 통한 CS125 후드 히터 제어
+  async setCS125HoodHeater(enable) {
+    if (!this.controlPort) {
+      throw new Error('Control port not available for CS125 hood heater control');
+    }
+
+    try {
+      const command = enable ? 'H' : 'h';
+      this.controlPort.write(command); // PIC24에 후드 히터 명령 전송
+      console.log(`[CS125] Hood heater ${enable ? 'ON' : 'OFF'} via PIC24`);
+      return { success: true };
+    } catch (error) {
+      console.error(`[CS125] Failed to turn ${enable ? 'on' : 'off'} hood heater:`, error);
+      systemState.logError('cs125_hood_heater', error);
+      throw error;
+    }
+  }
+
+  // 카메라 연결 테스트 (0x01 테스트 명령 사용)
+
+  // 개별 디바이스 체크 함수들
+  async checkCS125Connection() {
+    if (!this.devices.cs125) return false;
+    try {
+      const isConnected = await this.devices.cs125.checkConnection();
+      // CS125에 연결 상태 전달
+      this.devices.cs125.setConnectionStatus(isConnected);
+      return isConnected;
+    } catch (e) {
+      this.devices.cs125.setConnectionStatus(false);
+      return false;
+    }
+  }
+
+  async checkSpinelCameraConnection() {
+    if (!this.devices.camera) return false;
+    try {
+      return await this.devices.camera.checkConnection();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkOASCCameraConnection() {
+    if (!this.devices.oascCamera) return false;
+    try {
+      return await this.devices.oascCamera.checkConnection();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkEPEVERConnection() {
+    if (!this.devices.epever) return false;
+    try {
+      return await this.devices.epever.checkConnection();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkSHT45Connection() {
+    if (!this.devices.sht45) return false;
+    try {
+      return await this.devices.sht45.checkConnection();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkADCConnection() {
+    if (!this.devices.adc) return false;
+    try {
+      return await this.devices.adc.checkConnection();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // 데이터 수집용 디바이스 체크 (CS125, EPEVER, SHT45, ADC)
+  async checkDataCollectionDevices() {
+    return {
+      cs125: await this.checkCS125Connection(),
+      epever: await this.checkEPEVERConnection(),
+      sht45: await this.checkSHT45Connection(),
+      adc: await this.checkADCConnection()
+    };
+  }
+
+  // 이미지 수집용 디바이스 체크 (Cameras)
+  async checkImageCollectionDevices() {
+    return {
+      spinel_camera: await this.checkSpinelCameraConnection(),
+      oasc_camera: await this.checkOASCCameraConnection()
+    };
+  }
+
+  // 전체 디바이스 헬스 체크
   async checkDeviceHealth() {
     const deviceStatus = {
-      cs125: false,
-      spinel_camera: false,
-      oasc_camera: false,
-      bms: false,
-      sht45: false,
-      adc: false
+      cs125: await this.checkCS125Connection(),
+      spinel_camera: await this.checkSpinelCameraConnection(),
+      oasc_camera: await this.checkOASCCameraConnection(),
+      epever: await this.checkEPEVERConnection(),
+      sht45: await this.checkSHT45Connection(),
+      adc: await this.checkADCConnection()
     };
-
-    // CS125 체크 (최근 데이터 확인)
-    if (this.devices.cs125) {
-      try {
-        // 포트가 열려있고 최근 데이터가 있으면 연결됨
-        deviceStatus.cs125 = this.devices.cs125.isPortOpen && 
-                             (Date.now() - (this.devices.cs125.lastDataTime || 0) < 60000);
-      } catch (e) {
-        deviceStatus.cs125 = false;
-      }
-    }
-
-    // Spinel Camera 체크
-    if (this.devices.camera) {
-      try {
-        deviceStatus.spinel_camera = this.devices.camera.isConnected || false;
-      } catch (e) {
-        deviceStatus.spinel_camera = false;
-      }
-    }
-
-    // OASC Camera 체크
-    if (this.devices.oascCamera) {
-      try {
-        deviceStatus.oasc_camera = this.devices.oascCamera.isConnected || false;
-      } catch (e) {
-        deviceStatus.oasc_camera = false;
-      }
-    }
-
-    // BMS 체크
-    if (this.devices.bms) {
-      try {
-        deviceStatus.bms = this.devices.bms.isPortOpen || false;
-      } catch (e) {
-        deviceStatus.bms = false;
-      }
-    }
-
-    // SHT45 체크 (I2C는 대부분 항상 연결됨)
-    if (this.devices.sht45) {
-      try {
-        // 최근 읽기가 성공했으면 연결됨
-        deviceStatus.sht45 = (this.devices.sht45.data && 
-                             this.devices.sht45.data.temperature !== null);
-      } catch (e) {
-        deviceStatus.sht45 = false;
-      }
-    }
-
-    // ADC 체크
-    if (this.devices.adc) {
-      try {
-        deviceStatus.adc = true; // ADC는 보통 항상 작동
-      } catch (e) {
-        deviceStatus.adc = false;
-      }
-    }
 
     // 상태 업데이트
     systemState.updateDeviceStatus(deviceStatus);
