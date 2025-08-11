@@ -174,9 +174,9 @@ class OASCCamera {
         // 사용자 지정 파일명 사용
         filename = customFilename.endsWith('.jpg') ? customFilename : `${customFilename}.jpg`;
       } else {
-        // 기본 타임스탬프 파일명 생성
-        const timestamp = this.getFormattedTime();
-        filename = `oasc_${timestamp}.jpg`;
+        // 기본 타임스탬프 파일명 생성 (Spinel과 통일)
+        const timestamp = Date.now();
+        filename = `${timestamp}.jpg`;
       }
       
       // JPG 형식으로 저장 (기존 OASC 코드 설정 그대로: 명암 스트레칭 및 90% 품질)

@@ -320,19 +320,19 @@ class SpinelCamera {
    * @param {Buffer} data - 테스트 응답 데이터 (11바이트)
    */
   handleTestResponse(data) {
-    console.log('Test response received:', data.toString('hex'));
+    // Test response log removed for cleaner output
     
     // 응답 데이터 확인: 00 aa 55
     if (data[6] === 0x00 && data[7] === 0xAA && data[8] === 0x55) {
       const cameraId = data[2];
-      console.log(`[CAMERA] Test OK - Camera ID: 0x${cameraId.toString(16).padStart(2, '0')} connected`);
+      // console.log(`[CAMERA] Test OK - Camera ID: 0x${cameraId.toString(16).padStart(2, '0')} connected`); // Commented for cleaner logs
       
       if (this.testPromiseResolve) {
         this.testPromiseResolve({ success: true, cameraId });
         this.testPromiseResolve = null;
       }
     } else {
-      console.log('[CAMERA] Test response data mismatch');
+      // console.log('[CAMERA] Test response data mismatch'); // Commented for cleaner logs
       
       if (this.testPromiseResolve) {
         this.testPromiseResolve({ success: false, reason: 'data_mismatch' });
@@ -390,7 +390,7 @@ class SpinelCamera {
     // 이미지 버퍼에 데이터 추가 (순서대로 조립)
     this.imageBuffer = Buffer.concat([this.imageBuffer, requiredData]);
     
-    console.log(`Packet ${this.packetCounter + 1}/${this.packetNum + 1} received (${currentPacketSize} bytes)`);
+    // Packet progress removed for cleaner logs
     
     // 처리된 데이터는 버퍼에서 제거
     this.dataBuffer = this.dataBuffer.slice(currentPacketSize + 8);
@@ -497,7 +497,7 @@ class SpinelCamera {
     if (customFilename) {
       fileName = customFilename.endsWith('.jpg') ? customFilename : `${customFilename}.jpg`;
     } else {
-      const timestamp = Date.now();
+      const timestamp = this.captureTimestamp || Date.now();
       fileName = `${timestamp}.jpg`;
     }
     
@@ -600,7 +600,7 @@ class SpinelCamera {
         this.customSaveDir = customDir;
         this.customSaveFilename = customFilename;
         
-        console.log('Starting image capture with 15s timeout...');
+        // Starting capture log moved to app.js
         
         // 15초 타임아웃 설정 - 15초 안에 이미지 파일이 생성되지 않으면 실패로 처리
         const captureTimeout = setTimeout(() => {
@@ -612,8 +612,13 @@ class SpinelCamera {
           resolve({ success: false, reason: 'timeout' });
         }, 15000);
         
-        // 파일 저장 완료 체크를 위한 변수들
-        let expectedFilePath = null;
+        // 캡처 시작 시 타임스탬프 생성
+        this.captureTimestamp = Date.now();
+        this.customSaveDir = customDir;
+        this.customSaveFilename = customFilename;
+        
+        // 실제 저장될 파일 경로
+        const expectedFilePath = this.getExpectedFilePath();
         let checkSavedInterval = null;
         
         // 주기적 캡처 프로세스 시작 (100ms 간격)
@@ -621,12 +626,12 @@ class SpinelCamera {
           this.captureImage();
         }, interval);
         
-        // 파일 저장 완료 확인 - 1초마다 파일 존재 여부 체크
+        // 파일 저장 완료 확인 - waitForFileSave 사용
         checkSavedInterval = setInterval(async () => {
           if (this.isSaved && expectedFilePath) {
-            // 파일이 실제로 존재하는지 확인
-            const { existsSync } = await import('fs');
-            if (existsSync(expectedFilePath)) {
+            // waitForFileSave로 파일 저장 완료 대기
+            const fileSaved = await this.waitForFileSave(expectedFilePath, 5000);
+            if (fileSaved) {
               // 저장 완료! 모든 타이머 정리하고 성공 반환
               clearTimeout(captureTimeout);
               clearInterval(checkSavedInterval);
@@ -644,9 +649,6 @@ class SpinelCamera {
                 savedPath: expectedFilePath
               });
             }
-          } else if (this.isSaved) {
-            // isSaved가 true이지만 expectedFilePath가 없는 경우, 경로 생성 시도
-            expectedFilePath = this.getExpectedFilePath();
           }
         }, 1000);
         
@@ -684,9 +686,8 @@ class SpinelCamera {
                  this.customSaveFilename : 
                  `${this.customSaveFilename}.jpg`;
     } else {
-      // 기본 타임스탬프 방식 - 정확한 타임스탬프는 실제 저장 시점에 결정되므로
-      // 여기서는 대략적인 경로만 제공 (실제로는 saveImage에서 Date.now() 사용)
-      const timestamp = Date.now();
+      // 캡처 시작 시 생성된 타임스탬프 사용
+      const timestamp = this.captureTimestamp || Date.now();
       fileName = `${timestamp}.jpg`;
     }
 
@@ -774,12 +775,12 @@ class SpinelCamera {
             // 응답 데이터 확인: data[6] === 0x00 && data[7] === 0xAA && data[8] === 0x55
             if (responseBuffer[6] === 0x00 && responseBuffer[7] === 0xAA && responseBuffer[8] === 0x55) {
               const cameraId = responseBuffer[2];
-              console.log(`[CAMERA] Test OK - Camera ID: 0x${cameraId.toString(16).padStart(2, '0')} connected`);
+              // console.log(`[CAMERA] Test OK - Camera ID: 0x${cameraId.toString(16).padStart(2, '0')} connected`); // Commented for cleaner logs
               clearTimeout(timeout);
               this.port.removeListener('data', onData);
               resolve(true);
             } else {
-              console.log('[CAMERA] Test response data mismatch');
+              // console.log('[CAMERA] Test response data mismatch'); // Commented for cleaner logs
               clearTimeout(timeout);
               this.port.removeListener('data', onData);
               resolve(false);
@@ -799,6 +800,33 @@ class SpinelCamera {
       console.error('[CAMERA] Connection check failed:', error.message);
       return false;
     }
+  }
+
+  /**
+   * 파일 저장 완료 대기 (내부 메소드)
+   * 지정된 경로에 파일이 생성될 때까지 기다림
+   * @param {string} filePath - 확인할 파일 경로
+   * @param {number} timeoutMs - 타임아웃 (밀리초)
+   * @returns {Promise<boolean>} 파일 존재 여부
+   */
+  async waitForFileSave(filePath, timeoutMs = 15000) {
+    const startTime = Date.now();
+    const { existsSync } = await import('fs');
+    
+    return new Promise((resolve) => {
+      const checkFile = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        
+        if (existsSync(filePath)) {
+          clearInterval(checkFile);
+          resolve(true);
+        } else if (elapsed >= timeoutMs) {
+          clearInterval(checkFile);
+          resolve(false);
+        }
+        // 1초마다 체크
+      }, 1000);
+    });
   }
 
   /**

@@ -50,9 +50,6 @@ class CS125Sensor extends EventEmitter {
       this.isInitialized = true;
       console.log('CS125 Sensor initialized');
       
-      // Start connection monitoring
-      this.startConnectionMonitoring();
-      
     } catch (error) {
       console.error('CS125 Sensor initialization failed:', error);
       throw error;
@@ -300,24 +297,7 @@ class CS125Sensor extends EventEmitter {
     }
   }
 
-  startConnectionMonitoring() {
-    // Check for data timeout every 30 seconds
-    this.connectionCheckInterval = setInterval(() => {
-      const now = Date.now();
-      const dataAge = now - this.data.lastReading;
-      const maxAge = 30000; // 30 seconds
-      
-      if (dataAge > maxAge) {
-        console.warn(`[CS125] No data received for ${Math.round(dataAge/1000)}s - connection may be lost`);
-        this.status.connected = false;
-      } else {
-        if (!this.status.connected) {
-          console.log(`[CS125] Connection restored`);
-        }
-        this.status.connected = true;
-      }
-    }, 30000);
-  }
+  // Connection monitoring removed - app.js handles connection checking every 60s
 
 
   getStatus() {
@@ -345,11 +325,6 @@ class CS125Sensor extends EventEmitter {
 
   async close() {
     try {
-      if (this.connectionCheckInterval) {
-        clearInterval(this.connectionCheckInterval);
-        this.connectionCheckInterval = null;
-      }
-
       if (this.dataPort && this.dataPort.isOpen) {
         await new Promise((resolve) => {
           this.dataPort.close((err) => {

@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "node app.js",
+    "start": "sudo -E node app.js",
     "dev": "node --inspect app.js",
     "test": "node test.js",
     "ewcsboard": "sudo -E node scripts/device-health-check.js"

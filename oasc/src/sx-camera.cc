@@ -224,7 +224,7 @@ Napi::Value SXCamera::Open(const Napi::CallbackInfo& info) {
     return Napi::Boolean::New(env, false);
   }
   
-  printf("USB 장치 검색 중...\n");
+  // printf("USB 장치 검색 중...\n"); // Commented for cleaner logs
   
   // SX 카메라 찾기 (ECHO2 제품 ID 포함)
   for (int i = 0; i < count; i++) {
@@ -236,7 +236,7 @@ Napi::Value SXCamera::Open(const Napi::CallbackInfo& info) {
     }
     
     // 벤더 ID 출력
-    printf("검색 중: VID=0x%04x, PID=0x%04x\n", desc.idVendor, desc.idProduct);
+    // printf("검색 중: VID=0x%04x, PID=0x%04x\n", desc.idVendor, desc.idProduct); // Commented for cleaner logs
     
     // Starlight Xpress ECHO2 장치 확인
     if (desc.idVendor == SX_VID && desc.idProduct == SX_ECHO2_PID) {
@@ -349,14 +349,14 @@ bool SXCamera::GetFirmwareVersionInternal(float &version) {
     return true;
   }
   
-  printf("기존 방식 실패. 새로운 벌크 전송 방식으로 시도...\n");
+  // printf("기존 방식 실패. 새로운 벌크 전송 방식으로 시도...\n"); // Commented for cleaner logs
   
   // 새로운 벌크 전송 방식 시도 (Wireshark 분석 기반)
   // 1단계: 명령 전송
   unsigned char cmd[8] = {SX_CMD_TYPE, ECHO2_GET_FIRMWARE_VERSION, 0, 0, 0, 0, 0, 0};
   int transferred = 0;
   
-  printf("벌크 전송 방식으로 펌웨어 버전 명령 전송: %02x %02x ...\n", cmd[0], cmd[1]);
+  // printf("벌크 전송 방식으로 펌웨어 버전 명령 전송: %02x %02x ...\n", cmd[0], cmd[1]); // Commented for cleaner logs
   
   res = libusb_bulk_transfer(
     handle,
@@ -439,7 +439,7 @@ Napi::Value SXCamera::GetCameraModel(const Napi::CallbackInfo& info) {
   // 컨트롤 전송으로 모델 정보 요청
   unsigned char data[2] = {0};
   
-  printf("컨트롤 전송으로 카메라 모델 요청 (명령 0x%02x)...\n", 14);
+  // printf("컨트롤 전송으로 카메라 모델 요청 (명령 0x%02x)...\n", 14); // Commented for cleaner logs
   
   int res = libusb_control_transfer(
     handle,
@@ -465,7 +465,7 @@ Napi::Value SXCamera::GetCameraModel(const Napi::CallbackInfo& info) {
   }
   
   // 받은 데이터 크기 출력
-  printf("받은 데이터 크기: %d 바이트\n", res);
+  // printf("받은 데이터 크기: %d 바이트\n", res); // Commented for cleaner logs
   
   // 데이터 덤프
   printf("데이터 덤프: ");
