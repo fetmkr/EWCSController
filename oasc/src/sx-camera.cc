@@ -727,8 +727,8 @@ bool SXCamera::CaptureImageInternal(unsigned short *buffer, int &width, int &hei
   while (totalBytesReceived < expectedTotalBytes && retryCount < maxRetries) {
     int bytesToRead = std::min(chunkSize, expectedTotalBytes - totalBytesReceived);
     
-    printf("청크 데이터 요청: %d 바이트 (총 %d/%d)...\n", 
-           bytesToRead, totalBytesReceived, expectedTotalBytes);
+    //printf("청크 데이터 요청: %d 바이트 (총 %d/%d)...\n", 
+    //       bytesToRead, totalBytesReceived, expectedTotalBytes);
     
     res = libusb_bulk_transfer(
       handle,
@@ -765,8 +765,8 @@ bool SXCamera::CaptureImageInternal(unsigned short *buffer, int &width, int &hei
     } else {
       // 성공적으로 데이터 수신
       totalBytesReceived += transferred;
-      printf("청크 데이터 수신 완료: %d 바이트 (총 %d/%d)\n", 
-             transferred, totalBytesReceived, expectedTotalBytes);
+      //printf("청크 데이터 수신 완료: %d 바이트 (총 %d/%d)\n", 
+      //       transferred, totalBytesReceived, expectedTotalBytes);
       
       // 더 이상 데이터가 없으면 종료
       if (transferred < bytesToRead) {
