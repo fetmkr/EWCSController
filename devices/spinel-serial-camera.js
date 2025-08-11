@@ -418,7 +418,7 @@ class SpinelCamera {
    * State 0: 캡처 명령 전송 -> State 1: 패킷 요청 -> State 2: 대기 -> State 3: 저장
    */
   captureImage() {
-    console.log(`Capture attempt ${this.tryCount + 1}, state: ${this.captureState}`);
+    //console.log(`Capture attempt ${this.tryCount + 1}, state: ${this.captureState}`);
 
     switch(this.captureState) {
       case 0: // 캡처 시작 단계
@@ -442,8 +442,8 @@ class SpinelCamera {
         const startAddr = this.packetCounter * this.config.packetSize;
         const currentPacketSize = this.getCurrentPacketSize();
         const readCmd = this.buildReadDataCommand(startAddr, currentPacketSize);
-        console.log(`Requesting packet ${this.packetCounter + 1} from address 0x${startAddr.toString(16)} (${currentPacketSize} bytes)`);
-        console.log(`Read command hex: ${readCmd.toString('hex')}`);
+        //console.log(`Requesting packet ${this.packetCounter + 1} from address 0x${startAddr.toString(16)} (${currentPacketSize} bytes)`);
+        //console.log(`Read command hex: ${readCmd.toString('hex')}`);
         this.port.write(readCmd);
         this.captureState = 2;  // 응답 대기 상태로 전환
         break;

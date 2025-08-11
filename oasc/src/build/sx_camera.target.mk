@@ -47,7 +47,7 @@ INCS_Debug := \
 	-I/home/pi/.cache/node-gyp/18.17.1/deps/uv/include \
 	-I/home/pi/.cache/node-gyp/18.17.1/deps/zlib \
 	-I/home/pi/.cache/node-gyp/18.17.1/deps/v8/include \
-	-I/home/pi/OASCController/node_modules/node-addon-api
+	-I/home/pi/EWCSController/node_modules/node-addon-api
 
 DEFS_Release := \
 	'-DNODE_GYP_MODULE_NAME=sx_camera' \
@@ -91,7 +91,7 @@ INCS_Release := \
 	-I/home/pi/.cache/node-gyp/18.17.1/deps/uv/include \
 	-I/home/pi/.cache/node-gyp/18.17.1/deps/zlib \
 	-I/home/pi/.cache/node-gyp/18.17.1/deps/v8/include \
-	-I/home/pi/OASCController/node_modules/node-addon-api
+	-I/home/pi/EWCSController/node_modules/node-addon-api
 
 OBJS := \
 	$(obj).target/$(TARGET)/sx-camera.o
@@ -100,7 +100,7 @@ OBJS := \
 all_deps += $(OBJS)
 
 # Make sure our dependencies are built before any of us.
-$(OBJS): | $(builddir)/nothing.a $(obj).target/../node_modules/node-addon-api/nothing.a
+$(OBJS): | $(builddir)/nothing.a $(obj).target/../../node_modules/node-addon-api/nothing.a
 
 # CFLAGS et al overrides must be target-local.
 # See "Target-specific Variable Values" in the GNU Make manual.
@@ -137,7 +137,7 @@ LIBS := \
 $(obj).target/sx_camera.node: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
 $(obj).target/sx_camera.node: LIBS := $(LIBS)
 $(obj).target/sx_camera.node: TOOLSET := $(TOOLSET)
-$(obj).target/sx_camera.node: $(OBJS) $(obj).target/../node_modules/node-addon-api/nothing.a FORCE_DO_CMD
+$(obj).target/sx_camera.node: $(OBJS) $(obj).target/../../node_modules/node-addon-api/nothing.a FORCE_DO_CMD
 	$(call do_cmd,solink_module)
 
 all_deps += $(obj).target/sx_camera.node
