@@ -1,10 +1,8 @@
-// GPIO Controller - Singleton Pattern
-// Uses singleton because there is only one set of physical GPIO pins on the hardware
-// Simplified to match original ewcs.js pattern - only LED control
+// GPIO Controller - Use correct GPIO system number
+// GPIO 16 physical pin = gpio-528 in system
 import { Gpio } from 'onoff';
 
-// Simple LED control like original ewcs.js
-const LED = new Gpio(16, 'out');
+const LED = new Gpio(528, 'out'); // GPIO 16 = system gpio-528
 
 // LED control functions
 function ledOn() {

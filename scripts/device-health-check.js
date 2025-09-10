@@ -19,6 +19,7 @@ import SHT45Sensor from '../devices/sht45-sensor.js';
 import GPIOController from '../devices/gpio-controller.js';
 import ADCReader from '../devices/adc-reader.js';
 import OASCCamera from '../devices/oasc-camera.js';
+import sht45Sensor from '../devices/sht45-sensor.js';
 
 class DeviceHealthChecker {
   constructor() {
@@ -254,6 +255,7 @@ class DeviceHealthChecker {
     // SHT45 data
     if (deviceStatus.sht45 && this.devices.sht45) {
       try {
+        await this.devices.sht45.updateSHT45();
         const sht45Data = this.devices.sht45.getData();
         console.log('🌡️  SHT45 ENVIRONMENTAL SENSOR DATA:');
         console.log(`   Temperature: ${sht45Data.temperature}°C`);
@@ -271,10 +273,14 @@ class DeviceHealthChecker {
         const ch1Data = this.devices.adc.getChannelData(1);
         const ch2Data = this.devices.adc.getChannelData(2);
         const ch3Data = this.devices.adc.getChannelData(3);
+        const ch4Data = this.devices.adc.getChannelData(4);
+
         
-        console.log(`   Channel 1 (Iridium Current): ${ch1Data?.data.voltage || 0}V`);
-        console.log(`   Channel 2 (Camera Current): ${ch2Data?.data.voltage || 0}V`);
-        console.log(`   Channel 3 (Battery Voltage): ${ch3Data?.data.voltage || 0}V\n`);
+        console.log(`   Channel 1 (Ch1 Current): ${ch1Data?.data.convertedValue || 0}V`);
+        console.log(`   Channel 2 (Ch2 Current): ${ch2Data?.data.convertedValue || 0}V`);
+        console.log(`   Channel 3 (Ch3 Current): ${ch3Data?.data.convertedValue || 0}V`);
+        console.log(`   Channel 4 (Ch4 Current): ${ch4Data?.data.convertedValue || 0}V\n`);
+
       } catch (error) {
         console.log('❌ Failed to get ADC data:', error.message);
       }

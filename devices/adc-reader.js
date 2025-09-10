@@ -6,19 +6,27 @@ import adc from 'mcp-spi-adc';
 
 // Direct channel initialization - like original ewcs.js
 const cs125CurrentADCChan = adc.open(0, {speedHz: 20000}, err => {
-  if (err) throw err;
+  if (err) {
+    console.error('Error opening ADC channel 0 (cs125CurrentADCChan):', err);
+  }
 });
 
 const iridiumCurrentADCChan = adc.open(1, {speedHz: 20000}, err => {
-  if (err) throw err;
+  if (err) {
+    console.error('Error opening ADC channel 1 (iridiumCurrentADCChan):', err);
+  }
 });
 
 const cameraCurrentADCChan = adc.open(2, {speedHz: 20000}, err => {
-  if (err) throw err;
+  if (err) {
+    console.error('Error opening ADC channel 2 (cameraCurrentADCChan):', err);
+  }
 });
 
 const batteryVoltageADCChan = adc.open(3, {speedHz: 20000}, err => {
-  if (err) throw err;
+  if (err) {
+    console.error('Error opening ADC channel 3 (batteryVoltageADCChan):', err);
+  }
 });
 
 // Current ADC data storage
@@ -31,29 +39,39 @@ let adcData = {
 };
 
 // Simple ADC reading function - exactly like original ewcs.js
-function readADC() {
-  cs125CurrentADCChan.read((err, reading) => {
-    if (err) throw err;
-    adcData.cs125Current = parseFloat(parseFloat((reading.rawValue * 3.3 / 1024)*20000/1000).toFixed(3));
+async function readADC() {
+  return new Promise((resolve, reject) => {
+    const readings = {};
+    let completedReads = 0;
+    const totalReads = 4;
+
+    const readChannel = (channel, name, conversionFactor) => {
+      channel.read((err, reading) => {
+        if (err) {
+          console.error(`ADC Read Error on ${name}:`, err);
+          // Do not reject the whole promise immediately, try to get other readings
+          readings[name] = 0; // Set to 0 on error
+        } else {
+          console.log(`[ADC] Raw value for ${name}: ${reading.rawValue}`);
+          readings[name] = parseFloat(parseFloat((reading.rawValue * 3.3 / 1024) * conversionFactor).toFixed(3));
+        }
+        completedReads++;
+        if (completedReads === totalReads) {
+          adcData.cs125Current = readings.cs125Current || 0;
+          adcData.iridiumCurrent = readings.iridiumCurrent || 0;
+          adcData.cameraCurrent = readings.cameraCurrent || 0;
+          adcData.batteryVoltage = readings.batteryVoltage || 0;
+          adcData.lastUpdate = Date.now();
+          resolve(adcData);
+        }
+      });
+    };
+
+    readChannel(cs125CurrentADCChan, 'cs125Current', 20000/1000);
+    readChannel(iridiumCurrentADCChan, 'iridiumCurrent', 20000/1000);
+    readChannel(cameraCurrentADCChan, 'cameraCurrent', 20000/1000);
+    readChannel(batteryVoltageADCChan, 'batteryVoltage', 46/10);
   });
-  
-  iridiumCurrentADCChan.read((err, reading) => {
-    if (err) throw err;
-    adcData.iridiumCurrent = parseFloat(parseFloat((reading.rawValue * 3.3 / 1024)*20000/1000).toFixed(3));
-  });
-  
-  cameraCurrentADCChan.read((err, reading) => {
-    if (err) throw err;
-    adcData.cameraCurrent = parseFloat(parseFloat((reading.rawValue * 3.3 / 1024)*20000/1000).toFixed(3));
-  });
-  
-  batteryVoltageADCChan.read((err, reading) => {
-    if (err) throw err;
-    adcData.batteryVoltage = parseFloat(parseFloat((reading.rawValue * 3.3 / 1024) * 46 / 10).toFixed(3));
-  });
-  
-  adcData.lastUpdate = Date.now();
-  return adcData;
 }
 
 // Simple connection check using direct channel access
@@ -88,8 +106,8 @@ const adcReader = {
     return Promise.resolve();
   },
   // Compatibility method for app.js data collection
-  getChannelData: (channelNum) => {
-    readADC(); // Update data first
+  getChannelData: async (channelNum) => {
+    await readADC(); // Update data first
     const channelNames = ['cs125_current', 'iridium_current', 'camera_current', 'battery_voltage'];
     const values = [adcData.cs125Current, adcData.iridiumCurrent, adcData.cameraCurrent, adcData.batteryVoltage];
     return {

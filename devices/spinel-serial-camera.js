@@ -29,7 +29,7 @@ class SpinelCamera {
    * @param {string} portPath - 시리얼 포트 경로 (기본: /dev/ttyUSB0)
    * @param {number} baudRate - 통신 속도 (기본: 115200)
    */
-  constructor(portPath = '/dev/ttyUSB0', baudRate = 115200) {
+  constructor(portPath = '/dev/ttyAMA3', baudRate = 115200) {
     // 카메라 기본 설정
     this.config = {
       cameraId: 0x01,        // 카메라 주소 ID (멀티 카메라 지원)
@@ -198,10 +198,10 @@ class SpinelCamera {
    */
   buildSnapshotCommand() {
     const data = [
-      this.config.mode,               // 캡처 모드
-      this.config.quality,            // JPEG 압축 품질
-      this.config.resolution.width,   // 해상도 가로
-      this.config.resolution.height   // 해상도 세로
+      this.config.mode,
+      this.config.quality,
+      this.config.resolution.width,
+      this.config.resolution.height
     ];
     return this.buildCommand(0x40, data);
   }
@@ -278,6 +278,7 @@ class SpinelCamera {
    * @param {Buffer} data - 수신된 데이터
    */
   handleData(data) {
+    console.log(`[CAMERA] Raw incoming data: ${data.toString('hex')}`);
     this.dataBuffer = Buffer.concat([this.dataBuffer, data]);
     
     // 테스트 명령 응답 체크 (0x01 명령에 대한 응답)
@@ -643,7 +644,7 @@ class SpinelCamera {
               const path = await import('path');
               const filename = path.default.basename(expectedFilePath);
               console.log(`Image capture completed successfully: ${filename}`);
-              resolve({ 
+              resolve({
                 success: true, 
                 filename: filename,
                 savedPath: expectedFilePath
@@ -758,19 +759,21 @@ class SpinelCamera {
       return new Promise((resolve) => {
         let responseBuffer = Buffer.alloc(0);
         
-        // 타임아웃 설정 (3초)
+        // 타임아웃 설정 (5초)
         const timeout = setTimeout(() => {
-          this.port.removeAllListeners('data');
+          console.log('[CAMERA] Test command timeout - no response received');
+          this.port.removeListener('data', onData);
           resolve(false);
-        }, 3000);
+        }, 5000);
 
         // 응답 핸들러
         const onData = (data) => {
+          console.log('[CAMERA] Received data:', data.toString('hex'));
           responseBuffer = Buffer.concat([responseBuffer, data]);
           
           // 응답 분석 (최소 9바이트)
           if (responseBuffer.length >= 9) {
-            console.log('Test response received:', responseBuffer.toString('hex'));
+            console.log('[CAMERA] Full response received:', responseBuffer.toString('hex'));
             
             // 응답 데이터 확인: data[6] === 0x00 && data[7] === 0xAA && data[8] === 0x55
             if (responseBuffer[6] === 0x00 && responseBuffer[7] === 0xAA && responseBuffer[8] === 0x55) {

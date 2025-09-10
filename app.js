@@ -145,7 +145,7 @@ class EWCSApp {
     try {
       this.controlPort = new SerialPort({
         path: config.get('serialPorts.pic24'),
-        baudRate: 9600
+        baudRate: 115200
       });
       console.log(`[${getTimestamp()}] Control port initialized`);
     } catch (error) {

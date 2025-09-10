@@ -5,7 +5,7 @@
     "cs125_hood_heater_on": false,
     "iridium_on": false,
     "power_save_mode": false,
-    "last_updated": "2025-08-11T09:38:02.198Z"
+    "last_updated": "2025-09-10T17:37:35.167Z"
   },
   "settings": {
     "data_save_period": 60,
@@ -13,6 +13,22 @@
     "station_name": "EWCS_STATION"
   },
   "recent_events": [
+    {
+      "timestamp": "2025-09-10T17:37:35.168Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-10T17:37:35.111Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-10T17:27:14.034Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-10T16:27:14.313Z",
+      "event": "System started"
+    },
     {
       "timestamp": "2025-08-11T09:38:02.199Z",
       "event": "Camera power ON"
@@ -396,22 +412,6 @@
     },
     {
       "timestamp": "2025-08-10T14:58:00.802Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T14:58:00.795Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T14:58:00.792Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T14:58:00.788Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-08-10T14:58:00.783Z",
       "event": "System shutdown"
     }
   ],

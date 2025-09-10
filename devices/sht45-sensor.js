@@ -18,6 +18,7 @@ let sht45Data = {
 async function updateSHT45() {
   try {
     const val = await thermostat.measurements();
+    console.log('[SHT45] Raw measurements value:', val);
     sht45Data.temperature = parseFloat(((val.temperature - 32) * 5/9).toFixed(3));
     sht45Data.humidity = parseFloat(val.humidity.toFixed(3));
     sht45Data.lastReading = Date.now();

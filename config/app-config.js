@@ -72,9 +72,8 @@ class AppConfig {
       serialPorts: {
         pic24: '/dev/ttyAMA0',
         cs125: '/dev/ttyAMA2', 
-        iridium: '/dev/ttyAMA3',
-        bms: '/dev/ttyACM0',
-        camera: '/dev/ttyUSB0'
+        camera: '/dev/ttyAMA3',
+        bms: '/dev/ttyACM0'
       },
       
       // Camera Settings
