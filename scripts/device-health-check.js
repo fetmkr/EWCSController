@@ -270,16 +270,16 @@ class DeviceHealthChecker {
     if (deviceStatus.adc && this.devices.adc) {
       try {
         console.log('⚡ ADC POWER MONITORING DATA:');
-        const ch1Data = this.devices.adc.getChannelData(1);
-        const ch2Data = this.devices.adc.getChannelData(2);
-        const ch3Data = this.devices.adc.getChannelData(3);
-        const ch4Data = this.devices.adc.getChannelData(4);
+        const ch1Data = await this.devices.adc.getChannelData(0);
+        const ch2Data = await this.devices.adc.getChannelData(1);
+        const ch3Data = await this.devices.adc.getChannelData(2);
+        const ch4Data = await this.devices.adc.getChannelData(3);
 
         
-        console.log(`   Channel 1 (Ch1 Current): ${ch1Data?.data.convertedValue || 0}V`);
-        console.log(`   Channel 2 (Ch2 Current): ${ch2Data?.data.convertedValue || 0}V`);
-        console.log(`   Channel 3 (Ch3 Current): ${ch3Data?.data.convertedValue || 0}V`);
-        console.log(`   Channel 4 (Ch4 Current): ${ch4Data?.data.convertedValue || 0}V\n`);
+        console.log(`   Channel 1: ${ch1Data?.data.convertedValue || 0}mA`);
+        console.log(`   Channel 2: ${ch2Data?.data.convertedValue || 0}mA`);
+        console.log(`   Channel 3: ${ch3Data?.data.convertedValue || 0}mA`);
+        console.log(`   Channel 4: ${ch4Data?.data.convertedValue || 0}mA\n`);
 
       } catch (error) {
         console.log('❌ Failed to get ADC data:', error.message);

@@ -5,7 +5,7 @@
     "cs125_hood_heater_on": false,
     "iridium_on": false,
     "power_save_mode": false,
-    "last_updated": "2025-09-11T07:02:44.902Z"
+    "last_updated": "2025-09-11T07:56:35.571Z"
   },
   "settings": {
     "data_save_period": 60,
@@ -13,6 +13,180 @@
     "station_name": "EWCS_STATION"
   },
   "recent_events": [
+    {
+      "timestamp": "2025-09-11T07:57:17.200Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:56:35.572Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:56:18.210Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:55:54.559Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:55:07.526Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:54:25.892Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:54:08.456Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:53:44.879Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:52:57.458Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:52:15.815Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:51:58.767Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:51:39.800Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:50:54.841Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:49:44.484Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:49:41.462Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:49:41.371Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-11T07:49:05.843Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:49:02.823Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:49:02.788Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-11T07:46:24.857Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:45:14.511Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:45:11.481Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:45:11.393Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-11T07:31:19.620Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:30:56.495Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:30:38.610Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:29:56.494Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:29:14.860Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:28:57.508Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:28:34.847Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:27:47.583Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:27:05.948Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:26:48.733Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:26:25.934Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:25:40.961Z",
+      "event": "Error in data_collection",
+      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+    },
+    {
+      "timestamp": "2025-09-11T07:24:30.613Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-11T07:24:27.587Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:24:27.545Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-11T07:22:33.955Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-11T07:22:33.919Z",
+      "event": "System started"
+    },
     {
       "timestamp": "2025-09-11T07:02:44.904Z",
       "event": "Camera power OFF"
@@ -279,194 +453,15 @@
       "timestamp": "2025-09-11T06:31:05.836Z",
       "event": "Error in data_collection",
       "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:30:51.715Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:30:05.835Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:30:04.711Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:29:05.826Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:28:54.686Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:28:07.681Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:28:05.829Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:27:05.837Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:26:57.662Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:26:10.657Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:26:05.836Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:25:05.829Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:25:00.642Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:24:13.637Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:24:05.843Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:23:05.837Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:23:03.613Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:22:16.607Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:22:05.841Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:21:08.805Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:20:52.793Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:20:05.826Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:20:05.783Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:19:04.961Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:18:36.937Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:18:04.959Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:17:49.932Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:17:04.962Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:15:54.640Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:15:51.609Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:15:51.549Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-11T06:15:34.522Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:15:07.625Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:14:34.535Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:14:20.613Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:13:34.526Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:12:51.728Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T06:12:34.526Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:12:11.710Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:11:26.728Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
     }
   ],
   "device_status": {
     "cs125": true,
     "spinel_camera": true,
     "oasc_camera": true,
-    "epever": false,
+    "epever": true,
     "sht45": true,
     "adc": true,
-    "last_check": "2025-09-11T06:51:27.860Z"
+    "last_check": "2025-09-11T07:49:54.761Z"
   }
 }
