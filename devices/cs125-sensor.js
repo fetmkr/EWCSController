@@ -38,6 +38,7 @@ class CS125Sensor extends EventEmitter {
     this.isInitialized = false;
     this.retryCount = 0;
     this.maxRetries = this.config.retryAttempts || 3;
+    this.getMsgSent = false;
   }
 
   async initialize() {
@@ -69,9 +70,9 @@ class CS125Sensor extends EventEmitter {
         }
       });
 
-      const parser = this.dataPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+      this.parser = this.dataPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
       
-      parser.on('data', (data) => {
+      this.parser.on('data', (data) => {
         this.handleSerialData(data);
       });
 
@@ -90,9 +91,21 @@ class CS125Sensor extends EventEmitter {
 
   handleSerialData(rawData) {
     try {
-      const data = rawData.toString().trim().split(',');
+      const line = rawData.toString().trim();
+      const data = line.split(" ");
       
-      if (data.length >= 26) { // CS125 full SYNOP message
+      // Check first character for STX (0x02)
+      let messageId;
+      if (data[0] && data[0].charCodeAt(0) === 0x02) {
+        // STX present - extract message ID from second character
+        messageId = parseInt(data[0][1]);
+      } else {
+        // No STX - use first field as message ID
+        messageId = parseInt(data[0]);
+      }
+      
+      // Check if this is the normal data stream (message ID 5 - Full SYNOP)
+      if (messageId === 5 && data.length >= 24) {  // 최소 24개 필드 필요 (STX 포함시 28개)
         this.data.visibility = parseInt(data[4]) || 0;
         this.data.synop = parseInt(data[23]) || 0;
         this.data.temperature = parseFloat(data[24]) || 0;
@@ -101,11 +114,34 @@ class CS125Sensor extends EventEmitter {
 
         console.log(`CS125 Data - Temp: ${this.data.temperature}°C, Humidity: ${this.data.humidity}%, Vis: ${this.data.visibility}m`);
 
+        // Mark as connected when receiving valid data
+        this.isConnected = true;
+        
         // Emit data event
         this.emit('data', { ...this.data });
+      } else if (messageId === 0 && data.length > 17) {
+        // GET response (message ID 0)
+        this.getMsgSent = false;
+        console.log('[CS125] GET response received:', line);
+        
+        // Parse hood heater status from data[17] (18th field) - 0 means heater is ON
+        if (parseInt(data[17]) === 0) {
+          console.log("[CS125] Hood heater is ON (auto control enabled)");
+          this.status.hoodHeaterOn = true;
+        } else {
+          console.log("[CS125] Hood heater is OFF (manual override)");
+          this.status.hoodHeaterOn = false;
+        }
+        
+        // Mark as connected when receiving GET response
+        this.isConnected = true;
+        this.emit('getResponse', true);
       } else {
-        // CS125가 연결되어 있지 않거나 잘못된 데이터
-        console.log(`[CS125] Received incomplete data: ${rawData.toString().trim()}`);
+        // Only log as incomplete if it's not a valid message format
+        if (messageId !== 5 && messageId !== 0) {
+          console.log(`[CS125] Unknown message type ${messageId}: ${line}`);
+        }
+        // Don't log normal data that has slightly different field count
       }
     } catch (error) {
       console.error('CS125 data parsing error:', error);
@@ -170,62 +206,34 @@ class CS125Sensor extends EventEmitter {
     try {
       let getBuffer = Buffer.from([0x02]);
       getBuffer = Buffer.concat([getBuffer, Buffer.from(`GET:${this.sensorId}:0`)]);
-      const crc = crc16ccitt(getBuffer).toString(16);
       getBuffer = Buffer.concat([
         getBuffer,
         Buffer.from(':'),
-        Buffer.from(crc),
+        Buffer.from('2C67'),
         Buffer.from(':'),
         Buffer.from([0x03, 0x0D, 0x0A])
       ]);
       
       this.dataPort.write(getBuffer);
+      this.getMsgSent = true;
       console.log("[CS125] GET command sent");
       
       // Wait for response with timeout
       return new Promise((resolve) => {
         let timeout = setTimeout(() => {
           console.log("[CS125] GET response timeout - no response");
+          this.getMsgSent = false;
           resolve(false);
         }, 5000);
         
-        // Setup one-time listener for response
-        const responseHandler = (line) => {
+        // Setup one-time listener for GET response
+        const responseHandler = (success) => {
           clearTimeout(timeout);
-          
-          try {
-            const data = line.split(" ");
-            
-            // Check if this is a valid GET response
-            // data[0][1] should be sensor ID
-            if (data[0] && data[0].length > 1 && parseInt(data[0][1]) === this.sensorId) {
-              console.log("[CS125] Valid GET response received");
-              
-              // Parse hood heater status from data[18] (19th field)
-              if (data.length > 18 && data[18] !== undefined) {
-                const hoodHeaterOverride = parseInt(data[18]);
-                if (hoodHeaterOverride === 0) {
-                  console.log("[CS125] Hood heater is ON (auto control enabled)");
-                  this.status.hoodHeaterOn = true;
-                } else {
-                  console.log("[CS125] Hood heater is OFF (manual override)");
-                  this.status.hoodHeaterOn = false;
-                }
-              }
-              
-              resolve(true);
-            } else {
-              console.log("[CS125] Invalid GET response format");
-              resolve(false);
-            }
-          } catch (err) {
-            console.error("[CS125] Error parsing GET response:", err);
-            resolve(false);
-          }
+          resolve(success);
         };
         
-        // Listen for parsed line data
-        this.dataPort.once('data', responseHandler);
+        // Listen for GET response event
+        this.once('getResponse', responseHandler);
       });
     } catch (error) {
       console.error('[CS125] GET command error:', error);
@@ -242,11 +250,10 @@ class CS125Sensor extends EventEmitter {
       
       let getBuffer = Buffer.from([0x02]);
       getBuffer = Buffer.concat([getBuffer, Buffer.from(`GET:${this.sensorId}:0`)]);
-      const crc = crc16ccitt(getBuffer).toString(16);
       getBuffer = Buffer.concat([
         getBuffer,
         Buffer.from(':'),
-        Buffer.from(crc),
+        Buffer.from('2C67'),
         Buffer.from(':'),
         Buffer.from([0x03, 0x0D, 0x0A])
       ]);
@@ -256,28 +263,55 @@ class CS125Sensor extends EventEmitter {
       // Wait for GET response
       return new Promise((resolve) => {
         let timeout = setTimeout(() => {
+          console.log('[CS125] GET response timeout - no valid response received');
+          this.parser.removeListener('data', responseHandler);
           resolve(false);
         }, 3000);
         
         const responseHandler = (line) => {
-          clearTimeout(timeout);
+          const lineStr = line.toString().trim();
+          console.log('[CS125] Received message while waiting for GET response:', lineStr);
           
-          console.log('[CS125] GET response received:', line.toString('hex'), 'as string:', line.toString());
+          const data = lineStr.split(" ");
           
-          const data = line.split(" ");
-          // Check if data[0][0] is 0x02 (STX) and data[0][1] is sensor ID
-          if (data[0] && data[0].length > 1 && 
-              data[0].charCodeAt(0) === 0x02 && 
-              parseInt(data[0][1]) === this.sensorId) {
-            console.log('[CS125] Valid GET response - connected');
-            resolve(true);
+          // Debug: 실제 데이터 확인
+          console.log(`[CS125] Debug - data[0]: "${data[0]}", data[0].length: ${data[0].length}, data[1]: "${data[1]}"`);
+          
+          // Check if data[0] contains STX character at the beginning
+          let messageId, sensorId;
+          
+          if (data[0] && data[0].length > 1 && data[0].charCodeAt(0) === 0x02) {
+            // STX가 포함된 경우: data[0]의 두 번째 문자가 메시지 ID
+            messageId = parseInt(data[0][1]);
+            sensorId = data.length > 1 ? parseInt(data[1]) : -1;
+            console.log(`[CS125] STX detected - Message ID: ${messageId}, Sensor ID: ${sensorId}`);
           } else {
-            console.log('[CS125] Invalid GET response - disconnected');
-            resolve(false);
+            // STX가 없는 경우: data[0]이 메시지 ID
+            messageId = parseInt(data[0]);
+            sensorId = data.length > 1 ? parseInt(data[1]) : -1;
+            console.log(`[CS125] No STX - Message ID: ${messageId}, Sensor ID: ${sensorId}`);
+          }
+          
+          if (messageId === 0 && sensorId === this.sensorId) {
+            console.log('[CS125] Valid GET response - connected');
+            clearTimeout(timeout);
+            this.parser.removeListener('data', responseHandler);
+            resolve(true);
+          } else if (messageId === 5) {
+            // Message ID 5 is normal data stream, not GET response - ignore and keep waiting
+            console.log('[CS125] Ignoring data stream (ID 5), still waiting for GET response (ID 0)...');
+            // Keep listening, don't resolve
+          } else if (messageId === 0) {
+            // Message ID is 0 but something else is wrong
+            console.log(`[CS125] GET response with wrong sensor ID - got: ${sensorId}, expected: ${this.sensorId}`);
+            // Keep listening, might be for different sensor
+          } else {
+            console.log(`[CS125] Unexpected message - ID: ${messageId}, sensor ID: ${sensorId}`);
+            // Keep listening for a bit more, in case the real GET response comes later
           }
         };
         
-        this.dataPort.once('data', responseHandler);
+        this.parser.on('data', responseHandler);
       });
     } catch (error) {
       console.error('[CS125] Connection check failed:', error);

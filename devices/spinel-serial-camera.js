@@ -278,7 +278,7 @@ class SpinelCamera {
    * @param {Buffer} data - 수신된 데이터
    */
   handleData(data) {
-    console.log(`[CAMERA] Raw incoming data: ${data.toString('hex')}`);
+    //console.log(`[CAMERA] Raw incoming data: ${data.toString('hex')}`);
     this.dataBuffer = Buffer.concat([this.dataBuffer, data]);
     
     // 테스트 명령 응답 체크 (0x01 명령에 대한 응답)
@@ -288,11 +288,24 @@ class SpinelCamera {
       return;
     }
     
-    // 스냅샷 준비 완료 응답 체크 (0x40 명령에 대한 응답)
-    if (data[0] === 0x90 && data[1] === 0xEB && data[3] === 0x40 && 
-        data.length === 19 && this.captureState === 0) {
-      this.handleSnapshotReady(data);
-      return;
+    // 스냅샷 준비 완료 응답 체크 (0x40 명령에 대한 응답) - 버퍼에서 찾기
+    if (this.captureState === 0) {
+      // 버퍼에서 스냅샷 응답 패턴 찾기 (분할된 패킷 처리)
+      for (let i = 0; i <= this.dataBuffer.length - 17; i++) {
+        if (this.dataBuffer[i] === 0x90 && this.dataBuffer[i + 1] === 0xEB && 
+            this.dataBuffer[i + 2] === this.config.cameraId && this.dataBuffer[i + 3] === 0x40) {
+          
+          // 최소 17바이트 이상 있는지 확인
+          if (this.dataBuffer.length >= i + 17) {
+            console.log('[CAMERA] Snapshot ready signal detected in buffer!');
+            const snapshotData = this.dataBuffer.slice(i, i + 17);
+            this.handleSnapshotReady(snapshotData);
+            // 처리된 데이터는 버퍼에서 제거
+            this.dataBuffer = this.dataBuffer.slice(i + 17);
+            return;
+          }
+        }
+      }
     }
 
     // 이미지 데이터 패킷 시작 시퀀스 감지 (0x49 응답)
@@ -424,18 +437,28 @@ class SpinelCamera {
     switch(this.captureState) {
       case 0: // 캡처 시작 단계
         this.tryCount++;
-        if (this.tryCount > 5) {
-          console.error("Camera not responding");
+        if (this.tryCount > 20) {  // 10 -> 20으로 증가 (2초 대기)
+          console.error("Camera not responding after 20 attempts (2 seconds)");
           clearInterval(this.captureIntervalId);
           return;
         }
         
-        // 캡처 준비 및 스냅샷 명령 전송
-        this.imageBuffer = Buffer.alloc(0);
-        this.captureStartTime = Date.now(); // 성능 측정 시작
-        const snapshotCmd = this.buildSnapshotCommand();
-        console.log(`Sending snapshot command: ${snapshotCmd.toString('hex')}`);
-        this.port.write(snapshotCmd);
+        // 3번째 시도마다만 명령 전송 (300ms 간격)
+        if (this.tryCount === 1 || (this.tryCount - 1) % 3 === 0) {
+          // 캡처 준비 및 스냅샷 명령 전송
+          this.imageBuffer = Buffer.alloc(0);
+          this.captureStartTime = Date.now(); // 성능 측정 시작
+          const snapshotCmd = this.buildSnapshotCommand();
+          
+          console.log(`Sending snapshot command (attempt ${Math.ceil(this.tryCount/3)}): ${snapshotCmd.toString('hex')}`);
+          this.port.write(snapshotCmd);
+          
+          // 버퍼 초기화로 이전 데이터 제거
+          if (this.tryCount === 1) {
+            this.dataBuffer = Buffer.alloc(0);
+          }
+        }
+        // 응답 대기 (다음 100ms 후 재확인)
         break;
 
       case 1: // 패킷 요청 단계
