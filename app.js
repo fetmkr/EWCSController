@@ -19,7 +19,8 @@ import createDeviceRoutes from './api/routes/device-routes.js';
 import createSensorRoutes from './api/routes/sensor-routes.js';
 import createSystemRoutes from './api/routes/system-routes.js';
 import createEwcsRoutes from './api/routes/ewcs-routes.js';
-import createOascRoutes from './api/routes/oasc-routes.js';
+import createCameraRoutes from './api/routes/camera-routes.js';
+import createImageRoutes from './api/routes/image-routes.js';
 
 // Utility function for timestamped logging
 function getTimestamp() {
@@ -243,7 +244,9 @@ class EWCSApp {
     this.app.use('/api/sensor', createSensorRoutes(database, this.devices));
     this.app.use('/api/system', createSystemRoutes());
     this.app.use('/api', createEwcsRoutes(database));
-    this.app.use('/api', createOascRoutes(database, this.devices));
+    this.app.use('/api/camera', createCameraRoutes(database, this.devices));
+    this.app.use('/api/images', createImageRoutes(database));
+    this.app.use('/images', createImageRoutes(database));
     
     // Health check
     this.app.get('/health', (req, res) => {

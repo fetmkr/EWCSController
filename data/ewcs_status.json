@@ -1,11 +1,11 @@
 {
   "current_status": {
     "cs125_on": false,
-    "camera_on": false,
+    "camera_on": true,
     "cs125_hood_heater_on": false,
     "iridium_on": false,
     "power_save_mode": false,
-    "last_updated": "2025-09-12T15:28:45.331Z"
+    "last_updated": "2025-09-12T16:05:08.895Z"
   },
   "settings": {
     "data_save_period": 60,
@@ -13,6 +13,154 @@
     "station_name": "EWCS_STATION"
   },
   "recent_events": [
+    {
+      "timestamp": "2025-09-12T16:05:08.896Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T16:03:18.602Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T16:03:15.577Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T16:03:15.540Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-12T16:02:40.356Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T16:02:00.341Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T16:00:10.039Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T16:00:07.014Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T16:00:06.976Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-12T15:58:00.964Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:57:20.946Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:55:30.657Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:55:27.632Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:55:27.595Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-12T15:53:48.519Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:53:08.514Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:51:44.262Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:51:04.254Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:49:39.938Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:48:59.931Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:47:35.619Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:46:55.608Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:45:31.294Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:44:51.284Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:43:26.950Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:42:46.935Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:41:22.655Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:40:42.646Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:39:18.317Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:38:38.306Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:37:13.981Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:36:33.965Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:35:09.529Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:34:29.513Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:32:39.205Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:32:36.178Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:32:36.143Z",
+      "event": "System started"
+    },
     {
       "timestamp": "2025-09-12T15:28:45.332Z",
       "event": "Camera power OFF"
@@ -270,161 +418,6 @@
     {
       "timestamp": "2025-09-12T13:21:12.444Z",
       "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:20:42.445Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:20:42.442Z",
-      "event": "Error in camera_capture",
-      "error": "ReferenceError: deviceStatus is not defined"
-    },
-    {
-      "timestamp": "2025-09-12T13:20:25.435Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:18:35.124Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:18:32.085Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:18:32.048Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-12T13:17:34.326Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:17:04.326Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:17:04.323Z",
-      "event": "Error in camera_capture",
-      "error": "ReferenceError: deviceStatus is not defined"
-    },
-    {
-      "timestamp": "2025-09-12T13:16:47.315Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:15:37.309Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:15:07.311Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:15:07.308Z",
-      "event": "Error in camera_capture",
-      "error": "ReferenceError: deviceStatus is not defined"
-    },
-    {
-      "timestamp": "2025-09-12T13:14:50.297Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:12:59.968Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:12:56.939Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:12:56.900Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-12T13:09:43.183Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:09:13.183Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:09:13.181Z",
-      "event": "Error in camera_capture",
-      "error": "ReferenceError: deviceStatus is not defined"
-    },
-    {
-      "timestamp": "2025-09-12T13:08:56.172Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:07:46.167Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:07:16.169Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:07:16.165Z",
-      "event": "Error in camera_capture",
-      "error": "ReferenceError: deviceStatus is not defined"
-    },
-    {
-      "timestamp": "2025-09-12T13:06:59.160Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:05:49.151Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:05:19.153Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:05:19.150Z",
-      "event": "Error in camera_capture",
-      "error": "ReferenceError: deviceStatus is not defined"
-    },
-    {
-      "timestamp": "2025-09-12T13:05:02.146Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:03:52.144Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:03:22.143Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:03:22.141Z",
-      "event": "Error in camera_capture",
-      "error": "ReferenceError: deviceStatus is not defined"
-    },
-    {
-      "timestamp": "2025-09-12T13:03:05.134Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:01:14.851Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-12T13:01:11.825Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-12T13:01:11.788Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-12T13:00:06.410Z",
-      "event": "Camera power ON"
     }
   ],
   "device_status": {
@@ -434,6 +427,6 @@
     "epever": true,
     "sht45": true,
     "adc": true,
-    "last_check": "2025-09-12T15:20:12.252Z"
+    "last_check": "2025-09-12T16:03:28.884Z"
   }
 }
