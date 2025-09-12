@@ -311,7 +311,7 @@ class SQLiteDB {
         results = stmt.all(limit);
       }
       
-      return limit === 1 ? results[0] : results;
+      return results;
     } catch (error) {
       console.error(`Failed to get latest data from ${table}:`, error);
       throw error;

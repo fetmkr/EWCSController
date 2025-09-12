@@ -267,8 +267,8 @@ class EWCSApp {
     
     // Root endpoint
     this.app.get('/', (req, res) => {
-      res.json({ 
-        message: 'EWCS Controller API', 
+      res.json({
+        message: 'EWCS Controller API',
         version: '2.0.0',
         timestamp: Date.now()
       });
@@ -315,21 +315,26 @@ class EWCSApp {
     }
     
     // SHT45 환경 센서 데이터
-    if (this.devices.sht45?.data) {
-      console.log('[SHT45] Connected - collecting data');
-      this.ewcsData.SHT45Temp = this.devices.sht45.data.temperature || 0;
-      this.ewcsData.SHT45Humidity = this.devices.sht45.data.humidity || 0;
-    } else {
-      console.log('[SHT45] Disconnected - skipping data collection');
+    if (this.devices.sht45) {
+      await this.devices.sht45.updateSHT45(); // 데이터 업데이트 함수 호출
+      const sht45Data = this.devices.sht45.getData();
+      
+      if (sht45Data.lastReading > 0) {
+        console.log('[SHT45] Connected - collecting data');
+        this.ewcsData.SHT45Temp = sht45Data.temperature || 0;
+        this.ewcsData.SHT45Humidity = sht45Data.humidity || 0;
+      } else {
+        console.log('[SHT45] Disconnected - skipping data collection');
+      }
     }
     
     // ADC 전력 모니터링 데이터 (원래 ewcs.js 방식)
     if (this.devices.adc) {
       console.log('[ADC] Connected - collecting power monitoring data');
       // CH1: Iridium current, CH2: Camera current, CH3: Battery voltage
-      this.ewcsData.iridiumCurrent = this.devices.adc.getChannelData(1)?.data.voltage || 0;
-      this.ewcsData.cameraCurrent = this.devices.adc.getChannelData(2)?.data.voltage || 0;  
-      this.ewcsData.batteryVoltage = this.devices.adc.getChannelData(3)?.data.voltage || 0;
+      this.ewcsData.iridiumCurrent = (await this.devices.adc.getChannelData(1))?.data?.convertedValue || 0;
+      this.ewcsData.cameraCurrent = (await this.devices.adc.getChannelData(2))?.data?.convertedValue || 0;  
+      this.ewcsData.batteryVoltage = (await this.devices.adc.getChannelData(3))?.data?.convertedValue || 0;
     } else {
       console.log('[ADC] Disconnected - skipping power monitoring data');
     }
@@ -392,11 +397,11 @@ class EWCSApp {
     
     const captureImage = async () => {
       try {
-        // 이미지 수집용 디바이스만 체크
-        const deviceStatus = await this.checkImageCollectionDevices();
+        // 이미지 수집용 디바이스만 체크 - 경쟁 상태를 유발하므로 제거
+        // const deviceStatus = await this.checkImageCollectionDevices();
         
         // Spinel Camera 촬영
-        if (this.devices.camera && deviceStatus.spinel_camera) {
+        if (this.devices.camera) { // deviceStatus 확인 대신, camera 객체 존재 여부만 확인
           console.log(`[${getTimestamp()}] [CAMERA] Spinel capture started`);
           // Turn on camera via PIC24
           await this.turnOnCamera();
@@ -431,7 +436,7 @@ class EWCSApp {
         }
 
         // OASC Camera 촬영
-        if (this.devices.oascCamera && deviceStatus.oasc_camera) {
+        if (this.devices.oascCamera) {
           console.log('[OASC] OASC camera connected - starting capture');
           
           const captureResult = await this.devices.oascCamera.captureImage();

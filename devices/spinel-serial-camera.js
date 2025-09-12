@@ -242,7 +242,7 @@ class SpinelCamera {
    */
   buildReadDataCommand(startAddress, packetSize) {
     const addrBuf = Buffer.allocUnsafe(4);
-    addrBuf.writeInt32LE(startAddress);  // 시작 주소 (Little Endian)
+    addrBuf.writeInt32LE(startAddress);  // 시작 주소 (Little Endian) 
     
     // 패킷 크기를 Little Endian으로 전송 (768 = 0x0300 -> 0x00, 0x03)
     const actualSize = packetSize || this.config.packetSize;
@@ -291,17 +291,17 @@ class SpinelCamera {
     // 스냅샷 준비 완료 응답 체크 (0x40 명령에 대한 응답) - 버퍼에서 찾기
     if (this.captureState === 0) {
       // 버퍼에서 스냅샷 응답 패턴 찾기 (분할된 패킷 처리)
-      for (let i = 0; i <= this.dataBuffer.length - 17; i++) {
+      for (let i = 0; i <= this.dataBuffer.length - 19; i++) {
         if (this.dataBuffer[i] === 0x90 && this.dataBuffer[i + 1] === 0xEB && 
             this.dataBuffer[i + 2] === this.config.cameraId && this.dataBuffer[i + 3] === 0x40) {
           
-          // 최소 17바이트 이상 있는지 확인
-          if (this.dataBuffer.length >= i + 17) {
+          // 최소 19바이트 있는지 확인 (스냅샷 응답은 19바이트)
+          if (this.dataBuffer.length >= i + 19) {
             console.log('[CAMERA] Snapshot ready signal detected in buffer!');
-            const snapshotData = this.dataBuffer.slice(i, i + 17);
+            const snapshotData = this.dataBuffer.slice(i, i + 19);
             this.handleSnapshotReady(snapshotData);
             // 처리된 데이터는 버퍼에서 제거
-            this.dataBuffer = this.dataBuffer.slice(i + 17);
+            this.dataBuffer = this.dataBuffer.slice(i + 19);
             return;
           }
         }
@@ -339,14 +339,14 @@ class SpinelCamera {
     // 응답 데이터 확인: 00 aa 55
     if (data[6] === 0x00 && data[7] === 0xAA && data[8] === 0x55) {
       const cameraId = data[2];
-      // console.log(`[CAMERA] Test OK - Camera ID: 0x${cameraId.toString(16).padStart(2, '0')} connected`); // Commented for cleaner logs
+      console.log(`[CAMERA] Test OK - Camera ID: 0x${cameraId.toString(16).padStart(2, '0')} connected`);
       
       if (this.testPromiseResolve) {
         this.testPromiseResolve({ success: true, cameraId });
         this.testPromiseResolve = null;
       }
     } else {
-      // console.log('[CAMERA] Test response data mismatch'); // Commented for cleaner logs
+      console.log('[CAMERA] Test response data mismatch');
       
       if (this.testPromiseResolve) {
         this.testPromiseResolve({ success: false, reason: 'data_mismatch' });
@@ -361,7 +361,9 @@ class SpinelCamera {
    * @param {Buffer} data - 스냅샷 준비 완료 데이터 (19바이트)
    */
   handleSnapshotReady(data) {
+    // console.log("[DEBUG] handleSnapshotReady called! Camera has responded to snapshot command.");
     this.packetCounter = 0;
+    this.tryCount = 0;  // 응답을 받았으므로 시도 횟수 초기화
     console.log("Snapshot ready signal received");
     
     // 이미지 전체 크기 추출 (7번째 바이트부터 4바이트, Little Endian)
@@ -377,6 +379,14 @@ class SpinelCamera {
     console.log(`Last packet size: ${this.remainingBytesSize} bytes`);
     
     this.captureState = 1;  // 다음 단계: 패킷 요청
+    
+    // 인터벌이 중단되었다면 다시 시작
+    if (!this.captureIntervalId) {
+      // console.log("[DEBUG] Interval was stopped, restarting for packet requests...");
+      this.captureIntervalId = setInterval(() => {
+        this.captureImage();
+      }, 100);
+    }
   }
 
   /**
@@ -397,6 +407,7 @@ class SpinelCamera {
    * SXH 프로토콜에서 실제 이미지 데이터 부분만 추출하여 조립
    */
   processPacket() {
+    // console.log(`[DEBUG] processPacket called! Receiving image data. Packet: ${this.packetCounter + 1}/${this.packetNum + 1}`);
     const currentPacketSize = this.getCurrentPacketSize();
     // 패킷에서 실제 이미지 데이터 부분만 추출 (6바이트 헤더 제외)
     const requiredData = this.dataBuffer.slice(6, currentPacketSize + 6);
@@ -432,33 +443,39 @@ class SpinelCamera {
    * State 0: 캡처 명령 전송 -> State 1: 패킷 요청 -> State 2: 대기 -> State 3: 저장
    */
   captureImage() {
-    //console.log(`Capture attempt ${this.tryCount + 1}, state: ${this.captureState}`);
+    // console.log(`[DEBUG] captureImage running. State: ${this.captureState}, Try: ${this.tryCount}`);
 
     switch(this.captureState) {
       case 0: // 캡처 시작 단계
         this.tryCount++;
-        if (this.tryCount > 20) {  // 10 -> 20으로 증가 (2초 대기)
-          console.error("Camera not responding after 20 attempts (2 seconds)");
-          clearInterval(this.captureIntervalId);
-          return;
+        
+        // 스냅샷 명령은 1, 101, 201번째에만 전송 (10초 간격으로 재시도)
+        if (this.tryCount === 1 || this.tryCount === 101 || this.tryCount === 201) {
+          const attemptNumber = Math.floor((this.tryCount - 1) / 100) + 1;
+          
+          // 첫 번째 시도에서만 버퍼와 타이머 초기화
+          if (this.tryCount === 1) {
+            this.imageBuffer = Buffer.alloc(0);
+            this.dataBuffer = Buffer.alloc(0);
+            this.captureStartTime = Date.now();
+          }
+          
+          const snapshotCmd = this.buildSnapshotCommand();
+          console.log(`Sending snapshot command (attempt ${attemptNumber}/3): ${snapshotCmd.toString('hex')}`);
+          this.port.write(snapshotCmd);
         }
         
-        // 3번째 시도마다만 명령 전송 (300ms 간격)
-        if (this.tryCount === 1 || (this.tryCount - 1) % 3 === 0) {
-          // 캡처 준비 및 스냅샷 명령 전송
-          this.imageBuffer = Buffer.alloc(0);
-          this.captureStartTime = Date.now(); // 성능 측정 시작
-          const snapshotCmd = this.buildSnapshotCommand();
-          
-          console.log(`Sending snapshot command (attempt ${Math.ceil(this.tryCount/3)}): ${snapshotCmd.toString('hex')}`);
-          this.port.write(snapshotCmd);
-          
-          // 버퍼 초기화로 이전 데이터 제거
-          if (this.tryCount === 1) {
-            this.dataBuffer = Buffer.alloc(0);
+        // 300번 시도 (30초 = 10초 x 3번) 후에도 응답 없으면 포기
+        if (this.tryCount > 300) {
+          if (this.captureState === 0) {
+            console.error("Camera not responding after 3 snapshot attempts (30 seconds total)");
+            clearInterval(this.captureIntervalId);
+            this.captureIntervalId = null;
+            return;
           }
         }
-        // 응답 대기 (다음 100ms 후 재확인)
+        
+        // 응답이 오면 handleSnapshotReady에서 captureState가 1로 변경됨
         break;
 
       case 1: // 패킷 요청 단계
@@ -512,7 +529,7 @@ class SpinelCamera {
       baseDirectory = customDir;
       directoryPath = `${baseDirectory}/${year}-${month}`;
     } else {
-      baseDirectory = './ewcs-image';
+      baseDirectory = './ewcs_images';
       directoryPath = `${baseDirectory}/${year}-${month}`;
     }
     
@@ -569,32 +586,7 @@ class SpinelCamera {
     return resMap[this.config.resolution.width] || 'Unknown';
   }
 
-  /**
-   * 카메라 연결 테스트 (공개 메소드)
-   * @returns {Promise} 테스트 결과
-   */
-  async testConnection() {
-    if (!this.port?.isOpen) {
-      return { success: false, reason: 'port_not_open' };
-    }
-
-    return new Promise((resolve) => {
-      this.testPromiseResolve = resolve;
-      
-      const testCmd = this.buildTestCommand();
-      console.log(`[CAMERA] Sending test command: ${testCmd.toString('hex')}`);
-      this.port.write(testCmd);
-      
-      // 2초 타임아웃
-      setTimeout(() => {
-        if (this.testPromiseResolve) {
-          console.log('[CAMERA] No response - Camera not connected');
-          this.testPromiseResolve({ success: false, reason: 'timeout' });
-          this.testPromiseResolve = null;
-        }
-      }, 2000);
-    });
-  }
+  
 
   /**
    * 이미지 캡처 시작 (공개 메소드)
@@ -699,7 +691,7 @@ class SpinelCamera {
       baseDirectory = this.customSaveDir;
       directoryPath = `${baseDirectory}/${year}-${month}`;
     } else {
-      baseDirectory = './ewcs-image';
+      baseDirectory = './ewcs_images';
       directoryPath = `${baseDirectory}/${year}-${month}`;
     }
 
@@ -780,42 +772,18 @@ class SpinelCamera {
       }
 
       return new Promise((resolve) => {
-        let responseBuffer = Buffer.alloc(0);
+        // 기존 handleData를 통해 응답을 받도록 설정
+        this.testPromiseResolve = (result) => {
+          clearTimeout(timeout);
+          resolve(result.success);
+        };
         
         // 타임아웃 설정 (5초)
         const timeout = setTimeout(() => {
           console.log('[CAMERA] Test command timeout - no response received');
-          this.port.removeListener('data', onData);
+          this.testPromiseResolve = null;
           resolve(false);
         }, 5000);
-
-        // 응답 핸들러
-        const onData = (data) => {
-          console.log('[CAMERA] Received data:', data.toString('hex'));
-          responseBuffer = Buffer.concat([responseBuffer, data]);
-          
-          // 응답 분석 (최소 9바이트)
-          if (responseBuffer.length >= 9) {
-            console.log('[CAMERA] Full response received:', responseBuffer.toString('hex'));
-            
-            // 응답 데이터 확인: data[6] === 0x00 && data[7] === 0xAA && data[8] === 0x55
-            if (responseBuffer[6] === 0x00 && responseBuffer[7] === 0xAA && responseBuffer[8] === 0x55) {
-              const cameraId = responseBuffer[2];
-              // console.log(`[CAMERA] Test OK - Camera ID: 0x${cameraId.toString(16).padStart(2, '0')} connected`); // Commented for cleaner logs
-              clearTimeout(timeout);
-              this.port.removeListener('data', onData);
-              resolve(true);
-            } else {
-              // console.log('[CAMERA] Test response data mismatch'); // Commented for cleaner logs
-              clearTimeout(timeout);
-              this.port.removeListener('data', onData);
-              resolve(false);
-            }
-          }
-        };
-
-        // 데이터 리스너 등록
-        this.port.on('data', onData);
         
         // 테스트 명령 전송
         const testCmd = this.buildTestCommand();

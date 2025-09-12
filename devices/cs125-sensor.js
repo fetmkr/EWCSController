@@ -49,7 +49,7 @@ class CS125Sensor extends EventEmitter {
       await this.initializeDataPort();
       
       this.isInitialized = true;
-      console.log('CS125 Sensor initialized');
+      //console.log('CS125 Sensor initialized');
       
     } catch (error) {
       console.error('CS125 Sensor initialization failed:', error);
@@ -82,7 +82,7 @@ class CS125Sensor extends EventEmitter {
       });
 
       this.dataPort.on('open', () => {
-        console.log('CS125 data port opened');
+        //console.log('CS125 data port opened');
         resolve();
       });
     });
@@ -112,7 +112,7 @@ class CS125Sensor extends EventEmitter {
         this.data.humidity = parseFloat(data[25]) || 0;
         this.data.lastReading = Date.now();
 
-        console.log(`CS125 Data - Temp: ${this.data.temperature}°C, Humidity: ${this.data.humidity}%, Vis: ${this.data.visibility}m`);
+        //console.log(`CS125 Data - Temp: ${this.data.temperature}°C, Humidity: ${this.data.humidity}%, Vis: ${this.data.visibility}m`);
 
         // Mark as connected when receiving valid data
         this.isConnected = true;
@@ -122,7 +122,7 @@ class CS125Sensor extends EventEmitter {
       } else if (messageId === 0 && data.length > 17) {
         // GET response (message ID 0)
         this.getMsgSent = false;
-        console.log('[CS125] GET response received:', line);
+        //console.log('[CS125] GET response received:', line);
         
         // Parse hood heater status from data[17] (18th field) - 0 means heater is ON
         if (parseInt(data[17]) === 0) {
@@ -139,12 +139,12 @@ class CS125Sensor extends EventEmitter {
       } else {
         // Only log as incomplete if it's not a valid message format
         if (messageId !== 5 && messageId !== 0) {
-          console.log(`[CS125] Unknown message type ${messageId}: ${line}`);
+          //console.log(`[CS125] Unknown message type ${messageId}: ${line}`);
         }
         // Don't log normal data that has slightly different field count
       }
     } catch (error) {
-      console.error('CS125 data parsing error:', error);
+      //console.error('CS125 data parsing error:', error);
       this.emit('error', error);
     }
   }
@@ -216,12 +216,12 @@ class CS125Sensor extends EventEmitter {
       
       this.dataPort.write(getBuffer);
       this.getMsgSent = true;
-      console.log("[CS125] GET command sent");
+      //console.log("[CS125] GET command sent");
       
       // Wait for response with timeout
       return new Promise((resolve) => {
         let timeout = setTimeout(() => {
-          console.log("[CS125] GET response timeout - no response");
+          //console.log("[CS125] GET response timeout - no response");
           this.getMsgSent = false;
           resolve(false);
         }, 5000);
@@ -236,7 +236,7 @@ class CS125Sensor extends EventEmitter {
         this.once('getResponse', responseHandler);
       });
     } catch (error) {
-      console.error('[CS125] GET command error:', error);
+      //console.error('[CS125] GET command error:', error);
       return false;
     }
   }
@@ -263,19 +263,19 @@ class CS125Sensor extends EventEmitter {
       // Wait for GET response
       return new Promise((resolve) => {
         let timeout = setTimeout(() => {
-          console.log('[CS125] GET response timeout - no valid response received');
+          //console.log('[CS125] GET response timeout - no valid response received');
           this.parser.removeListener('data', responseHandler);
           resolve(false);
         }, 3000);
         
         const responseHandler = (line) => {
           const lineStr = line.toString().trim();
-          console.log('[CS125] Received message while waiting for GET response:', lineStr);
+          //console.log('[CS125] Received message while waiting for GET response:', lineStr);
           
           const data = lineStr.split(" ");
           
           // Debug: 실제 데이터 확인
-          console.log(`[CS125] Debug - data[0]: "${data[0]}", data[0].length: ${data[0].length}, data[1]: "${data[1]}"`);
+          //console.log(`[CS125] Debug - data[0]: "${data[0]}", data[0].length: ${data[0].length}, data[1]: "${data[1]}"`);
           
           // Check if data[0] contains STX character at the beginning
           let messageId, sensorId;
@@ -284,29 +284,29 @@ class CS125Sensor extends EventEmitter {
             // STX가 포함된 경우: data[0]의 두 번째 문자가 메시지 ID
             messageId = parseInt(data[0][1]);
             sensorId = data.length > 1 ? parseInt(data[1]) : -1;
-            console.log(`[CS125] STX detected - Message ID: ${messageId}, Sensor ID: ${sensorId}`);
+            //console.log(`[CS125] STX detected - Message ID: ${messageId}, Sensor ID: ${sensorId}`);
           } else {
             // STX가 없는 경우: data[0]이 메시지 ID
             messageId = parseInt(data[0]);
             sensorId = data.length > 1 ? parseInt(data[1]) : -1;
-            console.log(`[CS125] No STX - Message ID: ${messageId}, Sensor ID: ${sensorId}`);
+            //console.log(`[CS125] No STX - Message ID: ${messageId}, Sensor ID: ${sensorId}`);
           }
           
           if (messageId === 0 && sensorId === this.sensorId) {
-            console.log('[CS125] Valid GET response - connected');
+            //console.log('[CS125] Valid GET response - connected');
             clearTimeout(timeout);
             this.parser.removeListener('data', responseHandler);
             resolve(true);
           } else if (messageId === 5) {
             // Message ID 5 is normal data stream, not GET response - ignore and keep waiting
-            console.log('[CS125] Ignoring data stream (ID 5), still waiting for GET response (ID 0)...');
+            //console.log('[CS125] Ignoring data stream (ID 5), still waiting for GET response (ID 0)...');
             // Keep listening, don't resolve
           } else if (messageId === 0) {
             // Message ID is 0 but something else is wrong
-            console.log(`[CS125] GET response with wrong sensor ID - got: ${sensorId}, expected: ${this.sensorId}`);
+            //console.log(`[CS125] GET response with wrong sensor ID - got: ${sensorId}, expected: ${this.sensorId}`);
             // Keep listening, might be for different sensor
           } else {
-            console.log(`[CS125] Unexpected message - ID: ${messageId}, sensor ID: ${sensorId}`);
+            //console.log(`[CS125] Unexpected message - ID: ${messageId}, sensor ID: ${sensorId}`);
             // Keep listening for a bit more, in case the real GET response comes later
           }
         };

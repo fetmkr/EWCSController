@@ -22,7 +22,7 @@ class OASCCamera {
     };
     
     // OASC 이미지 저장 경로
-    this.imagesBaseDir = path.join(__dirname, '../oasc-images');
+    this.imagesBaseDir = path.join(__dirname, '../oasc_images');
   }
 
   /**
@@ -45,7 +45,7 @@ class OASCCamera {
 
   async initialize() {
     try {
-      console.log('[OASC] Initializing Starlight Xpress Camera...');
+      //console.log('[OASC] Initializing Starlight Xpress Camera...');
       
       // 카메라 객체 생성 (기존 OASC 코드 그대로)
       this.camera = new SXCamera();
@@ -86,9 +86,9 @@ class OASCCamera {
       try {
         const cameraInfo = this.camera.getCameraInfo();
         this.data.cameraInfo = cameraInfo;
-        console.log('[OASC] 카메라 정보:');
-        console.log(`[OASC]  - 모델: ${cameraInfo.model} (코드: ${cameraInfo.modelCode})`);
-        console.log(`[OASC]  - 펌웨어 버전: ${cameraInfo.firmwareVersion}`);
+        //console.log('[OASC] 카메라 정보:');
+        //console.log(`[OASC]  - 모델: ${cameraInfo.model} (코드: ${cameraInfo.modelCode})`);
+        //console.log(`[OASC]  - 펌웨어 버전: ${cameraInfo.firmwareVersion}`);
       } catch (error) {
         console.error('[OASC] 카메라 정보 가져오기 실패:', error.message);
       }

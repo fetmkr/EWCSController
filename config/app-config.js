@@ -124,7 +124,7 @@ class AppConfig {
       
       // Image Storage
       images: {
-        directory: './ewcs-image',
+        directory: './ewcs_images',
         format: 'jpg',
         maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
       },

@@ -5,7 +5,7 @@
     "cs125_hood_heater_on": false,
     "iridium_on": false,
     "power_save_mode": false,
-    "last_updated": "2025-09-11T07:56:35.571Z"
+    "last_updated": "2025-09-12T15:28:45.331Z"
   },
   "settings": {
     "data_save_period": 60,
@@ -14,445 +14,417 @@
   },
   "recent_events": [
     {
-      "timestamp": "2025-09-11T07:57:17.200Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:56:35.572Z",
+      "timestamp": "2025-09-12T15:28:45.332Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:56:18.210Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:55:54.559Z",
+      "timestamp": "2025-09-12T15:28:05.322Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:55:07.526Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:54:25.892Z",
+      "timestamp": "2025-09-12T15:26:41.022Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:54:08.456Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:53:44.879Z",
+      "timestamp": "2025-09-12T15:26:01.011Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:52:57.458Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:52:15.815Z",
+      "timestamp": "2025-09-12T15:24:36.723Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:51:58.767Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:51:39.800Z",
+      "timestamp": "2025-09-12T15:23:56.712Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:50:54.841Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:49:44.484Z",
+      "timestamp": "2025-09-12T15:22:32.279Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:49:41.462Z",
+      "timestamp": "2025-09-12T15:21:52.266Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:49:41.371Z",
+      "timestamp": "2025-09-12T15:20:01.943Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:19:58.917Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:19:58.881Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T07:49:05.843Z",
+      "timestamp": "2025-09-12T15:04:36.710Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:49:02.823Z",
+      "timestamp": "2025-09-12T15:03:56.700Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:49:02.788Z",
+      "timestamp": "2025-09-12T15:02:32.316Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T15:01:52.307Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T15:00:01.980Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T14:59:58.947Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T14:59:58.906Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T07:46:24.857Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:45:14.511Z",
+      "timestamp": "2025-09-12T14:42:07.877Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:45:11.481Z",
+      "timestamp": "2025-09-12T14:41:22.869Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:45:11.393Z",
+      "timestamp": "2025-09-12T14:39:58.509Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T14:39:13.500Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T14:37:23.217Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T14:37:20.191Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T14:37:20.149Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T07:31:19.620Z",
+      "timestamp": "2025-09-12T14:30:00.670Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:30:56.495Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:30:38.610Z",
+      "timestamp": "2025-09-12T14:29:13.662Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:29:56.494Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:29:14.860Z",
+      "timestamp": "2025-09-12T14:27:23.347Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:28:57.508Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:28:34.847Z",
+      "timestamp": "2025-09-12T14:27:20.320Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:27:47.583Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:27:05.948Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T07:26:48.733Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:26:25.934Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T07:25:40.961Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:24:30.613Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-11T07:24:27.587Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T07:24:27.545Z",
+      "timestamp": "2025-09-12T14:27:20.285Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T07:22:33.955Z",
+      "timestamp": "2025-09-12T14:20:34.788Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T14:20:04.790Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T14:20:04.786Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
+    },
+    {
+      "timestamp": "2025-09-12T14:19:47.779Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:22:33.919Z",
+      "timestamp": "2025-09-12T14:17:57.483Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T14:17:54.462Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T14:17:54.426Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T07:02:44.904Z",
+      "timestamp": "2025-09-12T14:16:14.030Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T07:02:38.500Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+      "timestamp": "2025-09-12T14:16:14.027Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
     },
     {
-      "timestamp": "2025-09-11T07:02:03.898Z",
+      "timestamp": "2025-09-12T14:15:57.019Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T07:01:38.498Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:00:38.498Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T07:00:35.192Z",
+      "timestamp": "2025-09-12T14:14:47.013Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:59:48.186Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:59:38.498Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:58:38.497Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:58:19.461Z",
+      "timestamp": "2025-09-12T14:14:17.014Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:57:38.497Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+      "timestamp": "2025-09-12T14:14:17.011Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
     },
     {
-      "timestamp": "2025-09-11T06:57:38.452Z",
+      "timestamp": "2025-09-12T14:14:00.006Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:56:35.548Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:56:09.727Z",
+      "timestamp": "2025-09-12T14:12:50.002Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:55:35.541Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:55:22.720Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:54:35.534Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:53:53.912Z",
+      "timestamp": "2025-09-12T14:12:20.003Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:53:38.511Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+      "timestamp": "2025-09-12T14:12:20.001Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
     },
     {
-      "timestamp": "2025-09-11T06:53:12.901Z",
+      "timestamp": "2025-09-12T14:12:02.995Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:52:27.918Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:51:17.579Z",
+      "timestamp": "2025-09-12T14:10:12.689Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:51:14.550Z",
+      "timestamp": "2025-09-12T14:10:09.669Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:51:14.511Z",
+      "timestamp": "2025-09-12T14:10:09.633Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T06:49:30.387Z",
+      "timestamp": "2025-09-12T13:26:50.529Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:49:27.361Z",
+      "timestamp": "2025-09-12T13:26:20.529Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:26:20.525Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
+    },
+    {
+      "timestamp": "2025-09-12T13:26:03.516Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:49:27.325Z",
+      "timestamp": "2025-09-12T13:24:53.510Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:24:23.510Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:24:23.507Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
+    },
+    {
+      "timestamp": "2025-09-12T13:24:06.500Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T13:22:16.195Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:22:13.168Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T13:22:13.132Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T06:46:46.549Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:45:36.216Z",
+      "timestamp": "2025-09-12T13:21:12.444Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:45:33.189Z",
+      "timestamp": "2025-09-12T13:20:42.445Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:20:42.442Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
+    },
+    {
+      "timestamp": "2025-09-12T13:20:25.435Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:45:33.150Z",
+      "timestamp": "2025-09-12T13:18:35.124Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:18:32.085Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T13:18:32.048Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T06:45:05.840Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:44:24.890Z",
+      "timestamp": "2025-09-12T13:17:34.326Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:44:05.842Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:43:37.884Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:43:05.839Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:42:27.868Z",
+      "timestamp": "2025-09-12T13:17:04.326Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:42:05.837Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+      "timestamp": "2025-09-12T13:17:04.323Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
     },
     {
-      "timestamp": "2025-09-11T06:41:40.863Z",
+      "timestamp": "2025-09-12T13:16:47.315Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:41:05.837Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:40:30.847Z",
+      "timestamp": "2025-09-12T13:15:37.309Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:40:05.831Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:39:43.842Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:39:05.837Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:38:33.828Z",
+      "timestamp": "2025-09-12T13:15:07.311Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:38:05.829Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+      "timestamp": "2025-09-12T13:15:07.308Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
     },
     {
-      "timestamp": "2025-09-11T06:37:46.822Z",
+      "timestamp": "2025-09-12T13:14:50.297Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:37:05.829Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:36:36.805Z",
+      "timestamp": "2025-09-12T13:12:59.968Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:36:05.835Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:35:49.801Z",
+      "timestamp": "2025-09-12T13:12:56.939Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:35:05.827Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+      "timestamp": "2025-09-12T13:12:56.900Z",
+      "event": "System started"
     },
     {
-      "timestamp": "2025-09-11T06:34:39.781Z",
+      "timestamp": "2025-09-12T13:09:43.183Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:34:05.830Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:33:58.770Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-11T06:33:05.827Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
-    },
-    {
-      "timestamp": "2025-09-11T06:32:48.747Z",
+      "timestamp": "2025-09-12T13:09:13.183Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-11T06:32:05.826Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+      "timestamp": "2025-09-12T13:09:13.181Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
     },
     {
-      "timestamp": "2025-09-11T06:32:01.741Z",
+      "timestamp": "2025-09-12T13:08:56.172Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-11T06:31:05.836Z",
-      "event": "Error in data_collection",
-      "error": "TypeError: Cannot read properties of undefined (reading 'voltage')"
+      "timestamp": "2025-09-12T13:07:46.167Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:07:16.169Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:07:16.165Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
+    },
+    {
+      "timestamp": "2025-09-12T13:06:59.160Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T13:05:49.151Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:05:19.153Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:05:19.150Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
+    },
+    {
+      "timestamp": "2025-09-12T13:05:02.146Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T13:03:52.144Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:03:22.143Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:03:22.141Z",
+      "event": "Error in camera_capture",
+      "error": "ReferenceError: deviceStatus is not defined"
+    },
+    {
+      "timestamp": "2025-09-12T13:03:05.134Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T13:01:14.851Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-12T13:01:11.825Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-12T13:01:11.788Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-12T13:00:06.410Z",
+      "event": "Camera power ON"
     }
   ],
   "device_status": {
@@ -462,6 +434,6 @@
     "epever": true,
     "sht45": true,
     "adc": true,
-    "last_check": "2025-09-11T07:49:54.761Z"
+    "last_check": "2025-09-12T15:20:12.252Z"
   }
 }

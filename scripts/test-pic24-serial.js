@@ -49,12 +49,23 @@ port.on('open', () => {
   console.log(`Serial port ${portPath} opened at ${baudRate} baud.`);
 
   // Example usage: Send a test command
-  sendPic24Command('TurnOff_1'); // You can change this string to test different commands
+  sendPic24Command('SendSyncData'); // You can change this string to test different commands
 });
 
 parser.on('data', (data) => {
   console.log('Received data:', data);
-  // You can add logic here to process the response from pic24
+const buffer = Buffer.from(data, 'binary');
+    // \n도 포함해서 표시
+    const fullBuffer = Buffer.concat([buffer, Buffer.from('\n')]);
+
+    console.log('Full hex:', fullBuffer.toString('hex'));
+    console.log('With formatting:');
+    [...fullBuffer].forEach((byte, i) => {
+      const char = (byte === 0x0A) ? '\\n' :
+                   (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '?';
+      console.log(`  Byte ${i}: 0x${byte.toString(16).padStart(2, '0').toUpperCase()} (${byte}) '${char}'`);
+    });
+// You can add logic here to process the response from pic24
 });
 
 port.on('error', (err) => {

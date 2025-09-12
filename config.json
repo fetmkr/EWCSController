@@ -60,7 +60,7 @@
     }
   },
   "images": {
-    "directory": "./ewcs-image",
+    "directory": "./ewcs_images",
     "format": "jpg",
     "maxAge": 2592000000
   },
