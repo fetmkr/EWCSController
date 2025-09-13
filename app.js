@@ -1,6 +1,5 @@
 import express from 'express';
 import expressWs from 'express-ws';
-import { SerialPort } from 'serialport';
 import config from './config/app-config.js';
 import database from './database/sqlite-db.js';
 import systemState from './utils/system-state.js';
@@ -13,13 +12,12 @@ import SHT45Sensor from './devices/sht45-sensor.js';
 import GPIOController from './devices/gpio-controller.js';
 import ADCReader from './devices/adc-reader.js';
 import OASCCamera from './devices/oasc-camera.js';
+import PIC24Controller from './devices/pic24-controller.js';
 
 // API routes
 import createDeviceRoutes from './api/routes/device-routes.js';
-import createSensorRoutes from './api/routes/sensor-routes.js';
 import createSystemRoutes from './api/routes/system-routes.js';
 import createEwcsRoutes from './api/routes/ewcs-routes.js';
-import createCameraRoutes from './api/routes/camera-routes.js';
 import createImageRoutes from './api/routes/image-routes.js';
 
 // Utility function for timestamped logging
@@ -33,7 +31,6 @@ class EWCSApp {
     this.app = express();
     this.server = null;
     this.devices = {};
-    this.controlPort = null;
     this.dataCollectionInterval = null;
     this.lastImageFilename = "";
     
@@ -108,8 +105,8 @@ class EWCSApp {
       database.initialize();
       console.log(`[${getTimestamp()}] [DB] Database initialized`);
       
-      // Initialize control port (PIC24)
-      await this.initializeControlPort();
+      // Initialize PIC24 controller
+      await this.initializePIC24();
       
       // Initialize devices
       await this.initializeDevices();
@@ -142,15 +139,14 @@ class EWCSApp {
     this.app.use(express.json());
   }
 
-  async initializeControlPort() {
+  // PIC24 관련 함수 - PIC24 컨트롤러 초기화
+  async initializePIC24() {
     try {
-      this.controlPort = new SerialPort({
-        path: config.get('serialPorts.pic24'),
-        baudRate: 115200
-      });
-      console.log(`[${getTimestamp()}] Control port initialized`);
+      this.devices.pic24 = new PIC24Controller();
+      await this.devices.pic24.initialize(config.get('serialPorts.pic24'), 115200);
+      console.log(`[${getTimestamp()}] PIC24 controller initialized`);
     } catch (error) {
-      console.warn('Control port initialization failed:', error.message);
+      console.warn('PIC24 controller initialization failed:', error.message);
     }
   }
 
@@ -239,12 +235,10 @@ class EWCSApp {
   }
 
   setupRoutes() {
-    // API routes
-    this.app.use('/api/device', createDeviceRoutes(this.devices));
-    this.app.use('/api/sensor', createSensorRoutes(database, this.devices));
+    // API routes - Pass both devices and app instance for PIC24 control
+    this.app.use('/api/device', createDeviceRoutes(this.devices, this));
     this.app.use('/api/system', createSystemRoutes());
     this.app.use('/api', createEwcsRoutes(database));
-    this.app.use('/api/camera', createCameraRoutes(database, this.devices));
     this.app.use('/api/images', createImageRoutes(database));
     this.app.use('/images', createImageRoutes(database));
     
@@ -256,15 +250,29 @@ class EWCSApp {
         uptime: process.uptime(),
         devices: {}
       };
-      
+
       for (const [name, device] of Object.entries(this.devices)) {
         try {
-          health.devices[name] = device.isHealthy ? device.isHealthy() : { healthy: true };
+          if (device && device.getStatus) {
+            health.devices[name] = device.getStatus();
+          } else if (device) {
+            // Fallback for devices without getStatus method
+            health.devices[name] = {
+              available: true,
+              connected: device.isConnected || device.connected || true
+            };
+          } else {
+            health.devices[name] = { available: false };
+          }
         } catch (error) {
-          health.devices[name] = { healthy: false, error: error.message };
+          health.devices[name] = {
+            available: true,
+            connected: false,
+            error: error.message
+          };
         }
       }
-      
+
       res.json(health);
     });
     
@@ -283,9 +291,6 @@ class EWCSApp {
     
     this.dataCollectionInterval = setInterval(async () => {
       try {
-        // 데이터 수집용 디바이스만 체크
-        await this.checkDataCollectionDevices();
-        
         await this.updateEwcsData();
         
         database.insertEwcsData(this.ewcsData);
@@ -306,40 +311,76 @@ class EWCSApp {
     this.ewcsData.stationName = config.get('stationName');
     
     // CS125 센서 데이터
-    if (this.devices.cs125?.data) {
-      console.log('[CS125] Connected - collecting data');
-      this.ewcsData.cs125Current = this.devices.cs125.data.current || 0;
-      this.ewcsData.cs125Visibility = this.devices.cs125.data.visibility || 0;
-      this.ewcsData.cs125SYNOP = this.devices.cs125.data.synop || 0;
-      this.ewcsData.cs125Temp = this.devices.cs125.data.temperature || 0;
-      this.ewcsData.cs125Humidity = this.devices.cs125.data.humidity || 0;
-    } else {
-      console.log('[CS125] Disconnected - skipping data collection');
+    try {
+      if (this.devices.cs125?.data) {
+        console.log('[CS125] Connected - collecting data');
+        this.ewcsData.cs125Current = this.devices.cs125.data.current || 0;
+        this.ewcsData.cs125Visibility = this.devices.cs125.data.visibility || 0;
+        this.ewcsData.cs125SYNOP = this.devices.cs125.data.synop || 0;
+        this.ewcsData.cs125Temp = this.devices.cs125.data.temperature || 0;
+        this.ewcsData.cs125Humidity = this.devices.cs125.data.humidity || 0;
+      } else {
+        console.log('[CS125] Disconnected - using default values');
+        this.ewcsData.cs125Current = 0;
+        this.ewcsData.cs125Visibility = 0;
+        this.ewcsData.cs125SYNOP = 0;
+        this.ewcsData.cs125Temp = 0;
+        this.ewcsData.cs125Humidity = 0;
+      }
+    } catch (error) {
+      console.log('[CS125] Data collection failed:', error.message);
+      this.ewcsData.cs125Current = 0;
+      this.ewcsData.cs125Visibility = 0;
+      this.ewcsData.cs125SYNOP = 0;
+      this.ewcsData.cs125Temp = 0;
+      this.ewcsData.cs125Humidity = 0;
     }
     
     // SHT45 환경 센서 데이터
-    if (this.devices.sht45) {
-      await this.devices.sht45.updateSHT45(); // 데이터 업데이트 함수 호출
-      const sht45Data = this.devices.sht45.getData();
-      
-      if (sht45Data.lastReading > 0) {
-        console.log('[SHT45] Connected - collecting data');
-        this.ewcsData.SHT45Temp = sht45Data.temperature || 0;
-        this.ewcsData.SHT45Humidity = sht45Data.humidity || 0;
+    try {
+      if (this.devices.sht45) {
+        await this.devices.sht45.updateSHT45(); // 데이터 업데이트 함수 호출
+        const sht45Data = this.devices.sht45.getData();
+
+        if (sht45Data.lastReading > 0) {
+          console.log('[SHT45] Connected - collecting data');
+          this.ewcsData.SHT45Temp = sht45Data.temperature || 0;
+          this.ewcsData.SHT45Humidity = sht45Data.humidity || 0;
+        } else {
+          console.log('[SHT45] Disconnected - using default values');
+          this.ewcsData.SHT45Temp = 0;
+          this.ewcsData.SHT45Humidity = 0;
+        }
       } else {
-        console.log('[SHT45] Disconnected - skipping data collection');
+        console.log('[SHT45] Not available - using default values');
+        this.ewcsData.SHT45Temp = 0;
+        this.ewcsData.SHT45Humidity = 0;
       }
+    } catch (error) {
+      console.log('[SHT45] Data collection failed:', error.message);
+      this.ewcsData.SHT45Temp = 0;
+      this.ewcsData.SHT45Humidity = 0;
     }
     
     // ADC 전력 모니터링 데이터 (원래 ewcs.js 방식)
-    if (this.devices.adc) {
-      console.log('[ADC] Connected - collecting power monitoring data');
-      // CH1: Iridium current, CH2: Camera current, CH3: Battery voltage
-      this.ewcsData.iridiumCurrent = (await this.devices.adc.getChannelData(1))?.data?.convertedValue || 0;
-      this.ewcsData.cameraCurrent = (await this.devices.adc.getChannelData(2))?.data?.convertedValue || 0;  
-      this.ewcsData.batteryVoltage = (await this.devices.adc.getChannelData(3))?.data?.convertedValue || 0;
-    } else {
-      console.log('[ADC] Disconnected - skipping power monitoring data');
+    try {
+      if (this.devices.adc) {
+        console.log('[ADC] Connected - collecting power monitoring data');
+        // CH1: Iridium current, CH2: Camera current, CH3: Battery voltage
+        this.ewcsData.iridiumCurrent = (await this.devices.adc.getChannelData(1))?.data?.convertedValue || 0;
+        this.ewcsData.cameraCurrent = (await this.devices.adc.getChannelData(2))?.data?.convertedValue || 0;
+        this.ewcsData.batteryVoltage = (await this.devices.adc.getChannelData(3))?.data?.convertedValue || 0;
+      } else {
+        console.log('[ADC] Disconnected - using default values');
+        this.ewcsData.iridiumCurrent = 0;
+        this.ewcsData.cameraCurrent = 0;
+        this.ewcsData.batteryVoltage = 0;
+      }
+    } catch (error) {
+      console.log('[ADC] Data collection failed:', error.message);
+      this.ewcsData.iridiumCurrent = 0;
+      this.ewcsData.cameraCurrent = 0;
+      this.ewcsData.batteryVoltage = 0;
     }
     
     // EPEVER 태양광 충전기 데이터 (실시간 수집)
@@ -384,7 +425,15 @@ class EWCSApp {
         this.ewcsData.DischgEquipStat = 0;
       }
     } else {
-      console.log('[EPEVER] Disconnected - skipping solar charger data');
+      console.log('[EPEVER] Disconnected - using default values');
+      this.ewcsData.PVVol = 0;
+      this.ewcsData.PVCur = 0;
+      this.ewcsData.LoadVol = 0;
+      this.ewcsData.LoadCur = 0;
+      this.ewcsData.BatTemp = 0;
+      this.ewcsData.DevTemp = 0;
+      this.ewcsData.ChargEquipStat = 0;
+      this.ewcsData.DischgEquipStat = 0;
     }
     
     // 이미지 정보
@@ -476,14 +525,14 @@ class EWCSApp {
     console.log(`Image collection started (${imagePeriod/1000}s interval)`);
   }
 
-  // PIC24를 통한 카메라 전원 제어
+  // PIC24 관련 함수 - 카메라 전원 제어
   async turnOnCamera() {
-    if (!this.controlPort) {
-      throw new Error('Control port not available for camera power control');
+    if (!this.devices.pic24) {
+      throw new Error('PIC24 controller not available for camera power control');
     }
 
     try {
-      this.controlPort.write('P'); // PIC24에 카메라 ON 명령 전송
+      await this.devices.pic24.cameraOn(); // PIC24에 카메라 ON 명령 전송 (VOUT1_ON)
       systemState.setCameraPower(true);
       console.log('[CAMERA] Power ON via PIC24');
       return { success: true };
@@ -495,12 +544,12 @@ class EWCSApp {
   }
 
   async turnOffCamera() {
-    if (!this.controlPort) {
-      throw new Error('Control port not available for camera power control');
+    if (!this.devices.pic24) {
+      throw new Error('PIC24 controller not available for camera power control');
     }
 
     try {
-      this.controlPort.write('p'); // PIC24에 카메라 OFF 명령 전송 (소문자)
+      await this.devices.pic24.cameraOff(); // PIC24에 카메라 OFF 명령 전송 (VOUT1_OFF)
       systemState.setCameraPower(false);
       console.log('[CAMERA] Power OFF via PIC24');
       return { success: true };
@@ -511,14 +560,14 @@ class EWCSApp {
     }
   }
 
-  // PIC24를 통한 CS125 전원 제어
+  // PIC24 관련 함수 - CS125 전원 제어
   async turnOnCS125() {
-    if (!this.controlPort) {
-      throw new Error('Control port not available for CS125 power control');
+    if (!this.devices.pic24) {
+      throw new Error('PIC24 controller not available for CS125 power control');
     }
 
     try {
-      this.controlPort.write('C'); // PIC24에 CS125 ON 명령 전송
+      await this.devices.pic24.cs125On(); // PIC24에 CS125 ON 명령 전송 (VOUT2_ON)
       console.log('[CS125] Power ON via PIC24');
       return { success: true };
     } catch (error) {
@@ -529,12 +578,12 @@ class EWCSApp {
   }
 
   async turnOffCS125() {
-    if (!this.controlPort) {
-      throw new Error('Control port not available for CS125 power control');
+    if (!this.devices.pic24) {
+      throw new Error('PIC24 controller not available for CS125 power control');
     }
 
     try {
-      this.controlPort.write('c'); // PIC24에 CS125 OFF 명령 전송 (소문자)
+      await this.devices.pic24.cs125Off(); // PIC24에 CS125 OFF 명령 전송 (VOUT2_OFF)
       console.log('[CS125] Power OFF via PIC24');
       return { success: true };
     } catch (error) {
@@ -544,15 +593,18 @@ class EWCSApp {
     }
   }
 
-  // PIC24를 통한 CS125 후드 히터 제어
+  // PIC24 관련 함수 - CS125 후드 히터 제어
   async setCS125HoodHeater(enable) {
-    if (!this.controlPort) {
-      throw new Error('Control port not available for CS125 hood heater control');
+    if (!this.devices.pic24) {
+      throw new Error('PIC24 controller not available for CS125 hood heater control');
     }
 
     try {
-      const command = enable ? 'H' : 'h';
-      this.controlPort.write(command); // PIC24에 후드 히터 명령 전송
+      if (enable) {
+        await this.devices.pic24.heaterOn(); // PIC24에 히터 ON 명령 전송 (VOUT3_ON)
+      } else {
+        await this.devices.pic24.heaterOff(); // PIC24에 히터 OFF 명령 전송 (VOUT3_OFF)
+      }
       console.log(`[CS125] Hood heater ${enable ? 'ON' : 'OFF'} via PIC24`);
       return { success: true };
     } catch (error) {
@@ -680,23 +732,6 @@ class EWCSApp {
     }
   }
 
-  // 데이터 수집용 디바이스 체크 (CS125, EPEVER, SHT45, ADC)
-  async checkDataCollectionDevices() {
-    return {
-      cs125: await this.checkCS125Connection(),
-      epever: await this.checkEPEVERConnection(),
-      sht45: await this.checkSHT45Connection(),
-      adc: await this.checkADCConnection()
-    };
-  }
-
-  // 이미지 수집용 디바이스 체크 (Cameras)
-  async checkImageCollectionDevices() {
-    return {
-      spinel_camera: await this.checkSpinelCameraConnection(),
-      oasc_camera: await this.checkOASCCameraConnection()
-    };
-  }
 
   // 전체 디바이스 헬스 체크
   async checkDeviceHealth() {
@@ -746,9 +781,9 @@ class EWCSApp {
         }
       }
       
-      // Close control port
-      if (this.controlPort && this.controlPort.isOpen) {
-        this.controlPort.close();
+      // Close PIC24 controller
+      if (this.devices.pic24) {
+        await this.devices.pic24.close();
       }
       
       // Close database

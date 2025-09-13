@@ -4,27 +4,83 @@ import systemState from '../../utils/system-state.js';
 export default function createEwcsRoutes(database) {
   const router = express.Router();
 
-  // 최신 EWCS 데이터 조회
+  // EWCS 데이터 조회 (유연한 날짜 범위 검색 지원)
   router.get('/ewcs_data', (req, res) => {
     try {
-      // Query parameters
-      const limit = parseInt(req.query.limit) || 1;
-      const includeImages = req.query.images === 'true';
-      
-      // Get latest EWCS data from database
-      const ewcsData = database.getLatestData('ewcs_data', limit);
-      
+      const { from, to, limit, images } = req.query;
+      const includeImages = images === 'true';
+
+      // 날짜 범위가 지정된 경우 범위 검색, 그렇지 않으면 최신 데이터
+      let ewcsData;
+      let query = {};
+
+      if (from || to) {
+        // 날짜 범위 검색
+        let startTime = 0;
+        let endTime = Date.now();
+
+        if (from) {
+          startTime = parseTimeParameter(from);
+          if (startTime === null) {
+            return res.status(400).json({ error: 'Invalid "from" parameter format' });
+          }
+        }
+
+        if (to) {
+          endTime = parseTimeParameter(to);
+          if (endTime === null) {
+            return res.status(400).json({ error: 'Invalid "to" parameter format' });
+          }
+        }
+
+        const maxLimit = parseInt(limit) || 100;
+
+        const stmt = database.db.prepare(`
+          SELECT * FROM ewcs_data
+          WHERE timestamp >= ? AND timestamp <= ?
+          ORDER BY timestamp DESC
+          LIMIT ?
+        `);
+
+        ewcsData = stmt.all(startTime, endTime, maxLimit);
+
+        query = {
+          from: startTime,
+          to: endTime,
+          from_readable: new Date(startTime).toISOString(),
+          to_readable: new Date(endTime).toISOString()
+        };
+      } else {
+        // 최신 데이터 (기존 방식)
+        const maxLimit = parseInt(limit) || 1;
+        ewcsData = database.getLatestData('ewcs_data', maxLimit);
+      }
+
       const response = {
+        query: query,
+        count: ewcsData.length,
         data: ewcsData,
         timestamp: Date.now()
       };
-      
+
       // Include image data if requested
       if (includeImages) {
-        const imageData = database.getLatestData('ewcs_images', limit);
+        let imageData;
+        if (from || to) {
+          // 같은 날짜 범위로 이미지도 검색
+          const stmt = database.db.prepare(`
+            SELECT * FROM ewcs_images
+            WHERE timestamp >= ? AND timestamp <= ?
+            ORDER BY timestamp DESC
+            LIMIT ?
+          `);
+          imageData = stmt.all(query.from || 0, query.to || Date.now(), parseInt(limit) || 100);
+        } else {
+          imageData = database.getLatestData('ewcs_images', parseInt(limit) || 1);
+        }
         response.images = imageData;
       }
-      
+
       res.json(response);
     } catch (error) {
       console.error('Failed to get EWCS data:', error);
@@ -50,4 +106,28 @@ export default function createEwcsRoutes(database) {
   });
 
   return router;
+}
+
+// Parse time parameter - supports epoch timestamp or YYYY-MM-DD-HH-mm format
+function parseTimeParameter(timeStr) {
+  // Check if it's a number (epoch timestamp)
+  if (/^\d+$/.test(timeStr)) {
+    return parseInt(timeStr);
+  }
+
+  // Try to parse YYYY-MM-DD-HH-mm format
+  const match = timeStr.match(/^(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})$/);
+  if (match) {
+    const [_, year, month, day, hour, minute] = match;
+    const date = new Date(year, month - 1, day, hour, minute);
+    return date.getTime();
+  }
+
+  // Try ISO format as fallback
+  const date = new Date(timeStr);
+  if (!isNaN(date.getTime())) {
+    return date.getTime();
+  }
+
+  return null;
 }

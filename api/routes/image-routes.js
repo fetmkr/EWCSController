@@ -5,84 +5,88 @@ import fs from 'fs';
 export default function createImageRoutes(database) {
   const router = express.Router();
 
-  // Static serving for both camera image directories
-  router.use('/spinel', express.static(path.join(process.cwd(), 'ewcs_images')));
-  router.use('/oasc', express.static(path.join(process.cwd(), 'oasc_images')));
-
-  // Get latest images from specific camera
-  router.get('/:camera/latest/:limit?', (req, res) => {
-    const isApiRoute = req.originalUrl.startsWith('/api/');
-    
-    if (!isApiRoute) {
-      // HTML response for non-API routes (/images/...)
-      return handleLatestImagesHTML(req, res);
-    }
-    
-    // JSON response for API calls (/api/images/...)
+  // Static serving for viewer (HTML gallery)
+  router.get('/:camera/viewer', (req, res) => {
     try {
       const { camera } = req.params;
-      const limit = parseInt(req.params.limit) || 10;
-      
+      const limit = parseInt(req.query.limit) || 20;
+
       if (!['spinel', 'oasc'].includes(camera)) {
-        return res.status(400).json({ error: 'Invalid camera. Use "spinel" or "oasc"' });
+        return res.status(400).send('<h1>Error: Invalid camera. Use "spinel" or "oasc"</h1>');
       }
-      
+
       const folderName = camera === 'spinel' ? 'ewcs_images' : 'oasc_images';
       const imagePath = path.join(process.cwd(), folderName);
-      
-      // Get files from directory and sort by modification time
+
       const files = getRecentImageFiles(imagePath, limit);
-      const imageList = files.map(file => ({
-        fullUrl: `${req.protocol}://${req.get('host')}/api/images/${camera}/${path.relative(imagePath, file.path)}`,
-        filename: path.basename(file.path),
-        timestamp: file.mtime,
-        camera: camera
-      }));
-      
-      res.json({
-        camera: camera,
-        count: imageList.length,
-        images: imageList,
-        timestamp: Date.now()
-      });
+
+      let html = generateImageViewerHTML(camera, files, imagePath);
+      res.send(html);
     } catch (error) {
-      console.error('Failed to get latest images:', error);
-      res.status(500).json({ error: error.message });
+      console.error('Failed to generate viewer:', error);
+      res.status(500).send('<h1>Error loading images</h1>');
     }
   });
 
+  // Static file serving for actual images
+  router.use('/spinel', express.static(path.join(process.cwd(), 'ewcs_images')));
+  router.use('/oasc', express.static(path.join(process.cwd(), 'oasc_images')));
 
-  // Get images by time range for specific camera
-  router.get('/:camera/last/:hours', (req, res) => {
+  // Get images with flexible date range search
+  router.get('/:camera/images', (req, res) => {
     try {
       const { camera } = req.params;
-      const hours = parseInt(req.params.hours) || 1;
-      
+      const { from, to, limit } = req.query;
+
       if (!['spinel', 'oasc'].includes(camera)) {
         return res.status(400).json({ error: 'Invalid camera. Use "spinel" or "oasc"' });
       }
-      
-      const startTime = Date.now() - (hours * 60 * 60 * 1000);
-      const folderName = camera === 'spinel' ? 'ewcs_images' : 'oasc_images';
-      const imagePath = path.join(process.cwd(), folderName);
-      
-      const files = getImagesByTimeRange(imagePath, startTime, Date.now());
-      const imageList = files.map(file => ({
-        fullUrl: `${req.protocol}://${req.get('host')}/api/images/${camera}/${path.relative(imagePath, file.path)}`,
-        filename: path.basename(file.path),
-        timestamp: file.mtime,
-        camera: camera
-      }));
-      
+
+      // Parse date parameters
+      let startTime = 0;
+      let endTime = Date.now();
+
+      if (from) {
+        startTime = parseTimeParameter(from);
+        if (startTime === null) {
+          return res.status(400).json({ error: 'Invalid "from" parameter format' });
+        }
+      }
+
+      if (to) {
+        endTime = parseTimeParameter(to);
+        if (endTime === null) {
+          return res.status(400).json({ error: 'Invalid "to" parameter format' });
+        }
+      }
+
+      const maxLimit = parseInt(limit) || 100;
+
+      // Get from database
+      const tableName = camera === 'spinel' ? 'ewcs_images' : 'oasc_images';
+      const stmt = database.db.prepare(`
+        SELECT * FROM ${tableName}
+        WHERE timestamp >= ? AND timestamp <= ?
+        ORDER BY timestamp DESC
+        LIMIT ?
+      `);
+
+      const imageData = stmt.all(startTime, endTime, maxLimit);
+
       res.json({
         camera: camera,
-        hours: hours,
-        count: imageList.length,
-        images: imageList,
+        query: {
+          from: startTime,
+          to: endTime,
+          from_readable: new Date(startTime).toISOString(),
+          to_readable: new Date(endTime).toISOString()
+        },
+        count: imageData.length,
+        images: imageData,
         timestamp: Date.now()
       });
     } catch (error) {
-      console.error('Failed to get images by time range:', error);
+      console.error('Failed to get images:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -90,22 +94,33 @@ export default function createImageRoutes(database) {
   return router;
 }
 
-// HTML response handler for latest images
-function handleLatestImagesHTML(req, res) {
-  try {
-    const { camera } = req.params;
-    const limit = parseInt(req.params.limit) || 10;
-    
-    if (!['spinel', 'oasc'].includes(camera)) {
-      return res.status(400).send('<h1>Error: Invalid camera. Use "spinel" or "oasc"</h1>');
-    }
-    
-    const folderName = camera === 'spinel' ? 'ewcs_images' : 'oasc_images';
-    const imagePath = path.join(process.cwd(), folderName);
-    
-    const files = getRecentImageFiles(imagePath, limit);
-    
-    let html = `
+// Parse time parameter - supports epoch timestamp or YYYY-MM-DD-HH-mm format
+function parseTimeParameter(timeStr) {
+  // Check if it's a number (epoch timestamp)
+  if (/^\d+$/.test(timeStr)) {
+    return parseInt(timeStr);
+  }
+
+  // Try to parse YYYY-MM-DD-HH-mm format
+  const match = timeStr.match(/^(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})$/);
+  if (match) {
+    const [_, year, month, day, hour, minute] = match;
+    const date = new Date(year, month - 1, day, hour, minute);
+    return date.getTime();
+  }
+
+  // Try ISO format as fallback
+  const date = new Date(timeStr);
+  if (!isNaN(date.getTime())) {
+    return date.getTime();
+  }
+
+  return null;
+}
+
+// HTML viewer generator
+function generateImageViewerHTML(camera, files, imagePath) {
+  let html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -124,11 +139,11 @@ function handleLatestImagesHTML(req, res) {
 </head>
 <body>
     <div class="nav">
-        <a href="/images/spinel/latest/20">Spinel Camera</a>
-        <a href="/images/oasc/latest/20">OASC Camera</a>
+        <a href="/api/images/spinel/viewer">Spinel Camera</a>
+        <a href="/api/images/oasc/viewer">OASC Camera</a>
     </div>
-    
-    <h1>${camera.toUpperCase()} Camera - Latest ${limit} Images</h1>
+
+    <h1>${camera.toUpperCase()} Camera - Image Viewer</h1>
     <p>Total images: ${files.length}</p>
     
     <div class="image-grid">`;
@@ -156,11 +171,7 @@ function handleLatestImagesHTML(req, res) {
 </body>
 </html>`;
 
-    res.send(html);
-  } catch (error) {
-    console.error('Failed to generate HTML view:', error);
-    res.status(500).send('<h1>Error loading images</h1>');
-  }
+  return html;
 }
 
 // Helper function to get recent image files
