@@ -178,18 +178,24 @@ function generateImageViewerHTML(camera, files, imagePath) {
 function getRecentImageFiles(directory, limit = 10) {
   try {
     if (!fs.existsSync(directory)) return [];
-    
+
     const files = [];
-    
+
     function scanDirectory(dir) {
       const items = fs.readdirSync(dir);
-      
+
       for (const item of items) {
         const fullPath = path.join(dir, item);
         const stats = fs.statSync(fullPath);
-        
+
         if (stats.isDirectory()) {
-          scanDirectory(fullPath);
+          // OASC 카메라의 경우 jpg 폴더를 우선적으로 탐색
+          if (item === 'jpg') {
+            scanDirectory(fullPath);
+          } else if (!dir.includes('/jpg')) {
+            // jpg 폴더가 아닌 경우에만 재귀 탐색
+            scanDirectory(fullPath);
+          }
         } else if (item.endsWith('.jpg')) {
           files.push({
             path: fullPath,
@@ -198,7 +204,7 @@ function getRecentImageFiles(directory, limit = 10) {
         }
       }
     }
-    
+
     scanDirectory(directory);
     return files.sort((a, b) => b.mtime - a.mtime).slice(0, limit);
   } catch (error) {
@@ -211,18 +217,24 @@ function getRecentImageFiles(directory, limit = 10) {
 function getImagesByTimeRange(directory, startTime, endTime) {
   try {
     if (!fs.existsSync(directory)) return [];
-    
+
     const files = [];
-    
+
     function scanDirectory(dir) {
       const items = fs.readdirSync(dir);
-      
+
       for (const item of items) {
         const fullPath = path.join(dir, item);
         const stats = fs.statSync(fullPath);
-        
+
         if (stats.isDirectory()) {
-          scanDirectory(fullPath);
+          // OASC 카메라의 경우 jpg 폴더를 우선적으로 탐색
+          if (item === 'jpg') {
+            scanDirectory(fullPath);
+          } else if (!dir.includes('/jpg')) {
+            // jpg 폴더가 아닌 경우에만 재귀 탐색
+            scanDirectory(fullPath);
+          }
         } else if (item.endsWith('.jpg')) {
           const mtime = stats.mtime.getTime();
           if (mtime >= startTime && mtime <= endTime) {
@@ -234,7 +246,7 @@ function getImagesByTimeRange(directory, startTime, endTime) {
         }
       }
     }
-    
+
     scanDirectory(directory);
     return files.sort((a, b) => b.mtime - a.mtime);
   } catch (error) {

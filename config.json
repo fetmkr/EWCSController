@@ -1,73 +1,9 @@
 {
   "stationName": "KOPRI Station",
   "mode": "normal",
-  "server": {
-    "port": 8080,
-    "host": "0.0.0.0"
-  },
-  "network": {
-    "ipAddress": "192.168.0.11",
-    "gateway": "192.168.0.1",
-    "cameraIpAddress": "192.168.0.12"
-  },
-  "data": {
-    "savePeriod": 60,
-    "imageSavePeriod": 60
-  },
-  "serialPorts": {
-    "pic24": "/dev/ttyAMA0",
-    "cs125": "/dev/ttyAMA2",
-    "bms": "/dev/ttyACM0",
-    "camera": "/dev/ttyAMA3"
-  },
-  "camera": {
-    "packetSize": 768,
-    "maxRetryCount": 5,
-    "captureTimeout": 6000,
-    "imageQuality": 1
-  },
-  "cs125": {
-    "baudRate": 38400,
-    "timeout": 5000,
-    "retryAttempts": 3
-  },
-  "bms": {
-    "baudRate": 9600,
-    "timeout": 3000,
-    "deviceIds": [
-      11,
-      12,
-      13,
-      14
-    ]
-  },
-  "adc": {
-    "channel": 0,
-    "speedHz": 1000000,
-    "conversionFactor": 20,
-    "vref": 3.3,
-    "resolution": 1024
-  },
-  "gpio": {
-    "led": 16
-  },
-  "database": {
-    "path": "./data/ewcs.db",
-    "backup": {
-      "enabled": true,
-      "interval": 86400000,
-      "maxBackups": 7
-    }
-  },
-  "images": {
-    "directory": "./ewcs_images",
-    "format": "jpg",
-    "maxAge": 2592000000
-  },
-  "logging": {
-    "level": "info",
-    "file": "./logs/ewcs.log",
-    "maxSize": "10m",
-    "maxFiles": 5
-  }
+  "dataSavePeriod": 60,
+  "spinelSavePeriod": 100,
+  "oascSavePeriod": 110,
+  "oascExposureTime": 10.0,
+  "lastUpdated": "2024-01-15T10:30:00Z"
 }

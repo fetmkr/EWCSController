@@ -1,7 +1,8 @@
 import express from 'express';
 import systemState from '../../utils/system-state.js';
+import config from '../../config/app-config.js';
 
-export default function createEwcsRoutes(database) {
+export default function createEwcsRoutes(database, appInstance) {
   const router = express.Router();
 
   // EWCS 데이터 조회 (유연한 날짜 범위 검색 지원)
@@ -88,16 +89,31 @@ export default function createEwcsRoutes(database) {
     }
   });
 
-  // 시스템 상태 조회 (system_state.json)
+  // 시스템 상태 조회 (system_state.json + real-time status)
   router.get('/ewcs_status', (req, res) => {
     try {
       const response = {
         current_status: systemState.getStatus(),
-        settings: systemState.getSetting(),
+        settings: {
+          ...systemState.getSetting(),
+          station_name: config.get('stationName')
+        },
+        network_info: {
+          ipAddress: appInstance?.ewcsStatus?.ipAddress || 'N/A',
+          gateway: appInstance?.ewcsStatus?.gateway || 'N/A'
+        },
+        device_connections: appInstance ? {
+          cs125Connected: appInstance.ewcsStatus.cs125Connected,
+          cameraConnected: appInstance.ewcsStatus.cameraConnected,
+          OASCConnected: appInstance.ewcsStatus.OASCConnected,
+          EPEVERConnected: appInstance.ewcsStatus.EPEVERConnected,
+          ADCConnected: appInstance.ewcsStatus.ADCConnected,
+          SHT45Connected: appInstance.ewcsStatus.SHT45Connected
+        } : {},
         recent_events: systemState.getRecentEvents(20),
         timestamp: Date.now()
       };
-      
+
       res.json(response);
     } catch (error) {
       console.error('Failed to get EWCS status:', error);

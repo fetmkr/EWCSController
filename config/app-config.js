@@ -172,8 +172,10 @@ class AppConfig {
       const saveableConfig = {
         stationName: this.config.stationName,
         mode: this.config.mode,
-        network: this.config.network,
-        data: this.config.data
+        dataSavePeriod: this.config.dataSavePeriod,
+        spinelSavePeriod: this.config.spinelSavePeriod,
+        oascSavePeriod: this.config.oascSavePeriod,
+        oascExposureTime: this.config.oascExposureTime
       };
       
       fs.writeFileSync(this.configPath, JSON.stringify(saveableConfig, null, 2));

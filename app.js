@@ -3,6 +3,13 @@ import expressWs from 'express-ws';
 import config from './config/app-config.js';
 import database from './database/sqlite-db.js';
 import systemState from './utils/system-state.js';
+import AutoDataCleanup from './utils/auto-data-cleanup.js';
+import os from 'os';
+import fs from 'fs';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 // Device modules
 import CS125Sensor from './devices/cs125-sensor.js';
@@ -70,33 +77,35 @@ class EWCSApp {
     this.ewcsStatus = {
       // 장치 연결 상태
       cs125Connected: 0,
-      cameraConnected: 0,
-      OASCConnected: 0,
+      cameraConnected: 0,  // Spinel camera
+      OASCConnected: 0,     // OASC camera
       EPEVERConnected: 0,
       ADCConnected: 0,
       SHT45Connected: 0,
-      // 기존 상태
-      cs125OnStatus: 0,
-      cs125HoodHeaterStatus: 0,
-      cameraOnStatus: 0,
-      cameraIsSaving: 0,
-      iridiumOnStatus: 0,
-      iridiumIsSending: 0,
-      powerSaveOnStatus: 0,
+      // 네트워크 정보
       ipAddress: "",
-      gateway: "",
-      cameraIpAddress: "",
-      dataSavePeriod: 60,
-      imageSavePeriod: 100
+      gateway: ""
+      // TODO: PIC24 제어 상태 (추후 구현 시 추가)
+      // cs125OnStatus: 0,
+      // cs125HoodHeaterStatus: 0,
+      // cameraOnStatus: 0,
+      // iridiumOnStatus: 0,
+      // powerSaveOnStatus: 0
     };
+
+    // Auto cleanup 초기화
+    this.autoCleanup = new AutoDataCleanup();
   }
 
   async initialize() {
     try {
       console.log(`[${getTimestamp()}] EWCS Controller starting...`);
-      
+
       // Log system start
       systemState.logSystemStart();
+
+      // Get network information
+      this.updateNetworkInfo();
       
       // Setup Express
       this.setupExpress();
@@ -120,12 +129,16 @@ class EWCSApp {
       // Start data collection
       this.startDataCollection();
       
-      // Start image collection (원래 ewcs.js 방식)
-      this.startImageCollection();
+      // Start image collection (분리된 방식)
+      this.startSpinelImageCollection();
+      this.startOASCImageCollection();
       
       // Start server
       this.startServer();
-      
+
+      // Start auto cleanup schedule
+      this.startAutoCleanupSchedule();
+
       console.log(`[${getTimestamp()}] EWCS Controller initialized successfully`);
       
     } catch (error) {
@@ -188,20 +201,29 @@ class EWCSApp {
     // Initialize spinel camera
     try {
       this.devices.camera = new SpinelCamera(config.get('serialPorts.camera'), 115200);
-      
-      // Camera power control will be handled by app.js via PIC24
-      // console.log('[CAMERA] Testing connection at startup...'); // Simplified for cleaner logs
-      await this.turnOnCamera();
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for camera boot
-      
+
+      // Camera power control will be handled by app.js via PIC24 (실패해도 계속 진행)
+      try {
+        await this.turnOnCamera();
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for camera boot
+      } catch (error) {
+        console.log(`[CAMERA] PIC24 turn on failed, but continuing: ${error.message}`);
+      }
+
+      console.log('[DEBUG] About to call checkConnection...');
       const isConnected = await this.devices.camera.checkConnection();
+      console.log(`[DEBUG] checkConnection result: ${isConnected}`);
       if (isConnected) {
-        // console.log(`[CAMERA] Startup test successful - ID: 0x${this.devices.camera.config.cameraId.toString(16).padStart(2, '0')}`); // Simplified for cleaner logs
+        console.log(`[CAMERA] Startup test successful - ID: 0x${this.devices.camera.config.cameraId.toString(16).padStart(2, '0')}`);
       } else {
         console.warn(`[CAMERA] Startup test failed: no response`);
       }
-      
-      await this.turnOffCamera();
+
+      try {
+        await this.turnOffCamera();
+      } catch (error) {
+        console.log(`[CAMERA] PIC24 turn off failed: ${error.message}`);
+      }
     } catch (error) {
       console.warn('Spinel camera initialization failed:', error.message);
       this.devices.camera = null;
@@ -238,7 +260,7 @@ class EWCSApp {
     // API routes - Pass both devices and app instance for PIC24 control
     this.app.use('/api/device', createDeviceRoutes(this.devices, this));
     this.app.use('/api/system', createSystemRoutes());
-    this.app.use('/api', createEwcsRoutes(database));
+    this.app.use('/api', createEwcsRoutes(database, this));
     this.app.use('/api/images', createImageRoutes(database));
     this.app.use('/images', createImageRoutes(database));
     
@@ -284,24 +306,121 @@ class EWCSApp {
         timestamp: Date.now()
       });
     });
+
+    // API Documentation
+    this.app.get('/api', (req, res) => {
+      const baseUrl = `http://${req.get('host')}`;
+
+      res.json({
+        title: "EWCS Controller API Documentation",
+        version: "2.0.0",
+        description: "Antarctic Weather Station & Camera Control System",
+        endpoints: {
+          "System Status": {
+            "GET /api/ewcs_status": "시스템 전체 상태, 네트워크 정보, 디바이스 연결 상태",
+            "GET /api/ewcs_data": "EWCS 센서 데이터 조회 (?from=timestamp&to=timestamp&limit=100)",
+            "GET /health": "시스템 헬스 체크"
+          },
+          "System Configuration": {
+            "GET /api/system/config": "시스템 설정 조회",
+            "GET /api/system/station-name?name=NAME": "스테이션 이름 설정/조회",
+            "GET /api/system/mode?mode=normal|emergency": "시스템 모드 설정/조회",
+            "GET /api/system/data-period?value=SECONDS": "데이터 저장 주기 설정/조회 (10-3600초)",
+            "GET /api/system/image-period?value=SECONDS": "이미지 저장 주기 설정/조회 (10-3600초)"
+          },
+          "Device Control": {
+            "GET /api/device/cs125?on=1|0": "CS125 센서 온/오프",
+            "GET /api/device/cs125-heater?on=1|0": "CS125 후드 히터 온/오프",
+            "GET /api/device/spinel/power?on=1|0": "Spinel 카메라 전원 제어 (PIC24 via)",
+            "GET /api/device/oasc/status": "OASC 카메라 상태 조회",
+            "GET /api/device/oasc/capture?exposure=SECONDS": "OASC 카메라 수동 촬영",
+            "GET /api/device/pic24/STATUS": "PIC24 상태 확인"
+          },
+          "Images & Media": {
+            "GET /api/images/spinel/viewer": "Spinel 카메라 이미지 뷰어 (HTML)",
+            "GET /api/images/oasc/viewer": "OASC 카메라 이미지 뷰어 (HTML)",
+            "GET /api/images/:camera/images": "이미지 목록 조회 (?from=timestamp&to=timestamp&limit=100)",
+            "GET /api/images/spinel/[path]": "Spinel 이미지 파일 직접 접근",
+            "GET /api/images/oasc/[path]": "OASC 이미지 파일 직접 접근 (FITS & JPG)"
+          }
+        },
+        examples: {
+          "시스템 상태 확인": `${baseUrl}/api/ewcs_status`,
+          "최근 1시간 데이터": `${baseUrl}/api/ewcs_data?from=${Date.now() - 3600000}&limit=60`,
+          "OASC 10초 노출 촬영": `${baseUrl}/api/device/oasc/capture?exposure=10`,
+          "Spinel 이미지 뷰어": `${baseUrl}/api/images/spinel/viewer`,
+          "OASC 이미지 뷰어": `${baseUrl}/api/images/oasc/viewer`
+        },
+        notes: {
+          "timestamp_format": "Unix timestamp (milliseconds) 또는 YYYY-MM-DD-HH-mm 형식",
+          "image_formats": {
+            "spinel": "JPG 파일 (시리얼 카메라)",
+            "oasc": "FITS (원본) + JPG (썸네일) - 2x2 binning"
+          },
+          "folder_structure": {
+            "spinel": "ewcs_images/YYYY-MM/timestamp.jpg",
+            "oasc": "oasc_images/YYYY-MM/timestamp.fits + oasc_images/YYYY-MM/jpg/timestamp.jpg"
+          }
+        },
+        timestamp: Date.now()
+      });
+    });
+  }
+
+  async updateNetworkInfo() {
+    try {
+      // Get IP address
+      const networkInterfaces = os.networkInterfaces();
+      let ipAddress = '';
+
+      // Find the first non-internal IPv4 address
+      for (const interfaceName in networkInterfaces) {
+        const interfaces = networkInterfaces[interfaceName];
+        for (const iface of interfaces) {
+          if (iface.family === 'IPv4' && !iface.internal) {
+            ipAddress = iface.address;
+            break;
+          }
+        }
+        if (ipAddress) break;
+      }
+
+      // Get gateway
+      let gateway = '';
+      try {
+        const { stdout } = await execAsync("ip route | grep default | awk '{print $3}'");
+        gateway = stdout.trim();
+      } catch (error) {
+        console.log('[Network] Could not get gateway:', error.message);
+      }
+
+      this.ewcsStatus.ipAddress = ipAddress || 'N/A';
+      this.ewcsStatus.gateway = gateway || 'N/A';
+
+      console.log(`[${getTimestamp()}] [Network] IP: ${this.ewcsStatus.ipAddress}, Gateway: ${this.ewcsStatus.gateway}`);
+    } catch (error) {
+      console.error('[Network] Failed to get network info:', error);
+      this.ewcsStatus.ipAddress = 'Error';
+      this.ewcsStatus.gateway = 'Error';
+    }
   }
 
   startDataCollection() {
-    const savePeriod = config.get('data.savePeriod') * 1000; // Convert to ms
-    
+    const savePeriod = config.get('dataSavePeriod') * 1000; // Convert to ms
+
     this.dataCollectionInterval = setInterval(async () => {
       try {
         await this.updateEwcsData();
-        
+
         database.insertEwcsData(this.ewcsData);
         console.log(`[${getTimestamp()}] [DB] EWCS data saved to database`);
-        
+
       } catch (error) {
         console.error('Data collection error:', error);
         systemState.logError('data_collection', error);
       }
     }, savePeriod);
-    
+
     console.log(`Data collection started (${savePeriod/1000}s interval)`);
   }
 
@@ -436,31 +555,130 @@ class EWCSApp {
       this.ewcsData.DischgEquipStat = 0;
     }
     
+    // RPi CPU 온도
+    try {
+      this.ewcsData.rpiTemp = this.getRPiTemperature();
+    } catch (error) {
+      console.log('[RPI] Temperature reading failed:', error.message);
+      this.ewcsData.rpiTemp = 0;
+    }
+
     // 이미지 정보
     this.ewcsData.lastImage = this.lastImageFilename || "";
-    
-    // RPi 온도는 별도 함수로 구현 예정
-    // this.ewcsData.rpiTemp = this.getRPiTemperature();
   }
 
+  /**
+   * RPi CPU 온도 읽기 (원본 ewcs.js의 readTemp() 함수 구현)
+   * /sys/class/thermal/thermal_zone0/temp 파일에서 온도 데이터를 읽어옴
+   * @returns {number} CPU 온도 (섭씨)
+   */
+  getRPiTemperature() {
+    try {
+      const tempRaw = fs.readFileSync('/sys/class/thermal/thermal_zone0/temp', 'utf8');
+      const tempMilliCelsius = parseInt(tempRaw.trim());
+      const tempCelsius = tempMilliCelsius / 1000;
+      return parseFloat(tempCelsius.toFixed(1));
+    } catch (error) {
+      console.error('[RPI] Failed to read CPU temperature:', error.message);
+      return 0;
+    }
+  }
+
+  // 원래 startImageCollection 함수 (주석처리 - 나중에 참고용)
+  /*
   startImageCollection() {
-    // 원래 ewcs.js의 imageSavePeriod = 100초
-    const imagePeriod = 100 * 1000; // 100초
-    
+    const imagePeriod = config.get('imageSavePeriod') * 1000;
+
     const captureImage = async () => {
       try {
-        // 이미지 수집용 디바이스만 체크 - 경쟁 상태를 유발하므로 제거
-        // const deviceStatus = await this.checkImageCollectionDevices();
-        
         // Spinel Camera 촬영
-        if (this.devices.camera) { // deviceStatus 확인 대신, camera 객체 존재 여부만 확인
-          console.log(`[${getTimestamp()}] [CAMERA] Spinel capture started`);
-          // Turn on camera via PIC24
-          await this.turnOnCamera();
-          
-          // Wait for camera to power up
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
+        if (this.devices.camera) {
+          console.log(`[${getTimestamp()}] [SPINEL] Capture started`);
+          try {
+            await this.turnOnCamera();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } catch (error) {
+            console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn on failed, but continuing: ${error.message}`);
+          }
+
+          const captureResult = await this.devices.camera.startCapture();
+          if (captureResult.success) {
+            console.log(`[${getTimestamp()}] [CAMERA] ✅ Spinel saved: ${captureResult.filename}`);
+            if (captureResult.filename && captureResult.savedPath) {
+              database.insertImageData({
+                timestamp: Date.now(),
+                filename: captureResult.filename,
+                camera: 'spinel'
+              });
+              console.log(`[${getTimestamp()}] [DB] Spinel image data saved: ${captureResult.filename}`);
+              this.lastImageFilename = captureResult.filename;
+            }
+          } else {
+            console.error(`[CAMERA] Spinel capture failed: ${captureResult.reason}`);
+          }
+
+          setTimeout(async () => {
+            try {
+              await this.turnOffCamera();
+            } catch (error) {
+              console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn off failed: ${error.message}`);
+            }
+          }, 30000);
+        } else {
+          console.log('[CAMERA] Spinel camera disconnected - skipping spinel capture');
+        }
+
+        // OASC Camera 촬영
+        if (this.devices.oascCamera) {
+          console.log('[OASC] OASC camera connected - starting capture');
+          const captureResult = await this.devices.oascCamera.captureImage();
+          if (captureResult.success) {
+            console.log(`[OASC] Image captured and saved: ${captureResult.filename}`);
+            if (captureResult.filename && captureResult.savedPath) {
+              database.insertImageData({
+                timestamp: Date.now(),
+                filename: captureResult.filename,
+                camera: 'oasc'
+              });
+              console.log(`[DB] OASC image data saved: ${captureResult.filename}`);
+            }
+          } else {
+            console.error(`[OASC] Capture failed: ${captureResult.reason}`);
+          }
+        } else {
+          console.log('[OASC] OASC camera disconnected - skipping OASC capture');
+        }
+      } catch (cameraError) {
+        console.error('[CAMERA] Capture failed:', cameraError.message);
+        systemState.logError('camera_capture', cameraError);
+        await this.turnOffCamera();
+      }
+
+      setTimeout(captureImage, imagePeriod);
+    };
+
+    setTimeout(captureImage, imagePeriod);
+    console.log(`Image collection started (${imagePeriod/1000}s interval)`);
+  }
+  */
+
+  startSpinelImageCollection() {
+    const spinelPeriod = config.get('spinelSavePeriod') * 1000; // Convert to ms
+
+    const captureSpinelImage = async () => {
+      try {
+        // Spinel Camera 촬영
+        if (this.devices.camera) {
+          console.log(`[${getTimestamp()}] [SPINEL] Capture started`);
+          // Turn on camera via PIC24 (실패해도 계속 진행)
+          try {
+            await this.turnOnCamera();
+            // Wait for camera to power up
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } catch (error) {
+            console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn on failed, but continuing: ${error.message}`);
+          }
+
           const captureResult = await this.devices.camera.startCapture();
           if (captureResult.success) {
             console.log(`[${getTimestamp()}] [CAMERA] ✅ Spinel saved: ${captureResult.filename}`);
@@ -478,20 +696,45 @@ class EWCSApp {
           } else {
             console.error(`[CAMERA] Spinel capture failed: ${captureResult.reason}`);
           }
-          
-          // Turn off camera after capture to save power
-          setTimeout(() => {
-            this.turnOffCamera();
-          }, 30000); // 30초 후 카메라 전원 차단
+
+          // Turn off camera after capture to save power (PIC24 통신 실패 무시)
+          setTimeout(async () => {
+            try {
+              await this.turnOffCamera();
+            } catch (error) {
+              console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn off failed: ${error.message}`);
+            }
+          }, 30000); // 30초 후 카메라 전원 차단 시도
         } else {
           console.log('[CAMERA] Spinel camera disconnected - skipping spinel capture');
         }
+      } catch (cameraError) {
+        console.error('[CAMERA] Spinel capture failed:', cameraError.message);
+        systemState.logError('camera_capture', cameraError);
+        await this.turnOffCamera(); // 에러 발생시도 전원 차단
+      }
 
+      // 다음 캡처 스케줄
+      setTimeout(captureSpinelImage, spinelPeriod);
+    };
+
+    // 첫 번째 이미지 캡처 시작
+    setTimeout(captureSpinelImage, spinelPeriod);
+    console.log(`Spinel image collection started (${spinelPeriod/1000}s interval)`);
+  }
+
+  startOASCImageCollection() {
+    const oascPeriod = config.get('oascSavePeriod') * 1000; // Convert to ms
+
+    const captureOASCImage = async () => {
+      try {
         // OASC Camera 촬영
         if (this.devices.oascCamera) {
           console.log('[OASC] OASC camera connected - starting capture');
-          
-          const captureResult = await this.devices.oascCamera.captureImage();
+
+          // 매번 최신 노출 시간 가져오기
+          const oascExposureTime = config.get('oascExposureTime');
+          const captureResult = await this.devices.oascCamera.captureImage(oascExposureTime);
           if (captureResult.success) {
             console.log(`[OASC] Image captured and saved: ${captureResult.filename}`);
             // 파일 저장이 완료된 후에만 데이터베이스에 저장
@@ -509,20 +752,18 @@ class EWCSApp {
         } else {
           console.log('[OASC] OASC camera disconnected - skipping OASC capture');
         }
-
       } catch (cameraError) {
-        console.error('[CAMERA] Capture failed:', cameraError.message);
-        systemState.logError('camera_capture', cameraError);
-        await this.turnOffCamera(); // 에러 발생시도 전원 차단
+        console.error('[OASC] OASC capture failed:', cameraError.message);
+        systemState.logError('oasc_camera_capture', cameraError);
       }
-      
+
       // 다음 캡처 스케줄
-      setTimeout(captureImage, imagePeriod);
+      setTimeout(captureOASCImage, oascPeriod);
     };
-    
+
     // 첫 번째 이미지 캡처 시작
-    setTimeout(captureImage, imagePeriod);
-    console.log(`Image collection started (${imagePeriod/1000}s interval)`);
+    setTimeout(captureOASCImage, oascPeriod);
+    console.log(`OASC image collection started (${oascPeriod/1000}s interval, exposure: ${config.get('oascExposureTime')}s)`);
   }
 
   // PIC24 관련 함수 - 카메라 전원 제어
@@ -643,17 +884,21 @@ class EWCSApp {
   }
 
   async checkSpinelCameraConnection() {
+    console.log(`[DEBUG] checkSpinelCameraConnection - camera exists? ${!!this.devices.camera}`);
     if (!this.devices.camera) {
       this.ewcsStatus.cameraConnected = 0;
       console.log(`[${getTimestamp()}] [STATUS] Camera Connected: ${this.ewcsStatus.cameraConnected}`);
       return false;
     }
     try {
+      console.log(`[DEBUG] Camera checkConnection calling...`);
       const isConnected = await this.devices.camera.checkConnection();
+      console.log(`[DEBUG] Camera checkConnection returned: ${isConnected}`);
       this.ewcsStatus.cameraConnected = isConnected ? 1 : 0;
       console.log(`[${getTimestamp()}] [STATUS] Camera Connected: ${this.ewcsStatus.cameraConnected}`);
       return isConnected;
     } catch (e) {
+      console.log(`[DEBUG] Camera checkConnection error: ${e.message}`);
       this.ewcsStatus.cameraConnected = 0;
       console.log(`[${getTimestamp()}] [STATUS] Camera Connected: ${this.ewcsStatus.cameraConnected}`);
       return false;
@@ -799,6 +1044,46 @@ class EWCSApp {
     } catch (error) {
       console.error('Shutdown error:', error);
     }
+  }
+
+  startAutoCleanupSchedule() {
+    // 매일 새벽 3시에 자동 정리 실행
+    const scheduleCleanup = () => {
+      const now = new Date();
+      const next3AM = new Date(now);
+      next3AM.setHours(3, 0, 0, 0);
+
+      // 오늘 3시가 이미 지났으면 내일 3시로
+      if (next3AM <= now) {
+        next3AM.setDate(next3AM.getDate() + 1);
+      }
+
+      const timeUntilNext = next3AM.getTime() - now.getTime();
+
+      setTimeout(async () => {
+        try {
+          console.log(`[${getTimestamp()}] [CLEANUP] Starting scheduled cleanup...`);
+          const result = await this.autoCleanup.executeAutoCleanup();
+
+          if (result.executed) {
+            console.log(`[${getTimestamp()}] [CLEANUP] ✅ Cleanup completed: ${result.cleanupResult?.deletedFiles || 0} files deleted`);
+          } else {
+            console.log(`[${getTimestamp()}] [CLEANUP] ℹ️ Cleanup skipped: ${result.reason}`);
+          }
+
+          // 다음날 스케줄 설정
+          scheduleCleanup();
+        } catch (error) {
+          console.error(`[${getTimestamp()}] [CLEANUP] ❌ Cleanup failed:`, error);
+          // 에러가 있어도 다음날 스케줄은 설정
+          scheduleCleanup();
+        }
+      }, timeUntilNext);
+
+      console.log(`[${getTimestamp()}] [CLEANUP] Next cleanup scheduled at: ${next3AM.toISOString()}`);
+    };
+
+    scheduleCleanup();
   }
 }
 
