@@ -26,6 +26,7 @@ import createDeviceRoutes from './api/routes/device-routes.js';
 import createSystemRoutes from './api/routes/system-routes.js';
 import createEwcsRoutes from './api/routes/ewcs-routes.js';
 import createImageRoutes from './api/routes/image-routes.js';
+import createHelpRoutes from './api/routes/help-routes.js';
 
 // Utility function for timestamped logging
 function getTimestamp() {
@@ -126,15 +127,20 @@ class EWCSApp {
       // Setup API routes
       this.setupRoutes();
       
-      // Start data collection
-      this.startDataCollection();
-      
-      // Start image collection (분리된 방식)
-      this.startSpinelImageCollection();
-      this.startOASCImageCollection();
-      
-      // Start server
+      // Start server first
       this.startServer();
+
+      // Run initial data collection and image captures asynchronously after server start
+      setTimeout(async () => {
+        try {
+          await this.runDataCollectionOnce();
+          await this.runSpinelImageCaptureOnce();
+          await this.runOASCImageCaptureOnce();
+          console.log(`[${getTimestamp()}] Initial data and image collection completed`);
+        } catch (error) {
+          console.error('Initial collection error:', error);
+        }
+      }, 1000); // 1초 후 실행
 
       // Start auto cleanup schedule
       this.startAutoCleanupSchedule();
@@ -259,10 +265,13 @@ class EWCSApp {
   setupRoutes() {
     // API routes - Pass both devices and app instance for PIC24 control
     this.app.use('/api/device', createDeviceRoutes(this.devices, this));
-    this.app.use('/api/system', createSystemRoutes());
+    this.app.use('/api/devices', createDeviceRoutes(this.devices, this));
+    this.app.use('/api/system', createSystemRoutes(this));
+    this.app.use('/api/ewcs', createEwcsRoutes(database, this));
     this.app.use('/api', createEwcsRoutes(database, this));
     this.app.use('/api/images', createImageRoutes(database));
     this.app.use('/images', createImageRoutes(database));
+    this.app.use('/api/help', createHelpRoutes());
     
     // Health check
     this.app.get('/health', (req, res) => {
@@ -303,67 +312,14 @@ class EWCSApp {
       res.json({
         message: 'EWCS Controller API',
         version: '2.0.0',
+        documentation: '/api/help',
         timestamp: Date.now()
       });
     });
 
-    // API Documentation
+    // Redirect /api to /api/help
     this.app.get('/api', (req, res) => {
-      const baseUrl = `http://${req.get('host')}`;
-
-      res.json({
-        title: "EWCS Controller API Documentation",
-        version: "2.0.0",
-        description: "Antarctic Weather Station & Camera Control System",
-        endpoints: {
-          "System Status": {
-            "GET /api/ewcs_status": "시스템 전체 상태, 네트워크 정보, 디바이스 연결 상태",
-            "GET /api/ewcs_data": "EWCS 센서 데이터 조회 (?from=timestamp&to=timestamp&limit=100)",
-            "GET /health": "시스템 헬스 체크"
-          },
-          "System Configuration": {
-            "GET /api/system/config": "시스템 설정 조회",
-            "GET /api/system/station-name?name=NAME": "스테이션 이름 설정/조회",
-            "GET /api/system/mode?mode=normal|emergency": "시스템 모드 설정/조회",
-            "GET /api/system/data-period?value=SECONDS": "데이터 저장 주기 설정/조회 (10-3600초)",
-            "GET /api/system/image-period?value=SECONDS": "이미지 저장 주기 설정/조회 (10-3600초)"
-          },
-          "Device Control": {
-            "GET /api/device/cs125?on=1|0": "CS125 센서 온/오프",
-            "GET /api/device/cs125-heater?on=1|0": "CS125 후드 히터 온/오프",
-            "GET /api/device/spinel/power?on=1|0": "Spinel 카메라 전원 제어 (PIC24 via)",
-            "GET /api/device/oasc/status": "OASC 카메라 상태 조회",
-            "GET /api/device/oasc/capture?exposure=SECONDS": "OASC 카메라 수동 촬영",
-            "GET /api/device/pic24/STATUS": "PIC24 상태 확인"
-          },
-          "Images & Media": {
-            "GET /api/images/spinel/viewer": "Spinel 카메라 이미지 뷰어 (HTML)",
-            "GET /api/images/oasc/viewer": "OASC 카메라 이미지 뷰어 (HTML)",
-            "GET /api/images/:camera/images": "이미지 목록 조회 (?from=timestamp&to=timestamp&limit=100)",
-            "GET /api/images/spinel/[path]": "Spinel 이미지 파일 직접 접근",
-            "GET /api/images/oasc/[path]": "OASC 이미지 파일 직접 접근 (FITS & JPG)"
-          }
-        },
-        examples: {
-          "시스템 상태 확인": `${baseUrl}/api/ewcs_status`,
-          "최근 1시간 데이터": `${baseUrl}/api/ewcs_data?from=${Date.now() - 3600000}&limit=60`,
-          "OASC 10초 노출 촬영": `${baseUrl}/api/device/oasc/capture?exposure=10`,
-          "Spinel 이미지 뷰어": `${baseUrl}/api/images/spinel/viewer`,
-          "OASC 이미지 뷰어": `${baseUrl}/api/images/oasc/viewer`
-        },
-        notes: {
-          "timestamp_format": "Unix timestamp (milliseconds) 또는 YYYY-MM-DD-HH-mm 형식",
-          "image_formats": {
-            "spinel": "JPG 파일 (시리얼 카메라)",
-            "oasc": "FITS (원본) + JPG (썸네일) - 2x2 binning"
-          },
-          "folder_structure": {
-            "spinel": "ewcs_images/YYYY-MM/timestamp.jpg",
-            "oasc": "oasc_images/YYYY-MM/timestamp.fits + oasc_images/YYYY-MM/jpg/timestamp.jpg"
-          }
-        },
-        timestamp: Date.now()
-      });
+      res.redirect('/api/help');
     });
   }
 
@@ -405,23 +361,16 @@ class EWCSApp {
     }
   }
 
-  startDataCollection() {
-    const savePeriod = config.get('dataSavePeriod') * 1000; // Convert to ms
-
-    this.dataCollectionInterval = setInterval(async () => {
-      try {
-        await this.updateEwcsData();
-
-        database.insertEwcsData(this.ewcsData);
-        console.log(`[${getTimestamp()}] [DB] EWCS data saved to database`);
-
-      } catch (error) {
-        console.error('Data collection error:', error);
-        systemState.logError('data_collection', error);
-      }
-    }, savePeriod);
-
-    console.log(`Data collection started (${savePeriod/1000}s interval)`);
+  async runDataCollectionOnce() {
+    try {
+      console.log(`[${getTimestamp()}] [DB] Running initial data collection...`);
+      await this.updateEwcsData();
+      database.insertEwcsData(this.ewcsData);
+      console.log(`[${getTimestamp()}] [DB] Initial EWCS data saved to database`);
+    } catch (error) {
+      console.error('Initial data collection error:', error);
+      systemState.logError('data_collection', error);
+    }
   }
 
   // EWCS 데이터 업데이트 함수 (비동기)
@@ -635,10 +584,9 @@ class EWCSApp {
           if (captureResult.success) {
             console.log(`[OASC] Image captured and saved: ${captureResult.filename}`);
             if (captureResult.filename && captureResult.savedPath) {
-              database.insertImageData({
+              database.insertOascImageData({
                 timestamp: Date.now(),
-                filename: captureResult.filename,
-                camera: 'oasc'
+                filename: captureResult.filename
               });
               console.log(`[DB] OASC image data saved: ${captureResult.filename}`);
             }
@@ -662,108 +610,84 @@ class EWCSApp {
   }
   */
 
-  startSpinelImageCollection() {
-    const spinelPeriod = config.get('spinelSavePeriod') * 1000; // Convert to ms
-
-    const captureSpinelImage = async () => {
-      try {
-        // Spinel Camera 촬영
-        if (this.devices.camera) {
-          console.log(`[${getTimestamp()}] [SPINEL] Capture started`);
-          // Turn on camera via PIC24 (실패해도 계속 진행)
-          try {
-            await this.turnOnCamera();
-            // Wait for camera to power up
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          } catch (error) {
-            console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn on failed, but continuing: ${error.message}`);
-          }
-
-          const captureResult = await this.devices.camera.startCapture();
-          if (captureResult.success) {
-            console.log(`[${getTimestamp()}] [CAMERA] ✅ Spinel saved: ${captureResult.filename}`);
-            console.log(`[${getTimestamp()}] [DEBUG] Spinel captureResult:`, JSON.stringify(captureResult, null, 2));
-            // 파일 저장이 완료된 후에만 데이터베이스에 저장
-            if (captureResult.filename && captureResult.savedPath) {
-              database.insertImageData({
-                timestamp: Date.now(),
-                filename: captureResult.filename,
-                camera: 'spinel'
-              });
-              console.log(`[${getTimestamp()}] [DB] Spinel image data saved: ${captureResult.filename}`);
-              this.lastImageFilename = captureResult.filename;
-            }
-          } else {
-            console.error(`[CAMERA] Spinel capture failed: ${captureResult.reason}`);
-          }
-
-          // Turn off camera after capture to save power (PIC24 통신 실패 무시)
-          setTimeout(async () => {
-            try {
-              await this.turnOffCamera();
-            } catch (error) {
-              console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn off failed: ${error.message}`);
-            }
-          }, 30000); // 30초 후 카메라 전원 차단 시도
-        } else {
-          console.log('[CAMERA] Spinel camera disconnected - skipping spinel capture');
+  async runSpinelImageCaptureOnce() {
+    try {
+      // Spinel Camera 촬영
+      if (this.devices.camera) {
+        console.log(`[${getTimestamp()}] [SPINEL] Initial capture started`);
+        // Turn on camera via PIC24 (실패해도 계속 진행)
+        try {
+          await this.turnOnCamera();
+          // Wait for camera to power up
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (error) {
+          console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn on failed, but continuing: ${error.message}`);
         }
-      } catch (cameraError) {
-        console.error('[CAMERA] Spinel capture failed:', cameraError.message);
-        systemState.logError('camera_capture', cameraError);
-        await this.turnOffCamera(); // 에러 발생시도 전원 차단
+
+        const captureResult = await this.devices.camera.startCapture();
+        if (captureResult.success) {
+          console.log(`[${getTimestamp()}] [CAMERA] ✅ Initial Spinel saved: ${captureResult.filename}`);
+          console.log(`[${getTimestamp()}] [DEBUG] Spinel captureResult:`, JSON.stringify(captureResult, null, 2));
+          // 파일 저장이 완료된 후에만 데이터베이스에 저장
+          if (captureResult.filename && captureResult.savedPath) {
+            database.insertImageData({
+              timestamp: Date.now(),
+              filename: captureResult.filename
+            });
+            console.log(`[${getTimestamp()}] [DB] Initial Spinel image data saved: ${captureResult.filename}`);
+            this.lastImageFilename = captureResult.filename;
+          }
+        } else {
+          console.error(`[CAMERA] Initial Spinel capture failed: ${captureResult.reason}`);
+        }
+
+        // Turn off camera after capture to save power (PIC24 통신 실패 무시)
+        setTimeout(async () => {
+          try {
+            await this.turnOffCamera();
+          } catch (error) {
+            console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn off failed: ${error.message}`);
+          }
+        }, 30000); // 30초 후 카메라 전원 차단 시도
+      } else {
+        console.log('[CAMERA] Spinel camera disconnected - skipping initial spinel capture');
       }
-
-      // 다음 캡처 스케줄
-      setTimeout(captureSpinelImage, spinelPeriod);
-    };
-
-    // 첫 번째 이미지 캡처 시작
-    setTimeout(captureSpinelImage, spinelPeriod);
-    console.log(`Spinel image collection started (${spinelPeriod/1000}s interval)`);
+    } catch (cameraError) {
+      console.error('[CAMERA] Initial Spinel capture failed:', cameraError.message);
+      systemState.logError('camera_capture', cameraError);
+      await this.turnOffCamera(); // 에러 발생시도 전원 차단
+    }
   }
 
-  startOASCImageCollection() {
-    const oascPeriod = config.get('oascSavePeriod') * 1000; // Convert to ms
+  async runOASCImageCaptureOnce() {
+    try {
+      // OASC Camera 촬영
+      if (this.devices.oascCamera) {
+        console.log('[OASC] Initial OASC camera capture started');
 
-    const captureOASCImage = async () => {
-      try {
-        // OASC Camera 촬영
-        if (this.devices.oascCamera) {
-          console.log('[OASC] OASC camera connected - starting capture');
-
-          // 매번 최신 노출 시간 가져오기
-          const oascExposureTime = config.get('oascExposureTime');
-          const captureResult = await this.devices.oascCamera.captureImage(oascExposureTime);
-          if (captureResult.success) {
-            console.log(`[OASC] Image captured and saved: ${captureResult.filename}`);
-            // 파일 저장이 완료된 후에만 데이터베이스에 저장
-            if (captureResult.filename && captureResult.savedPath) {
-              database.insertImageData({
-                timestamp: Date.now(),
-                filename: captureResult.filename,
-                camera: 'oasc'
-              });
-              console.log(`[DB] OASC image data saved: ${captureResult.filename}`);
-            }
-          } else {
-            console.error(`[OASC] Capture failed: ${captureResult.reason}`);
+        // 매번 최신 노출 시간 가져오기
+        const oascExposureTime = config.get('oascExposureTime');
+        const captureResult = await this.devices.oascCamera.captureImage(oascExposureTime);
+        if (captureResult.success) {
+          console.log(`[OASC] Initial image captured and saved: ${captureResult.filename}`);
+          // 파일 저장이 완료된 후에만 데이터베이스에 저장
+          if (captureResult.filename && captureResult.savedPath) {
+            database.insertOascImageData({
+              timestamp: Date.now(),
+              filename: captureResult.filename
+            });
+            console.log(`[DB] Initial OASC image data saved: ${captureResult.filename}`);
           }
         } else {
-          console.log('[OASC] OASC camera disconnected - skipping OASC capture');
+          console.error(`[OASC] Initial capture failed: ${captureResult.reason}`);
         }
-      } catch (cameraError) {
-        console.error('[OASC] OASC capture failed:', cameraError.message);
-        systemState.logError('oasc_camera_capture', cameraError);
+      } else {
+        console.log('[OASC] OASC camera disconnected - skipping initial OASC capture');
       }
-
-      // 다음 캡처 스케줄
-      setTimeout(captureOASCImage, oascPeriod);
-    };
-
-    // 첫 번째 이미지 캡처 시작
-    setTimeout(captureOASCImage, oascPeriod);
-    console.log(`OASC image collection started (${oascPeriod/1000}s interval, exposure: ${config.get('oascExposureTime')}s)`);
+    } catch (cameraError) {
+      console.error('[OASC] Initial OASC capture failed:', cameraError.message);
+      systemState.logError('oasc_camera_capture', cameraError);
+    }
   }
 
   // PIC24 관련 함수 - 카메라 전원 제어

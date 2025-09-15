@@ -99,6 +99,88 @@ export default function createDeviceRoutes(devices, appInstance) {
     }
   });
 
+  // PIC24 VOUT 제어
+  router.get('/vout1', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (on === '1') {
+        await appInstance.devices.pic24?.turnOnVOUT(1);
+      } else {
+        await appInstance.devices.pic24?.turnOffVOUT(1);
+      }
+      res.json({ success: true, vout: 1, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/vout2', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (on === '1') {
+        await appInstance.devices.pic24?.turnOnVOUT(2);
+      } else {
+        await appInstance.devices.pic24?.turnOffVOUT(2);
+      }
+      res.json({ success: true, vout: 2, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/vout3', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (on === '1') {
+        await appInstance.devices.pic24?.turnOnVOUT(3);
+      } else {
+        await appInstance.devices.pic24?.turnOffVOUT(3);
+      }
+      res.json({ success: true, vout: 3, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/vout4', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (on === '1') {
+        await appInstance.devices.pic24?.turnOnVOUT(4);
+      } else {
+        await appInstance.devices.pic24?.turnOffVOUT(4);
+      }
+      res.json({ success: true, vout: 4, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PIC24 절전 모드 제어
+  router.get('/power-save', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (on === '1') {
+        await appInstance.devices.pic24?.enablePowerSave();
+      } else {
+        await appInstance.devices.pic24?.disablePowerSave();
+      }
+      res.json({ success: true, powerSave: on === '1' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PIC24 위성 전송 시작
+  router.post('/satellite/start', async (req, res) => {
+    try {
+      await appInstance.devices.pic24?.startSatelliteTransmission();
+      res.json({ success: true, message: 'Satellite transmission started' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // 장치 상태 조회
   router.get('/status', async (req, res) => {
     try {

@@ -5,7 +5,7 @@
     "cs125_hood_heater_on": false,
     "iridium_on": false,
     "power_save_mode": false,
-    "last_updated": "2025-09-14T15:33:02.561Z"
+    "last_updated": "2025-09-15T08:24:09.640Z"
   },
   "settings": {
     "data_save_period": 60,
@@ -14,510 +14,449 @@
   },
   "recent_events": [
     {
-      "timestamp": "2025-09-14T15:42:48.595Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
+      "timestamp": "2025-09-15T08:24:09.642Z",
+      "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-14T15:42:10.386Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
+      "timestamp": "2025-09-15T08:23:39.636Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
     },
     {
-      "timestamp": "2025-09-14T15:41:00.386Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
+      "timestamp": "2025-09-15T08:23:22.628Z",
+      "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-14T15:40:22.177Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
+      "timestamp": "2025-09-15T08:23:13.469Z",
+      "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-14T15:39:12.178Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
+      "timestamp": "2025-09-15T08:23:05.451Z",
+      "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-14T15:38:32.964Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:37:22.965Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:36:44.753Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:35:34.750Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:34:56.537Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:33:03.057Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:33:02.833Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:33:02.560Z",
+      "timestamp": "2025-09-15T08:23:05.376Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-14T15:32:06.497Z",
+      "timestamp": "2025-09-15T08:22:34.993Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:22:25.355Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:21:47.977Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:20:37.977Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:20:35.351Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:19:50.966Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:18:45.349Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:18:40.966Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:17:53.956Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:16:55.346Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:16:43.954Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:15:56.945Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:15:05.344Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:14:46.944Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:13:59.933Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:13:15.341Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:12:49.932Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:12:02.921Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:11:25.337Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:10:52.921Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:10:05.907Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:09:35.334Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:08:55.909Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:08:08.897Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:07:45.332Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:06:58.898Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:06:11.886Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:05:55.328Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:05:01.885Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:04:14.873Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:04:05.325Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:03:04.873Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:02:17.862Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T08:02:15.321Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:01:07.861Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T08:00:25.318Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T08:00:20.850Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:59:10.849Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:58:35.316Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:58:23.834Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:57:13.833Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:56:45.315Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:56:26.824Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:55:16.826Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:54:55.313Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:54:29.814Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:53:19.814Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:53:05.309Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:52:32.803Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:51:22.998Z",
       "event": "Error in camera",
       "error": "Error: Timeout waiting for response"
     },
     {
-      "timestamp": "2025-09-14T15:32:06.271Z",
+      "timestamp": "2025-09-15T07:51:15.306Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:50:37.791Z",
       "event": "Error in camera",
       "error": "Error: Timeout waiting for response"
     },
     {
-      "timestamp": "2025-09-14T15:32:05.999Z",
+      "timestamp": "2025-09-15T07:49:27.789Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-15T07:49:25.303Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:48:40.583Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:47:35.299Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:47:30.584Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:46:43.568Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:45:45.296Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:45:33.566Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:44:46.557Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:43:55.291Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:43:36.555Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:42:49.545Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:42:05.287Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:41:39.546Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:40:52.536Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:40:15.282Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:39:42.537Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:38:55.526Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:38:25.279Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:37:45.525Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:36:58.515Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:36:35.275Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:35:48.514Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:35:01.504Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:34:45.271Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:33:51.503Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:33:04.492Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:32:55.266Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:31:54.492Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:31:07.481Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:31:05.262Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:29:57.483Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:29:15.256Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:29:12.472Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-15T07:28:02.274Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:27:25.254Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-15T07:27:15.256Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:25:27.192Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-15T07:25:19.177Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-15T07:25:19.096Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-14T15:31:52.413Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
+      "timestamp": "2025-09-15T07:25:14.300Z",
+      "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-14T15:31:14.205Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:30:04.204Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:29:24.994Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:27:31.528Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:27:31.297Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:27:31.020Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-14T15:27:13.894Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:26:35.688Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:25:11.638Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:24:33.430Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:23:09.360Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:22:31.153Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:21:07.066Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:20:28.855Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:19:04.792Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:18:25.586Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:17:01.510Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:16:22.298Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:14:58.245Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:14:19.037Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:12:54.960Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:12:16.753Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:10:52.677Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:10:13.471Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:08:49.401Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:08:10.193Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:06:46.130Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:06:06.921Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:04:42.836Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:04:04.626Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:02:40.544Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:02:01.318Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T15:00:37.187Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:59:57.977Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:58:33.886Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:57:54.677Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:56:30.577Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:55:51.369Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:54:27.213Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:53:48.004Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:52:23.946Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:51:44.738Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:50:20.683Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:49:41.475Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:48:17.419Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:47:38.211Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:46:14.169Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:45:34.957Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:44:10.862Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:43:31.650Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:42:07.593Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:41:28.385Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:40:04.305Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:39:25.098Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:38:01.041Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:37:21.829Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:35:57.550Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:35:18.342Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:33:54.260Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:33:15.050Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:31:50.989Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:31:11.778Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:29:47.692Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:29:08.482Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:27:44.422Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:27:05.212Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:25:41.108Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:25:01.897Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:23:37.811Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:22:58.601Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:21:34.534Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:20:55.325Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:19:31.238Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:18:52.031Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:17:27.918Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:16:48.714Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:15:24.652Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:14:45.441Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:13:21.258Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:12:42.048Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:11:17.777Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:10:38.561Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-14T14:08:48.044Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
+      "timestamp": "2025-09-15T07:24:04.301Z",
+      "event": "Camera power OFF"
     }
   ],
   "device_status": {
     "cs125": false,
-    "spinel_camera": true,
-    "oasc_camera": true,
-    "epever": true,
+    "spinel_camera": false,
+    "oasc_camera": false,
+    "epever": false,
     "sht45": true,
     "adc": true,
-    "last_check": "2025-09-14T15:33:16.310Z"
+    "last_check": "2025-09-15T08:23:21.543Z"
   }
 }
