@@ -1,9 +1,5 @@
 {
   "stationName": "KOPRI Station",
-  "mode": "normal",
-  "dataSavePeriod": 60,
-  "spinelSavePeriod": 100,
-  "oascSavePeriod": 110,
-  "oascExposureTime": 10.0,
-  "lastUpdated": "2024-01-15T10:30:00Z"
+  "powerSaveMode": "normal",
+  "oascExposureTime": 10.0
 }

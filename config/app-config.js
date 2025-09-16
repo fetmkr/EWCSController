@@ -47,7 +47,7 @@ class AppConfig {
     return {
       // Station Settings
       stationName: "KOPRI Station",
-      mode: "normal",
+      powerSaveMode: "normal",
       
       // Network Settings  
       server: {
@@ -62,11 +62,8 @@ class AppConfig {
         cameraIpAddress: "192.168.0.12"
       },
       
-      // Data Collection
-      data: {
-        savePeriod: 60,
-        imageSavePeriod: 60
-      },
+      // OASC Exposure Time
+      oascExposureTime: 10.0,
       
       // Serial Ports
       serialPorts: {
@@ -86,7 +83,7 @@ class AppConfig {
       
       // CS125 Sensor Settings
       cs125: {
-        baudRate: 9600,
+        baudRate: 38400,
         timeout: 5000,
         retryAttempts: 3
       },
@@ -171,13 +168,10 @@ class AppConfig {
       // Only save user-configurable settings, not all defaults
       const saveableConfig = {
         stationName: this.config.stationName,
-        mode: this.config.mode,
-        dataSavePeriod: this.config.dataSavePeriod,
-        spinelSavePeriod: this.config.spinelSavePeriod,
-        oascSavePeriod: this.config.oascSavePeriod,
+        powerSaveMode: this.config.powerSaveMode,
         oascExposureTime: this.config.oascExposureTime
       };
-      
+
       fs.writeFileSync(this.configPath, JSON.stringify(saveableConfig, null, 2));
     } catch (error) {
       console.error('Failed to save config:', error.message);

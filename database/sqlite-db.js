@@ -52,7 +52,7 @@ class SQLiteDB {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp INTEGER NOT NULL,
         station_name TEXT,
-        mode TEXT DEFAULT 'normal',
+        power_save_mode TEXT DEFAULT 'normal',
         -- CS125 센서 데이터
         cs125_current REAL,
         cs125_visibility REAL,
@@ -63,10 +63,11 @@ class SQLiteDB {
         sht45_temp REAL,
         sht45_humidity REAL,
         rpi_temp REAL,
-        -- 전력 모니터링 데이터
-        iridium_current REAL,
-        camera_current REAL,
-        battery_voltage REAL,
+        -- 전력 모니터링 데이터 (ADC 채널)
+        chan1_current REAL,  -- CS125 전류
+        chan2_current REAL,  -- 이리디움 전류
+        chan3_current REAL,  -- 카메라 전류
+        chan4_current REAL,  -- 배터리/기타 전류
         -- 태양광 충전기 데이터
         pv_vol REAL,
         pv_cur REAL,
@@ -76,8 +77,6 @@ class SQLiteDB {
         dev_temp REAL,
         charg_equip_stat INTEGER,
         dischg_equip_stat INTEGER,
-        -- 이미지 정보
-        last_image TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -119,12 +118,12 @@ class SQLiteDB {
     this.stmts = {
       insertEwcsData: this.db.prepare(`
         INSERT INTO ewcs_data (
-          timestamp, station_name, mode,
+          timestamp, station_name, power_save_mode,
           cs125_current, cs125_visibility, cs125_synop, cs125_temp, cs125_humidity,
           sht45_temp, sht45_humidity, rpi_temp,
-          iridium_current, camera_current, battery_voltage,
+          chan1_current, chan2_current, chan3_current, chan4_current,
           pv_vol, pv_cur, load_vol, load_cur, bat_temp, dev_temp,
-          charg_equip_stat, dischg_equip_stat, last_image
+          charg_equip_stat, dischg_equip_stat
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `),
       
@@ -197,7 +196,7 @@ class SQLiteDB {
     const params = [
       data.timestamp || Date.now(),
       data.stationName,
-      data.mode || 'normal',
+      data.powerSaveMode || 'normal',
       // CS125 센서 데이터
       data.cs125Current || 0,
       data.cs125Visibility || 0,
@@ -208,10 +207,11 @@ class SQLiteDB {
       data.SHT45Temp || 0,
       data.SHT45Humidity || 0,
       data.rpiTemp || 0,
-      // 전력 모니터링 데이터
-      data.iridiumCurrent || 0,
-      data.cameraCurrent || 0,
-      data.batteryVoltage || 0,
+      // 전력 모니터링 데이터 (ADC 채널)
+      data.chan1Current || 0,
+      data.chan2Current || 0,
+      data.chan3Current || 0,
+      data.chan4Current || 0,
       // 태양광 충전기 데이터
       data.PVVol || 0,
       data.PVCur || 0,
@@ -220,9 +220,7 @@ class SQLiteDB {
       data.BatTemp || 0,
       data.DevTemp || 0,
       data.ChargEquipStat || 0,
-      data.DischgEquipStat || 0,
-      // 이미지 정보
-      data.lastImage || ''
+      data.DischgEquipStat || 0
     ];
 
     try {

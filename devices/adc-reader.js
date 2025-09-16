@@ -5,36 +5,36 @@
 import adc from 'mcp-spi-adc';
 
 // Direct channel initialization - like original ewcs.js
-const cs125CurrentADCChan = adc.open(0, {speedHz: 20000}, err => {
+const chan1ADCChan = adc.open(0, {speedHz: 20000}, err => {
   if (err) {
-    console.error('Error opening ADC channel 0 (cs125CurrentADCChan):', err);
+    console.error('Error opening ADC channel 0 (chan1ADCChan):', err);
   }
 });
 
-const iridiumCurrentADCChan = adc.open(1, {speedHz: 20000}, err => {
+const chan2ADCChan = adc.open(1, {speedHz: 20000}, err => {
   if (err) {
-    console.error('Error opening ADC channel 1 (iridiumCurrentADCChan):', err);
+    console.error('Error opening ADC channel 1 (chan2ADCChan):', err);
   }
 });
 
-const cameraCurrentADCChan = adc.open(2, {speedHz: 20000}, err => {
+const chan3ADCChan = adc.open(2, {speedHz: 20000}, err => {
   if (err) {
-    console.error('Error opening ADC channel 2 (cameraCurrentADCChan):', err);
+    console.error('Error opening ADC channel 2 (chan3ADCChan):', err);
   }
 });
 
-const batteryVoltageADCChan = adc.open(3, {speedHz: 20000}, err => {
+const chan4ADCChan = adc.open(3, {speedHz: 20000}, err => {
   if (err) {
-    console.error('Error opening ADC channel 3 (batteryVoltageADCChan):', err);
+    console.error('Error opening ADC channel 3 (chan4ADCChan):', err);
   }
 });
 
 // Current ADC data storage
 let adcData = {
-  cs125Current: 0,
-  iridiumCurrent: 0,
-  cameraCurrent: 0,
-  batteryVoltage: 0,
+  chan1Current: 0,
+  chan2Current: 0,
+  chan3Current: 0,
+  chan4Current: 0,
   lastUpdate: 0
 };
 
@@ -57,20 +57,20 @@ async function readADC() {
         }
         completedReads++;
         if (completedReads === totalReads) {
-          adcData.cs125Current = readings.cs125Current || 0;
-          adcData.iridiumCurrent = readings.iridiumCurrent || 0;
-          adcData.cameraCurrent = readings.cameraCurrent || 0;
-          adcData.batteryVoltage = readings.batteryVoltage || 0;
+          adcData.chan1Current = readings.chan1Current || 0;
+          adcData.chan2Current = readings.chan2Current || 0;
+          adcData.chan3Current = readings.chan3Current || 0;
+          adcData.chan4Current = readings.chan4Current || 0;
           adcData.lastUpdate = Date.now();
           resolve(adcData);
         }
       });
     };
 
-    readChannel(cs125CurrentADCChan, 'cs125Current', 20000/1000);
-    readChannel(iridiumCurrentADCChan, 'iridiumCurrent', 20000/1000);
-    readChannel(cameraCurrentADCChan, 'cameraCurrent', 20000/1000);
-    readChannel(batteryVoltageADCChan, 'batteryVoltage', 46/10);
+    readChannel(chan1ADCChan, 'chan1Current', 1000);  // MAX4376 gain=50, Rsense=20mΩ, output in mA
+    readChannel(chan2ADCChan, 'chan2Current', 1000);  // MAX4376 gain=50, Rsense=20mΩ, output in mA
+    readChannel(chan3ADCChan, 'chan3Current', 1000);   // MAX4376 gain=50, Rsense=20mΩ, output in mA
+    readChannel(chan4ADCChan, 'chan4Current', 1000);  // MAX4376 gain=50, Rsense=20mΩ, output in mA
   });
 }
 
@@ -108,8 +108,8 @@ const adcReader = {
   // Compatibility method for app.js data collection
   getChannelData: async (channelNum) => {
     await readADC(); // Update data first
-    const channelNames = ['cs125_current', 'iridium_current', 'camera_current', 'battery_voltage'];
-    const values = [adcData.cs125Current, adcData.iridiumCurrent, adcData.cameraCurrent, adcData.batteryVoltage];
+    const channelNames = ['chan1_current', 'chan2_current', 'chan3_current', 'chan4_current'];
+    const values = [adcData.chan1Current, adcData.chan2Current, adcData.chan3Current, adcData.chan4Current];
     return {
       channel: channelNum,
       name: channelNames[channelNum] || 'unknown',

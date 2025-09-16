@@ -40,13 +40,12 @@ class EWCSApp {
     this.server = null;
     this.devices = {};
     this.dataCollectionInterval = null;
-    this.lastImageFilename = "";
     
     // EWCS 데이터 구조 (원래 ewcs.js와 동일한 필드)
     this.ewcsData = {
       stationName: "",
       timestamp: 0,
-      mode: "normal",
+      powerSaveMode: "normal",
       // CS125 센서 데이터
       cs125Current: 0,
       cs125Visibility: 0,
@@ -57,10 +56,11 @@ class EWCSApp {
       SHT45Temp: 0,
       SHT45Humidity: 0,
       rpiTemp: 0,
-      // 전력 모니터링 데이터
-      iridiumCurrent: 0,
-      cameraCurrent: 0,
-      batteryVoltage: 0,
+      // 전력 모니터링 데이터 (ADC 채널)
+      chan1Current: 0,  // CS125 전류
+      chan2Current: 0,  // 이리디움 전류
+      chan3Current: 0,  // 카메라 전류
+      chan4Current: 0,  // 배터리/기타 전류
       // 태양광 충전기 데이터
       PVVol: 0,
       PVCur: 0,
@@ -69,9 +69,7 @@ class EWCSApp {
       BatTemp: 0,
       DevTemp: 0,
       ChargEquipStat: 0,
-      DischgEquipStat: 0,
-      // 이미지 정보
-      lastImage: ""
+      DischgEquipStat: 0
     };
     
     // EWCS 상태 정보 (시스템 상태 추적용)
@@ -145,6 +143,9 @@ class EWCSApp {
       // Start auto cleanup schedule
       this.startAutoCleanupSchedule();
 
+      // Start time sync with PIC24
+      this.startTimeSync();
+
       console.log(`[${getTimestamp()}] EWCS Controller initialized successfully`);
       
     } catch (error) {
@@ -161,7 +162,7 @@ class EWCSApp {
   // PIC24 관련 함수 - PIC24 컨트롤러 초기화
   async initializePIC24() {
     try {
-      this.devices.pic24 = new PIC24Controller();
+      this.devices.pic24 = new PIC24Controller(this);
       await this.devices.pic24.initialize(config.get('serialPorts.pic24'), 115200);
       console.log(`[${getTimestamp()}] PIC24 controller initialized`);
     } catch (error) {
@@ -434,21 +435,24 @@ class EWCSApp {
     try {
       if (this.devices.adc) {
         console.log('[ADC] Connected - collecting power monitoring data');
-        // CH1: Iridium current, CH2: Camera current, CH3: Battery voltage
-        this.ewcsData.iridiumCurrent = (await this.devices.adc.getChannelData(1))?.data?.convertedValue || 0;
-        this.ewcsData.cameraCurrent = (await this.devices.adc.getChannelData(2))?.data?.convertedValue || 0;
-        this.ewcsData.batteryVoltage = (await this.devices.adc.getChannelData(3))?.data?.convertedValue || 0;
+        // CH0: chan1Current, CH1: chan2Current, CH2: chan3Current, CH3: chan4Current
+        this.ewcsData.chan1Current = (await this.devices.adc.getChannelData(0))?.data?.convertedValue || 0;
+        this.ewcsData.chan2Current = (await this.devices.adc.getChannelData(1))?.data?.convertedValue || 0;
+        this.ewcsData.chan3Current = (await this.devices.adc.getChannelData(2))?.data?.convertedValue || 0;
+        this.ewcsData.chan4Current = (await this.devices.adc.getChannelData(3))?.data?.convertedValue || 0;
       } else {
         console.log('[ADC] Disconnected - using default values');
-        this.ewcsData.iridiumCurrent = 0;
-        this.ewcsData.cameraCurrent = 0;
-        this.ewcsData.batteryVoltage = 0;
+        this.ewcsData.chan1Current = 0;
+        this.ewcsData.chan2Current = 0;
+        this.ewcsData.chan3Current = 0;
+        this.ewcsData.chan4Current = 0;
       }
     } catch (error) {
       console.log('[ADC] Data collection failed:', error.message);
-      this.ewcsData.iridiumCurrent = 0;
-      this.ewcsData.cameraCurrent = 0;
-      this.ewcsData.batteryVoltage = 0;
+      this.ewcsData.chan1Current = 0;
+      this.ewcsData.chan2Current = 0;
+      this.ewcsData.chan3Current = 0;
+      this.ewcsData.chan4Current = 0;
     }
     
     // EPEVER 태양광 충전기 데이터 (실시간 수집)
@@ -512,8 +516,6 @@ class EWCSApp {
       this.ewcsData.rpiTemp = 0;
     }
 
-    // 이미지 정보
-    this.ewcsData.lastImage = this.lastImageFilename || "";
   }
 
   /**
@@ -560,8 +562,7 @@ class EWCSApp {
                 camera: 'spinel'
               });
               console.log(`[${getTimestamp()}] [DB] Spinel image data saved: ${captureResult.filename}`);
-              this.lastImageFilename = captureResult.filename;
-            }
+              }
           } else {
             console.error(`[CAMERA] Spinel capture failed: ${captureResult.reason}`);
           }
@@ -635,7 +636,6 @@ class EWCSApp {
               filename: captureResult.filename
             });
             console.log(`[${getTimestamp()}] [DB] Initial Spinel image data saved: ${captureResult.filename}`);
-            this.lastImageFilename = captureResult.filename;
           }
         } else {
           console.error(`[CAMERA] Initial Spinel capture failed: ${captureResult.reason}`);
@@ -931,13 +931,14 @@ class EWCSApp {
   async shutdown() {
     console.log('Shutting down EWCS Controller...');
     systemState.logSystemShutdown();
-    
+
     try {
       // Stop data collection
       if (this.dataCollectionInterval) {
         clearInterval(this.dataCollectionInterval);
       }
-      
+
+
       // Close devices
       for (const [name, device] of Object.entries(this.devices)) {
         try {
@@ -949,24 +950,52 @@ class EWCSApp {
           console.error(`Error closing ${name}:`, error);
         }
       }
-      
+
       // Close PIC24 controller
       if (this.devices.pic24) {
         await this.devices.pic24.close();
       }
-      
+
       // Close database
       database.close();
-      
+
       // Close server
       if (this.server) {
         this.server.close();
       }
-      
+
       console.log('EWCS Controller shutdown complete');
-      
+
     } catch (error) {
       console.error('Shutdown error:', error);
+    }
+  }
+
+  // PIC24와 시간 동기화 (시스템 시작 시 한번만)
+  async startTimeSync() {
+    try {
+      if (this.devices.pic24 && this.devices.pic24.isConnected) {
+        console.log(`[${getTimestamp()}] [TIME SYNC] Starting time sync with PIC24...`);
+        const timeData = await this.devices.pic24.sendSyncData();
+
+        if (timeData) {
+          console.log(`[${getTimestamp()}] [TIME SYNC] Time sync completed successfully`);
+
+          // 시스템 시간 확인
+          const { exec } = await import('child_process');
+          exec('date "+%Y-%m-%d %H:%M:%S %Z"', (err, currentTime) => {
+            if (!err) {
+              console.log(`[${getTimestamp()}] [TIME SYNC] Verification - Current system time: ${currentTime.trim()}`);
+            }
+          });
+        } else {
+          console.log(`[${getTimestamp()}] [TIME SYNC] No valid time data received from PIC24`);
+        }
+      } else {
+        console.log(`[${getTimestamp()}] [TIME SYNC] PIC24 not connected, skipping time sync`);
+      }
+    } catch (error) {
+      console.error(`[${getTimestamp()}] [TIME SYNC] Time sync error:`, error.message);
     }
   }
 

@@ -5,7 +5,7 @@
     "cs125_hood_heater_on": false,
     "iridium_on": false,
     "power_save_mode": false,
-    "last_updated": "2025-09-15T08:24:09.640Z"
+    "last_updated": "2025-09-16T17:26:51.197Z"
   },
   "settings": {
     "data_save_period": 60,
@@ -14,440 +14,435 @@
   },
   "recent_events": [
     {
-      "timestamp": "2025-09-15T08:24:09.642Z",
+      "timestamp": "2025-09-16T17:26:51.199Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-15T08:23:39.636Z",
+      "timestamp": "2025-09-16T17:26:21.181Z",
       "event": "Error in oasc_camera_capture",
       "error": "Error: Camera not connected"
     },
     {
-      "timestamp": "2025-09-15T08:23:22.628Z",
+      "timestamp": "2025-09-16T17:26:04.172Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-15T08:23:13.469Z",
+      "timestamp": "2025-09-16T17:25:55.004Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-15T08:23:05.451Z",
+      "timestamp": "2025-09-16T17:25:46.980Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-15T08:23:05.376Z",
+      "timestamp": "2025-09-16T17:25:46.891Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-15T08:22:34.993Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:22:25.355Z",
+      "timestamp": "2025-09-16T17:25:35.012Z",
       "event": "Error in oasc_camera_capture",
       "error": "Error: Camera not connected"
     },
     {
-      "timestamp": "2025-09-15T08:21:47.977Z",
+      "timestamp": "2025-09-16T17:25:18.006Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-15T08:20:37.977Z",
+      "timestamp": "2025-09-16T17:25:08.884Z",
       "event": "Camera power OFF"
     },
     {
-      "timestamp": "2025-09-15T08:20:35.351Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:19:50.966Z",
+      "timestamp": "2025-09-16T17:25:00.860Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-15T08:18:45.349Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:18:40.966Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:17:53.956Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:16:55.346Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:16:43.954Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:15:56.945Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:15:05.344Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:14:46.944Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:13:59.933Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:13:15.341Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:12:49.932Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:12:02.921Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:11:25.337Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:10:52.921Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:10:05.907Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:09:35.334Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:08:55.909Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:08:08.897Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:07:45.332Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:06:58.898Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:06:11.886Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:05:55.328Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:05:01.885Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:04:14.873Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:04:05.325Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:03:04.873Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:02:17.862Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T08:02:15.321Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:01:07.861Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T08:00:25.318Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T08:00:20.850Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:59:10.849Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:58:35.316Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:58:23.834Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:57:13.833Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:56:45.315Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:56:26.824Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:55:16.826Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:54:55.313Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:54:29.814Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:53:19.814Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:53:05.309Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:52:32.803Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:51:22.998Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-15T07:51:15.306Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:50:37.791Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-15T07:49:27.789Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-15T07:49:25.303Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:48:40.583Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:47:35.299Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:47:30.584Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:46:43.568Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:45:45.296Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:45:33.566Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:44:46.557Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:43:55.291Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:43:36.555Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:42:49.545Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:42:05.287Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:41:39.546Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:40:52.536Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:40:15.282Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:39:42.537Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:38:55.526Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:38:25.279Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:37:45.525Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:36:58.515Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:36:35.275Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:35:48.514Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:35:01.504Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:34:45.271Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:33:51.503Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:33:04.492Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:32:55.266Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:31:54.492Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:31:07.481Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:31:05.262Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:29:57.483Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:29:15.256Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:29:12.472Z",
-      "event": "Error in camera",
-      "error": "Error: Timeout waiting for response"
-    },
-    {
-      "timestamp": "2025-09-15T07:28:02.274Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:27:25.254Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-15T07:27:15.256Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:25:27.192Z",
-      "event": "Camera power OFF"
-    },
-    {
-      "timestamp": "2025-09-15T07:25:19.177Z",
-      "event": "Camera power ON"
-    },
-    {
-      "timestamp": "2025-09-15T07:25:19.096Z",
+      "timestamp": "2025-09-16T17:25:00.772Z",
       "event": "System started"
     },
     {
-      "timestamp": "2025-09-15T07:25:14.300Z",
+      "timestamp": "2025-09-16T17:24:41.907Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T17:24:36.697Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T17:24:36.427Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T17:20:39.357Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T17:20:09.340Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T17:19:52.331Z",
       "event": "Camera power ON"
     },
     {
-      "timestamp": "2025-09-15T07:24:04.301Z",
+      "timestamp": "2025-09-16T17:19:43.227Z",
       "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T17:19:35.203Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T17:19:35.117Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T17:19:25.587Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T17:19:16.224Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T17:19:11.014Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T17:19:10.735Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T16:51:18.974Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:50:48.770Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T16:50:33.764Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:50:24.394Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:50:19.178Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:50:18.907Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T16:35:25.756Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:34:55.554Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T16:34:40.548Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:34:31.208Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:34:26.002Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:34:25.730Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T16:30:15.812Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T16:29:45.612Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T16:29:28.604Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T16:29:19.498Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T16:29:11.473Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T16:29:11.385Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T16:28:13.324Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T16:27:43.306Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T16:27:26.297Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T16:27:17.161Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T16:27:09.132Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T16:27:09.045Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T16:25:57.028Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T16:25:40.018Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T16:25:31.287Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T16:25:23.262Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T16:25:23.150Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T16:09:34.698Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T16:09:04.681Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T16:08:47.673Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T16:08:38.506Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T16:08:30.478Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T16:08:30.392Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T15:50:36.051Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T15:50:05.848Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T15:49:48.840Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T15:49:39.719Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T15:49:31.702Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T15:49:31.621Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T15:49:16.931Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T15:49:11.911Z",
+      "event": "Error in camera",
+      "error": "Error: Timeout waiting for response"
+    },
+    {
+      "timestamp": "2025-09-16T15:49:11.638Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T15:48:26.272Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T15:47:17.837Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T13:25:16.898Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T13:24:46.887Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T13:24:29.877Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T13:24:20.720Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T13:24:12.700Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T13:24:12.618Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T13:07:01.785Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T13:06:31.774Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T13:06:14.767Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T13:06:05.652Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T13:05:57.636Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T13:05:57.441Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T12:44:05.310Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T12:43:35.308Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T12:43:18.295Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T12:43:09.181Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T12:43:01.169Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T12:43:01.052Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T12:01:52.490Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T12:01:22.485Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T12:01:05.474Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T12:00:56.322Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T12:00:48.306Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T12:00:48.231Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-16T11:48:33.664Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T11:48:03.660Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-16T11:47:46.653Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T11:47:37.544Z",
+      "event": "Camera power OFF"
+    },
+    {
+      "timestamp": "2025-09-16T11:47:29.529Z",
+      "event": "Camera power ON"
+    },
+    {
+      "timestamp": "2025-09-16T11:47:29.344Z",
+      "event": "System started"
     }
   ],
   "device_status": {
@@ -456,7 +451,7 @@
     "oasc_camera": false,
     "epever": false,
     "sht45": true,
-    "adc": true,
-    "last_check": "2025-09-15T08:23:21.543Z"
+    "adc": false,
+    "last_check": "2025-09-16T17:26:03.046Z"
   }
 }

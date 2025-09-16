@@ -17,3 +17,17 @@ export function validateNumber(min, max) {
     next();
   };
 }
+
+export function validateString(minLength, maxLength) {
+  return (req, res, next) => {
+    const { value } = req.query;
+    if (value && typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed.length < minLength) {
+        return res.status(400).json({ error: `String must be at least ${minLength} characters` });
+      }
+      // maxLength는 체크하지 않음 (자동으로 자르기 때문)
+    }
+    next();
+  };
+}

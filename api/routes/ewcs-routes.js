@@ -89,6 +89,54 @@ export default function createEwcsRoutes(database, appInstance) {
     }
   });
 
+  // EWCS 현재 데이터 (실시간 수집 후 반환)
+  router.get('/ewcs_data/now', async (req, res) => {
+    try {
+      // 실시간 데이터 수집 실행
+      await appInstance.runDataCollectionOnce();
+
+      // 수집된 현재 데이터 반환 (ewcs_data와 동일한 형식)
+      const currentData = {
+        timestamp: appInstance.ewcsData.timestamp,
+        station_name: appInstance.ewcsData.stationName,
+        power_save_mode: appInstance.ewcsData.powerSaveMode,
+        // CS125 센서 데이터
+        cs125_current: appInstance.ewcsData.cs125Current,
+        cs125_visibility: appInstance.ewcsData.cs125Visibility,
+        cs125_synop: appInstance.ewcsData.cs125SYNOP,
+        cs125_temp: appInstance.ewcsData.cs125Temp,
+        cs125_humidity: appInstance.ewcsData.cs125Humidity,
+        // 환경 센서 데이터
+        sht45_temp: appInstance.ewcsData.SHT45Temp,
+        sht45_humidity: appInstance.ewcsData.SHT45Humidity,
+        rpi_temp: appInstance.ewcsData.rpiTemp,
+        // 전력 모니터링 데이터
+        chan1_current: appInstance.ewcsData.chan1Current,
+        chan2_current: appInstance.ewcsData.chan2Current,
+        chan3_current: appInstance.ewcsData.chan3Current,
+        chan4_current: appInstance.ewcsData.chan4Current,
+        // 태양광 충전기 데이터
+        pv_vol: appInstance.ewcsData.PVVol,
+        pv_cur: appInstance.ewcsData.PVCur,
+        load_vol: appInstance.ewcsData.LoadVol,
+        load_cur: appInstance.ewcsData.LoadCur,
+        bat_temp: appInstance.ewcsData.BatTemp,
+        dev_temp: appInstance.ewcsData.DevTemp,
+        charg_equip_stat: appInstance.ewcsData.ChargEquipStat,
+        dischg_equip_stat: appInstance.ewcsData.DischgEquipStat
+      };
+
+      res.json({
+        query: { realtime: true },
+        count: 1,
+        data: [currentData]
+      });
+    } catch (error) {
+      console.error('Failed to collect real-time EWCS data:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // 시스템 상태 조회 (system_state.json + real-time status)
   router.get('/ewcs_status', (req, res) => {
     try {
@@ -96,7 +144,9 @@ export default function createEwcsRoutes(database, appInstance) {
         current_status: systemState.getStatus(),
         settings: {
           ...systemState.getSetting(),
-          station_name: config.get('stationName')
+          stationName: config.get('stationName'),
+          powerSaveMode: config.get('powerSaveMode'),
+          oascExposureTime: config.get('oascExposureTime')
         },
         network_info: {
           ipAddress: appInstance?.ewcsStatus?.ipAddress || 'N/A',

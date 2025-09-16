@@ -7,17 +7,17 @@ const LED = new Gpio(528, 'out'); // GPIO 16 = system gpio-528
 // LED control functions
 function ledOn() {
   LED.writeSync(1);
-  console.log('LED turned ON');
+  //console.log('LED turned ON');
 }
 
 function ledOff() {
   LED.writeSync(0);
-  console.log('LED turned OFF');
+  //console.log('LED turned OFF');
 }
 
 function setLED(state) {
   LED.writeSync(state ? 1 : 0);
-  console.log(`LED set to ${state ? 'ON' : 'OFF'}`);
+  //console.log(`LED set to ${state ? 'ON' : 'OFF'}`);
 }
 
 // Cleanup on exit
