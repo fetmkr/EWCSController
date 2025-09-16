@@ -304,7 +304,7 @@ export default class PIC24Controller {
 
         const sensorData = {
             stationName: ewcsData.stationName || "KOPRI_STATION_01",
-            timestamp: Math.floor((ewcsData.timestamp || Date.now()) / 1000),
+            timestamp: ewcsData.timestamp || Date.now(),
             powerSaveMode: ewcsData.powerSaveMode === "save" ? 1 : 0,  // 0=normal, 1=save
 
             // CS125 센서 데이터
@@ -344,8 +344,8 @@ export default class PIC24Controller {
     }
 
     structToBuffer(data) {
-        // RPi에서 PIC24로 보내는 센서 데이터 (스케줄 정보 제외, 95 bytes)
-        const buffer = Buffer.alloc(95);
+        // RPi에서 PIC24로 보내는 센서 데이터 (스케줄 정보 제외, 99 bytes)
+        const buffer = Buffer.alloc(99);
         let offset = 0;
 
         // stationName[16] - 16 bytes (null-terminated string)
@@ -354,9 +354,9 @@ export default class PIC24Controller {
         // 나머지 바이트는 0으로 패딩 (Buffer.alloc으로 이미 0으로 초기화됨)
         offset += 16;
 
-        // timestamp - 4 bytes (uint32_t)
-        buffer.writeUInt32LE(data.timestamp, offset);
-        offset += 4;
+        // timestamp - 8 bytes (uint64_t)
+        buffer.writeBigUInt64LE(BigInt(data.timestamp), offset);
+        offset += 8;
 
         // powerSaveMode - 1 byte (uint8_t: 0=normal, 1=save)
         buffer.writeUInt8(data.powerSaveMode, offset);
@@ -392,8 +392,8 @@ export default class PIC24Controller {
 
         // 스케줄 정보는 RPi에서 보내지 않음 (PIC24에서만 관리)
 
-        console.log(`[PIC24] structToBuffer: Created ${offset} bytes (expected 95)`);
-        return buffer; // 정확히 95바이트 반환
+        console.log(`[PIC24] structToBuffer: Created ${offset} bytes (expected 99)`);
+        return buffer; // 정확히 99바이트 반환
     }
 
     handleReceivedPacket() {
