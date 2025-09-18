@@ -139,7 +139,7 @@ class EWCSApp {
       }, 1000); // 1초 후 실행
 
       // Start auto cleanup schedule
-      this.startAutoCleanupSchedule();
+      await this.startAutoCleanupSchedule();
 
       // Start time sync with PIC24
       this.startTimeSync();

@@ -141,7 +141,8 @@ export default function createEwcsRoutes(database, appInstance) {
       const response = {
         settings: {
           stationName: config.get('stationName'),
-          oascExposureTime: config.get('oascExposureTime')
+          oascExposureTime: config.get('oascExposureTime'),
+          lastCleanupDate: config.get('lastCleanupDate')
         },
         network_info: {
           ipAddress: appInstance?.ewcsStatus?.ipAddress || 'N/A',
