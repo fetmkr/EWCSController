@@ -1,5 +1,5 @@
 {
   "stationName": "KOPRI Station",
-  "powerSaveMode": "normal",
-  "oascExposureTime": 10.0
+  "oascExposureTime": 10.0,
+  "lastCleanupDate": "2024-12-31"
 }

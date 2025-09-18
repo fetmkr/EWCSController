@@ -99,9 +99,7 @@ export default function createEwcsRoutes(database, appInstance) {
       const currentData = {
         timestamp: appInstance.ewcsData.timestamp,
         station_name: appInstance.ewcsData.stationName,
-        power_save_mode: appInstance.ewcsData.powerSaveMode,
         // CS125 센서 데이터
-        cs125_current: appInstance.ewcsData.cs125Current,
         cs125_visibility: appInstance.ewcsData.cs125Visibility,
         cs125_synop: appInstance.ewcsData.cs125SYNOP,
         cs125_temp: appInstance.ewcsData.cs125Temp,
@@ -141,11 +139,8 @@ export default function createEwcsRoutes(database, appInstance) {
   router.get('/ewcs_status', (req, res) => {
     try {
       const response = {
-        current_status: systemState.getStatus(),
         settings: {
-          ...systemState.getSetting(),
           stationName: config.get('stationName'),
-          powerSaveMode: config.get('powerSaveMode'),
           oascExposureTime: config.get('oascExposureTime')
         },
         network_info: {

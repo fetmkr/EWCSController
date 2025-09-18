@@ -27,7 +27,6 @@ class SystemState {
         camera_on: false,
         cs125_hood_heater_on: false,
         iridium_on: false,
-        power_save_mode: false,
         last_updated: new Date().toISOString()
       },
       device_status: {
@@ -137,10 +136,6 @@ class SystemState {
     this.addEvent(`Iridium modem ${on ? 'ON' : 'OFF'}`);
   }
 
-  setPowerSaveMode(on) {
-    this.updateStatus('power_save_mode', on);
-    this.addEvent(`Power save mode ${on ? 'ENABLED' : 'DISABLED'}`);
-  }
 
   logError(component, error) {
     this.addEvent(`Error in ${component}`, error.toString());

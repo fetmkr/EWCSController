@@ -44,7 +44,7 @@ export default function createSystemRoutes(appInstance) {
   // PIC24 OnOff 스케줄 조회
   router.get('/schedule/onoff', async (req, res) => {
     try {
-      const schedule = await appInstance.devices.pic24?.getOnOffSchedule();
+      const schedule = await appInstance.devices.pic24?.getOnOffScheduleFlexible();
       if (schedule) {
         res.json(schedule);
       } else {
@@ -58,21 +58,57 @@ export default function createSystemRoutes(appInstance) {
   // PIC24 OnOff 스케줄 설정
   router.post('/schedule/onoff', async (req, res) => {
     try {
-      const { onMin, offMin } = req.body;
+      const { mode, onMin, offMin } = req.body;
 
-      if (typeof onMin !== 'number' || typeof offMin !== 'number' ||
-          onMin < 0 || onMin > 59 || offMin < 0 || offMin > 59) {
+      // mode가 없으면 기본값 1 (매시간)
+      const scheduleMode = mode || 1;
+
+      // mode 검증
+      if (typeof scheduleMode !== 'number' || (scheduleMode !== 1 && scheduleMode !== 2)) {
         return res.status(400).json({
-          error: 'onMin and offMin must be numbers between 0-59'
+          error: 'mode must be 1 (hourly) or 2 (every 10 minutes)'
         });
       }
 
-      await appInstance.devices.pic24?.setOnOffSchedule(onMin, offMin);
+      // 기본 검증
+      if (typeof onMin !== 'number' || typeof offMin !== 'number' ||
+          onMin < 0 || offMin < 0) {
+        return res.status(400).json({
+          error: 'onMin and offMin must be non-negative numbers'
+        });
+      }
+
+      // 모드별 범위 검증
+      if (scheduleMode === 1) {
+        if (onMin > 59 || offMin > 59) {
+          return res.status(400).json({
+            error: 'For hourly mode, onMin and offMin must be 0-59'
+          });
+        }
+      } else if (scheduleMode === 2) {
+        if (onMin > 9 || offMin > 9) {
+          return res.status(400).json({
+            error: 'For every 10min mode, onMin and offMin must be 0-9'
+          });
+        }
+      }
+
+      await appInstance.devices.pic24?.setOnOffScheduleFlexible(scheduleMode, onMin, offMin);
+
+      // 설명 생성
+      let description;
+      if (scheduleMode === 1) {
+        description = `Every hour: ON at xx:${onMin.toString().padStart(2, '0')}, OFF at xx:${offMin.toString().padStart(2, '0')}`;
+      } else {
+        description = `Every 10 minutes: ON at x${onMin}, OFF at x${offMin}`;
+      }
+
       res.json({
         success: true,
+        mode: scheduleMode,
         onMin,
         offMin,
-        description: `Every hour: ON at xx:${onMin.toString().padStart(2, '0')}, OFF at xx:${offMin.toString().padStart(2, '0')}`
+        description
       });
     } catch (error) {
       res.status(500).json({ error: error.message });

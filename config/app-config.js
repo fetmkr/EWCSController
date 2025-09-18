@@ -47,7 +47,6 @@ class AppConfig {
     return {
       // Station Settings
       stationName: "KOPRI Station",
-      powerSaveMode: "normal",
       
       // Network Settings  
       server: {
@@ -168,8 +167,8 @@ class AppConfig {
       // Only save user-configurable settings, not all defaults
       const saveableConfig = {
         stationName: this.config.stationName,
-        powerSaveMode: this.config.powerSaveMode,
-        oascExposureTime: this.config.oascExposureTime
+        oascExposureTime: this.config.oascExposureTime,
+        lastCleanupDate: this.config.lastCleanupDate
       };
 
       fs.writeFileSync(this.configPath, JSON.stringify(saveableConfig, null, 2));

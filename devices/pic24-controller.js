@@ -297,7 +297,6 @@ export default class PIC24Controller {
         console.log('[PIC24] ewcsData timestamp:', ewcsData.timestamp);
         console.log('[PIC24] ewcsData sample values:', {
             stationName: ewcsData.stationName,
-            cs125Current: ewcsData.cs125Current,
             chan1Current: ewcsData.chan1Current,
             PVVol: ewcsData.PVVol
         });
@@ -305,10 +304,8 @@ export default class PIC24Controller {
         const sensorData = {
             stationName: ewcsData.stationName || "KOPRI_STATION_01",
             timestamp: ewcsData.timestamp || Date.now(),
-            powerSaveMode: ewcsData.powerSaveMode === "save" ? 1 : 0,  // 0=normal, 1=save
 
             // CS125 센서 데이터
-            cs125Current: ewcsData.cs125Current || 0,
             cs125Visibility: ewcsData.cs125Visibility || 0,
             cs125SYNOP: ewcsData.cs125SYNOP || 0,
             cs125Temp: ewcsData.cs125Temp || 0,
@@ -344,8 +341,8 @@ export default class PIC24Controller {
     }
 
     structToBuffer(data) {
-        // RPi에서 PIC24로 보내는 센서 데이터 (스케줄 정보 제외, 99 bytes)
-        const buffer = Buffer.alloc(99);
+        // RPi에서 PIC24로 보내는 센서 데이터 (스케줄 정보 제외, 94 bytes)
+        const buffer = Buffer.alloc(94);
         let offset = 0;
 
         // stationName[16] - 16 bytes (null-terminated string)
@@ -358,12 +355,7 @@ export default class PIC24Controller {
         buffer.writeBigUInt64LE(BigInt(data.timestamp), offset);
         offset += 8;
 
-        // powerSaveMode - 1 byte (uint8_t: 0=normal, 1=save)
-        buffer.writeUInt8(data.powerSaveMode, offset);
-        offset += 1;
-
         // CS125 센서 데이터
-        buffer.writeFloatLE(data.cs125Current, offset); offset += 4;
         buffer.writeFloatLE(data.cs125Visibility, offset); offset += 4;
         buffer.writeUInt16LE(data.cs125SYNOP, offset); offset += 2;
         buffer.writeFloatLE(data.cs125Temp, offset); offset += 4;
@@ -392,8 +384,8 @@ export default class PIC24Controller {
 
         // 스케줄 정보는 RPi에서 보내지 않음 (PIC24에서만 관리)
 
-        console.log(`[PIC24] structToBuffer: Created ${offset} bytes (expected 99)`);
-        return buffer; // 정확히 99바이트 반환
+        console.log(`[PIC24] structToBuffer: Created ${offset} bytes (expected 94)`);
+        return buffer; // 정확히 94바이트 반환
     }
 
     handleReceivedPacket() {

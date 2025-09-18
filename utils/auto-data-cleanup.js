@@ -9,7 +9,7 @@ class AutoDataCleanup {
     this.config = {
       maxDiskUsagePercent: 80,    // 디스크 사용률 80% 이상일 때만 실행
       criticalDiskUsagePercent: 90, // 90% 이상이면 강제 정리
-      minFileAgedays: 90,         // 90일 이상된 파일만 삭제
+      minFileAgedays: 365,        // 1년 이상된 파일만 삭제
       minPreserveCount: 2000,     // 최신 2000개 파일 무조건 보존
       maxDeletePercentage: 10,    // 한 번에 최대 10%만 삭제
       minRecentFiles: 100,        // 최근 7일 이내 최소 파일 수
@@ -17,6 +17,7 @@ class AutoDataCleanup {
     };
 
     this.cleanupLog = [];
+    this.configPath = path.join(__dirname, '../config.json');
     this.basePaths = {
       spinel: path.join(__dirname, '../ewcs_images'),
       oasc: path.join(__dirname, '../oasc_images'),
@@ -219,6 +220,47 @@ class AutoDataCleanup {
   }
 
   /**
+   * config.json에서 마지막 실행 날짜 로드
+   * @returns {Promise<string|null>} 마지막 실행 날짜 또는 null
+   */
+  async getLastExecutionDate() {
+    try {
+      const configData = await fs.readFile(this.configPath, 'utf8');
+      const config = JSON.parse(configData);
+      return config.lastCleanupDate || null;
+    } catch (error) {
+      console.error('[CLEANUP] Failed to read last execution date:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * config.json에 마지막 실행 날짜 저장
+   * @param {string} date YYYY-MM-DD 형식 날짜
+   */
+  async saveLastExecutionDate(date) {
+    try {
+      const configData = await fs.readFile(this.configPath, 'utf8');
+      const config = JSON.parse(configData);
+      config.lastCleanupDate = date;
+      await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
+      console.log(`[CLEANUP] Saved last execution date: ${date}`);
+    } catch (error) {
+      console.error('[CLEANUP] Failed to save last execution date:', error.message);
+    }
+  }
+
+  /**
+   * 오늘 이미 실행했는지 확인
+   * @returns {Promise<boolean>} 오늘 실행했으면 true
+   */
+  async hasExecutedToday() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+    const lastDate = await this.getLastExecutionDate();
+    return lastDate === today;
+  }
+
+  /**
    * 자동 정리 메인 함수
    * @returns {Promise<Object>} 실행 결과
    */
@@ -234,6 +276,14 @@ class AutoDataCleanup {
     };
 
     try {
+      // 0단계: 오늘 이미 실행했는지 확인
+      if (await this.hasExecutedToday()) {
+        const lastDate = await this.getLastExecutionDate();
+        result.reason = `Already executed today (${lastDate})`;
+        console.log(`[CLEANUP] ${result.reason}`);
+        return result;
+      }
+
       // 1단계: 디스크 사용률 확인
       result.diskUsage = await this.getDiskUsage();
       console.log(`[CLEANUP] Current disk usage: ${result.diskUsage}%`);
@@ -263,6 +313,10 @@ class AutoDataCleanup {
       result.cleanupResult = await this.performConservativeCleanup();
       result.executed = true;
       result.reason = 'Cleanup executed successfully';
+
+      // 실행 날짜 기록 (config.json에 저장)
+      const today = new Date().toISOString().split('T')[0];
+      await this.saveLastExecutionDate(today);
 
     } catch (error) {
       result.reason = `Cleanup error: ${error.message}`;

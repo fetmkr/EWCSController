@@ -45,9 +45,7 @@ class EWCSApp {
     this.ewcsData = {
       stationName: "",
       timestamp: 0,
-      powerSaveMode: "normal",
       // CS125 센서 데이터
-      cs125Current: 0,
       cs125Visibility: 0,
       cs125SYNOP: 0,
       cs125Temp: 0,
@@ -58,9 +56,9 @@ class EWCSApp {
       rpiTemp: 0,
       // 전력 모니터링 데이터 (ADC 채널)
       chan1Current: 0,  // CS125 전류
-      chan2Current: 0,  // 이리디움 전류
-      chan3Current: 0,  // 카메라 전류
-      chan4Current: 0,  // 배터리/기타 전류
+      chan2Current: 0,  // spinel 전류
+      chan3Current: 0,  // oasc 전류
+      chan4Current: 0,  // 기타 전류
       // 태양광 충전기 데이터
       PVVol: 0,
       PVCur: 0,
@@ -383,14 +381,12 @@ class EWCSApp {
     try {
       if (this.devices.cs125?.data) {
         console.log('[CS125] Connected - collecting data');
-        this.ewcsData.cs125Current = this.devices.cs125.data.current || 0;
         this.ewcsData.cs125Visibility = this.devices.cs125.data.visibility || 0;
         this.ewcsData.cs125SYNOP = this.devices.cs125.data.synop || 0;
         this.ewcsData.cs125Temp = this.devices.cs125.data.temperature || 0;
         this.ewcsData.cs125Humidity = this.devices.cs125.data.humidity || 0;
       } else {
         console.log('[CS125] Disconnected - using default values');
-        this.ewcsData.cs125Current = 0;
         this.ewcsData.cs125Visibility = 0;
         this.ewcsData.cs125SYNOP = 0;
         this.ewcsData.cs125Temp = 0;
@@ -398,7 +394,6 @@ class EWCSApp {
       }
     } catch (error) {
       console.log('[CS125] Data collection failed:', error.message);
-      this.ewcsData.cs125Current = 0;
       this.ewcsData.cs125Visibility = 0;
       this.ewcsData.cs125SYNOP = 0;
       this.ewcsData.cs125Temp = 0;

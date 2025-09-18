@@ -52,9 +52,7 @@ class SQLiteDB {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp INTEGER NOT NULL,
         station_name TEXT,
-        power_save_mode TEXT DEFAULT 'normal',
         -- CS125 센서 데이터
-        cs125_current REAL,
         cs125_visibility REAL,
         cs125_synop INTEGER,
         cs125_temp REAL,
@@ -118,13 +116,13 @@ class SQLiteDB {
     this.stmts = {
       insertEwcsData: this.db.prepare(`
         INSERT INTO ewcs_data (
-          timestamp, station_name, power_save_mode,
-          cs125_current, cs125_visibility, cs125_synop, cs125_temp, cs125_humidity,
+          timestamp, station_name,
+          cs125_visibility, cs125_synop, cs125_temp, cs125_humidity,
           sht45_temp, sht45_humidity, rpi_temp,
           chan1_current, chan2_current, chan3_current, chan4_current,
           pv_vol, pv_cur, load_vol, load_cur, bat_temp, dev_temp,
-          charg_equip_stat, dischg_equip_stat
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          charg_equip_stat, dischg_equip_stat, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `),
       
       insertImageData: this.db.prepare(`
@@ -196,9 +194,7 @@ class SQLiteDB {
     const params = [
       data.timestamp || Date.now(),
       data.stationName,
-      data.powerSaveMode || 'normal',
       // CS125 센서 데이터
-      data.cs125Current || 0,
       data.cs125Visibility || 0,
       data.cs125SYNOP || 0,
       data.cs125Temp || 0,
@@ -220,7 +216,9 @@ class SQLiteDB {
       data.BatTemp || 0,
       data.DevTemp || 0,
       data.ChargEquipStat || 0,
-      data.DischgEquipStat || 0
+      data.DischgEquipStat || 0,
+      // created_at - 현재 시간
+      new Date().toISOString()
     ];
 
     try {
