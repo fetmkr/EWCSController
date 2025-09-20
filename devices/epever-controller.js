@@ -64,18 +64,19 @@ class EPEVERController extends EventEmitter {
   }
 
   async initialize() {
-    if (this.isInitialized) return;
+    if (this.isInitialized) return { success: true };
 
     try {
       await this.initializeSerialPort();
       this.isInitialized = true;
       console.log('EPEVER Controller initialized');
-      
+
       // 폴링 제거 - 온디맨드 방식으로 변경
-      
+      return { success: true };
+
     } catch (error) {
       console.error('EPEVER Controller initialization failed:', error);
-      throw error;
+      return { success: false, error: error.message };
     }
   }
 

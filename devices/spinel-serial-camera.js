@@ -783,7 +783,7 @@ class SpinelCamera {
           console.log('[CAMERA] Test command timeout - no response received');
           this.testPromiseResolve = null;
           resolve(false);
-        }, 5000);
+        }, 2000);
         
         // 테스트 명령 전송
         const testCmd = this.buildTestCommand();

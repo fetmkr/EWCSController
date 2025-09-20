@@ -2,7 +2,7 @@ import express from 'express';
 import expressWs from 'express-ws';
 import config from './config/app-config.js';
 import database from './database/sqlite-db.js';
-import systemState from './utils/system-state.js';
+import logManager from './utils/log-manager.js';
 import AutoDataCleanup from './utils/auto-data-cleanup.js';
 import os from 'os';
 import fs from 'fs';
@@ -22,8 +22,7 @@ import OASCCamera from './devices/oasc-camera.js';
 import PIC24Controller from './devices/pic24-controller.js';
 
 // API routes
-import createDeviceRoutes from './api/routes/device-routes.js';
-import createSystemRoutes from './api/routes/system-routes.js';
+import createScheduleRoutes from './api/routes/schedule-routes.js';
 import createEwcsRoutes from './api/routes/ewcs-routes.js';
 import createImageRoutes from './api/routes/image-routes.js';
 import createHelpRoutes from './api/routes/help-routes.js';
@@ -99,7 +98,7 @@ class EWCSApp {
       console.log(`[${getTimestamp()}] EWCS Controller starting...`);
 
       // Log system start
-      systemState.logSystemStart();
+      logManager.logSystemStart();
 
       // Get network information
       this.updateNetworkInfo();
@@ -110,15 +109,12 @@ class EWCSApp {
       // Initialize database
       database.initialize();
       console.log(`[${getTimestamp()}] [DB] Database initialized`);
-      
-      // Initialize PIC24 controller
-      await this.initializePIC24();
-      
+            
       // Initialize devices
       await this.initializeDevices();
       
-      // Initial device health check after initialization
-      await this.checkDeviceHealth();
+      // Start periodic tasks (device health check, etc.) and wait for first check
+      await this.startPeriodicTasks();
       
       // Setup API routes
       this.setupRoutes();
@@ -157,154 +153,54 @@ class EWCSApp {
     this.app.use(express.json());
   }
 
-  // PIC24 관련 함수 - PIC24 컨트롤러 초기화
-  async initializePIC24() {
-    try {
-      this.devices.pic24 = new PIC24Controller(this);
-      await this.devices.pic24.initialize(config.get('serialPorts.pic24'), 115200);
-      console.log(`[${getTimestamp()}] PIC24 controller initialized`);
-    } catch (error) {
-      console.warn('PIC24 controller initialization failed:', error.message);
-    }
-  }
 
   async initializeDevices() {
     // Initialize GPIO controller
-    try {
-      this.devices.gpio = GPIOController;
-      await this.devices.gpio.initialize();
-    } catch (error) {
-      console.warn('GPIO initialization failed:', error.message);
-    }
-    
+    this.devices.gpio = GPIOController;
+    await this.devices.gpio.initialize();
+
+    // Initialize PIC24 controller
+    this.devices.pic24 = new PIC24Controller(this);
+    await this.devices.pic24.initialize(config.get('serialPorts.pic24'), 115200);
+
     // Initialize SHT45 sensor
-    try {
-      this.devices.sht45 = SHT45Sensor;
-      await this.devices.sht45.initialize();
-    } catch (error) {
-      console.warn('SHT45 sensor initialization failed:', error.message);
-    }
-    
+    this.devices.sht45 = SHT45Sensor;
+    await this.devices.sht45.initialize();
+
     // Initialize ADC reader
-    try {
-      this.devices.adc = ADCReader;
-      await this.devices.adc.initialize();
-      // ADC 단순화로 인해 continuous reading 불필요
-    } catch (error) {
-      console.warn('ADC reader initialization failed:', error.message);
-    }
-    
+    this.devices.adc = ADCReader;
+    await this.devices.adc.initialize();
+
     // Initialize CS125 sensor
-    try {
-      this.devices.cs125 = new CS125Sensor();
-      await this.devices.cs125.initialize();
-    } catch (error) {
-      console.warn('CS125 sensor initialization failed:', error.message);
-      this.devices.cs125 = null;
-    }
-    
+    this.devices.cs125 = new CS125Sensor();
+    await this.devices.cs125.initialize();
+
     // Initialize spinel camera
-    try {
-      this.devices.camera = new SpinelCamera(config.get('serialPorts.camera'), 115200);
+    this.devices.camera = new SpinelCamera(config.get('serialPorts.camera'), 115200);
 
-      // Camera power control will be handled by app.js via PIC24 (실패해도 계속 진행)
-      try {
-        await this.turnOnCamera();
-        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for camera boot
-      } catch (error) {
-        console.log(`[CAMERA] PIC24 turn on failed, but continuing: ${error.message}`);
-      }
-
-      console.log('[DEBUG] About to call checkConnection...');
-      const isConnected = await this.devices.camera.checkConnection();
-      console.log(`[DEBUG] checkConnection result: ${isConnected}`);
-      if (isConnected) {
-        console.log(`[CAMERA] Startup test successful - ID: 0x${this.devices.camera.config.cameraId.toString(16).padStart(2, '0')}`);
-      } else {
-        console.warn(`[CAMERA] Startup test failed: no response`);
-      }
-
-      try {
-        await this.turnOffCamera();
-      } catch (error) {
-        console.log(`[CAMERA] PIC24 turn off failed: ${error.message}`);
-      }
-    } catch (error) {
-      console.warn('Spinel camera initialization failed:', error.message);
-      this.devices.camera = null;
-    }
-    
     // Initialize EPEVER controller
-    try {
-      this.devices.epever = EPEVERController;
-      await this.devices.epever.initialize();
-    } catch (error) {
-      console.warn('EPEVER controller initialization failed:', error.message);
-    }
-    
+    this.devices.epever = EPEVERController;
+    await this.devices.epever.initialize();
+
     // Initialize OASC camera
-    try {
-      this.devices.oascCamera = new OASCCamera();
-      await this.devices.oascCamera.initialize();
-      
-      // Connect to camera after initialization
-      const connected = await this.devices.oascCamera.connect();
-      if (connected) {
-        console.log('[OASC] Camera connected successfully');
-      } else {
-        console.warn('[OASC] Camera initialized but connection failed');
-      }
-    } catch (error) {
-      console.warn('OASC camera initialization failed:', error.message);
-    }
+    this.devices.oascCamera = new OASCCamera();
+    await this.devices.oascCamera.initialize();
+
+    // Connect to OASC camera after initialization
+    await this.devices.oascCamera.connect();
     
+
     console.log(`[${getTimestamp()}] Device initialization complete`);
   }
 
   setupRoutes() {
-    // API routes - Pass both devices and app instance for PIC24 control
-    this.app.use('/api/device', createDeviceRoutes(this.devices, this));
-    this.app.use('/api/devices', createDeviceRoutes(this.devices, this));
-    this.app.use('/api/system', createSystemRoutes(this));
-    this.app.use('/api/ewcs', createEwcsRoutes(database, this));
+    // API routes - Pass database and app instance for EWCS control
     this.app.use('/api', createEwcsRoutes(database, this));
-    this.app.use('/api/images', createImageRoutes(database));
-    this.app.use('/images', createImageRoutes(database));
+    this.app.use('/api/schedule', createScheduleRoutes(this));
+    this.app.use('/api/image', createImageRoutes(database));
+    this.app.use('/file/image', createImageRoutes(database));
     this.app.use('/api/help', createHelpRoutes());
     
-    // Health check
-    this.app.get('/health', (req, res) => {
-      const health = {
-        status: 'ok',
-        timestamp: Date.now(),
-        uptime: process.uptime(),
-        devices: {}
-      };
-
-      for (const [name, device] of Object.entries(this.devices)) {
-        try {
-          if (device && device.getStatus) {
-            health.devices[name] = device.getStatus();
-          } else if (device) {
-            // Fallback for devices without getStatus method
-            health.devices[name] = {
-              available: true,
-              connected: device.isConnected || device.connected || true
-            };
-          } else {
-            health.devices[name] = { available: false };
-          }
-        } catch (error) {
-          health.devices[name] = {
-            available: true,
-            connected: false,
-            error: error.message
-          };
-        }
-      }
-
-      res.json(health);
-    });
     
     // Root endpoint
     this.app.get('/', (req, res) => {
@@ -368,7 +264,7 @@ class EWCSApp {
       console.log(`[${getTimestamp()}] [DB] Initial EWCS data saved to database`);
     } catch (error) {
       console.error('Initial data collection error:', error);
-      systemState.logError('data_collection', error);
+      logManager.logError('data_collection', error);
     }
   }
 
@@ -379,14 +275,14 @@ class EWCSApp {
     
     // CS125 센서 데이터
     try {
-      if (this.devices.cs125?.data) {
+      if (this.ewcsStatus.cs125Connected === 1 && this.devices.cs125?.data) {
         console.log('[CS125] Connected - collecting data');
         this.ewcsData.cs125Visibility = this.devices.cs125.data.visibility || 0;
         this.ewcsData.cs125SYNOP = this.devices.cs125.data.synop || 0;
         this.ewcsData.cs125Temp = this.devices.cs125.data.temperature || 0;
         this.ewcsData.cs125Humidity = this.devices.cs125.data.humidity || 0;
       } else {
-        console.log('[CS125] Disconnected - using default values');
+        console.log('[CS125] Not connected - using default values');
         this.ewcsData.cs125Visibility = 0;
         this.ewcsData.cs125SYNOP = 0;
         this.ewcsData.cs125Temp = 0;
@@ -402,21 +298,15 @@ class EWCSApp {
     
     // SHT45 환경 센서 데이터
     try {
-      if (this.devices.sht45) {
+      if (this.ewcsStatus.SHT45Connected === 1 && this.devices.sht45) {
+        console.log('[SHT45] Connected - collecting data');
         await this.devices.sht45.updateSHT45(); // 데이터 업데이트 함수 호출
         const sht45Data = this.devices.sht45.getData();
 
-        if (sht45Data.lastReading > 0) {
-          console.log('[SHT45] Connected - collecting data');
-          this.ewcsData.SHT45Temp = sht45Data.temperature || 0;
-          this.ewcsData.SHT45Humidity = sht45Data.humidity || 0;
-        } else {
-          console.log('[SHT45] Disconnected - using default values');
-          this.ewcsData.SHT45Temp = 0;
-          this.ewcsData.SHT45Humidity = 0;
-        }
+        this.ewcsData.SHT45Temp = sht45Data.temperature || 0;
+        this.ewcsData.SHT45Humidity = sht45Data.humidity || 0;
       } else {
-        console.log('[SHT45] Not available - using default values');
+        console.log('[SHT45] Not connected - using default values');
         this.ewcsData.SHT45Temp = 0;
         this.ewcsData.SHT45Humidity = 0;
       }
@@ -428,15 +318,16 @@ class EWCSApp {
     
     // ADC 전력 모니터링 데이터 (원래 ewcs.js 방식)
     try {
-      if (this.devices.adc) {
+      if (this.ewcsStatus.ADCConnected === 1 && this.devices.adc) {
         console.log('[ADC] Connected - collecting power monitoring data');
-        // CH0: chan1Current, CH1: chan2Current, CH2: chan3Current, CH3: chan4Current
-        this.ewcsData.chan1Current = (await this.devices.adc.getChannelData(0))?.data?.convertedValue || 0;
-        this.ewcsData.chan2Current = (await this.devices.adc.getChannelData(1))?.data?.convertedValue || 0;
-        this.ewcsData.chan3Current = (await this.devices.adc.getChannelData(2))?.data?.convertedValue || 0;
-        this.ewcsData.chan4Current = (await this.devices.adc.getChannelData(3))?.data?.convertedValue || 0;
+        // 한 번의 readADC로 모든 채널 데이터 가져오기 (이미 변환된 값)
+        const adcData = await this.devices.adc.getData();
+        this.ewcsData.chan1Current = adcData.chan1Current || 0;
+        this.ewcsData.chan2Current = adcData.chan2Current || 0;
+        this.ewcsData.chan3Current = adcData.chan3Current || 0;
+        this.ewcsData.chan4Current = adcData.chan4Current || 0;
       } else {
-        console.log('[ADC] Disconnected - using default values');
+        console.log('[ADC] Not connected - using default values');
         this.ewcsData.chan1Current = 0;
         this.ewcsData.chan2Current = 0;
         this.ewcsData.chan3Current = 0;
@@ -451,37 +342,22 @@ class EWCSApp {
     }
     
     // EPEVER 태양광 충전기 데이터 (실시간 수집)
-    if (this.devices.epever) {
+    if (this.ewcsStatus.EPEVERConnected === 1 && this.devices.epever) {
       try {
-        console.log('[EPEVER] Collecting real-time solar charger data');
+        console.log('[EPEVER] Connected - collecting solar charger data');
         const epeverData = await this.devices.epever.getData();
-        
-        // lastUpdate가 0이면 연결 실패 또는 타임아웃으로 데이터 저장하지 않음
-        if (epeverData.lastUpdate && epeverData.lastUpdate > 0) {
-          console.log('[EPEVER] Connected - using real-time data');
-          this.ewcsData.PVVol = epeverData.PVVol || 0;
-          this.ewcsData.PVCur = epeverData.PVCur || 0;
-          this.ewcsData.LoadVol = epeverData.LoadVol || 0;
-          this.ewcsData.LoadCur = epeverData.LoadCur || 0;
-          this.ewcsData.BatTemp = epeverData.BatTemp || 0;
-          this.ewcsData.DevTemp = epeverData.DevTemp || 0;
-          this.ewcsData.ChargEquipStat = epeverData.ChargEquipStat || 0;
-          this.ewcsData.DischgEquipStat = epeverData.DischgEquipStat || 0;
-        } else {
-          console.log('[EPEVER] Data collection failed - using default values');
-          // 연결 실패 시 기본값 사용
-          this.ewcsData.PVVol = 0;
-          this.ewcsData.PVCur = 0;
-          this.ewcsData.LoadVol = 0;
-          this.ewcsData.LoadCur = 0;
-          this.ewcsData.BatTemp = 0;
-          this.ewcsData.DevTemp = 0;
-          this.ewcsData.ChargEquipStat = 0;
-          this.ewcsData.DischgEquipStat = 0;
-        }
+
+        this.ewcsData.PVVol = epeverData.PVVol || 0;
+        this.ewcsData.PVCur = epeverData.PVCur || 0;
+        this.ewcsData.LoadVol = epeverData.LoadVol || 0;
+        this.ewcsData.LoadCur = epeverData.LoadCur || 0;
+        this.ewcsData.BatTemp = epeverData.BatTemp || 0;
+        this.ewcsData.DevTemp = epeverData.DevTemp || 0;
+        this.ewcsData.ChargEquipStat = epeverData.ChargEquipStat || 0;
+        this.ewcsData.DischgEquipStat = epeverData.DischgEquipStat || 0;
       } catch (error) {
-        console.log('[EPEVER] Real-time data collection failed:', error.message);
-        // 예외 발생 시에도 기본값 사용
+        console.log('[EPEVER] Data collection failed:', error.message);
+        // 예외 발생 시 기본값 사용
         this.ewcsData.PVVol = 0;
         this.ewcsData.PVCur = 0;
         this.ewcsData.LoadVol = 0;
@@ -492,7 +368,7 @@ class EWCSApp {
         this.ewcsData.DischgEquipStat = 0;
       }
     } else {
-      console.log('[EPEVER] Disconnected - using default values');
+      console.log('[EPEVER] Not connected - using default values');
       this.ewcsData.PVVol = 0;
       this.ewcsData.PVCur = 0;
       this.ewcsData.LoadVol = 0;
@@ -594,7 +470,7 @@ class EWCSApp {
         }
       } catch (cameraError) {
         console.error('[CAMERA] Capture failed:', cameraError.message);
-        systemState.logError('camera_capture', cameraError);
+        logManager.logError('camera_capture', cameraError);
         await this.turnOffCamera();
       }
 
@@ -609,16 +485,8 @@ class EWCSApp {
   async runSpinelImageCaptureOnce() {
     try {
       // Spinel Camera 촬영
-      if (this.devices.camera) {
+      if (this.ewcsStatus.cameraConnected === 1 && this.devices.camera) {
         console.log(`[${getTimestamp()}] [SPINEL] Initial capture started`);
-        // Turn on camera via PIC24 (실패해도 계속 진행)
-        try {
-          await this.turnOnCamera();
-          // Wait for camera to power up
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        } catch (error) {
-          console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn on failed, but continuing: ${error.message}`);
-        }
 
         const captureResult = await this.devices.camera.startCapture();
         if (captureResult.success) {
@@ -626,38 +494,34 @@ class EWCSApp {
           console.log(`[${getTimestamp()}] [DEBUG] Spinel captureResult:`, JSON.stringify(captureResult, null, 2));
           // 파일 저장이 완료된 후에만 데이터베이스에 저장
           if (captureResult.filename && captureResult.savedPath) {
+            // 파일명에서 timestamp 추출
+            const filenameTimestamp = parseInt(captureResult.filename.replace('.jpg', '')) || Date.now();
             database.insertImageData({
-              timestamp: Date.now(),
+              timestamp: filenameTimestamp,
               filename: captureResult.filename
             });
             console.log(`[${getTimestamp()}] [DB] Initial Spinel image data saved: ${captureResult.filename}`);
+            return { success: true, filename: captureResult.filename, message: `Image captured and saved to database: ${captureResult.filename}` };
           }
         } else {
           console.error(`[CAMERA] Initial Spinel capture failed: ${captureResult.reason}`);
+          return { success: false, reason: captureResult.reason };
         }
-
-        // Turn off camera after capture to save power (PIC24 통신 실패 무시)
-        setTimeout(async () => {
-          try {
-            await this.turnOffCamera();
-          } catch (error) {
-            console.log(`[${getTimestamp()}] [CAMERA] PIC24 turn off failed: ${error.message}`);
-          }
-        }, 30000); // 30초 후 카메라 전원 차단 시도
       } else {
-        console.log('[CAMERA] Spinel camera disconnected - skipping initial spinel capture');
+        console.log('[CAMERA] Spinel camera not connected - skipping initial spinel capture');
+        return { success: false, reason: 'camera_not_connected' };
       }
     } catch (cameraError) {
       console.error('[CAMERA] Initial Spinel capture failed:', cameraError.message);
-      systemState.logError('camera_capture', cameraError);
-      await this.turnOffCamera(); // 에러 발생시도 전원 차단
+      logManager.logError('camera_capture', cameraError);
+      return { success: false, reason: 'capture_error', error: cameraError.message };
     }
   }
 
   async runOASCImageCaptureOnce() {
     try {
       // OASC Camera 촬영
-      if (this.devices.oascCamera) {
+      if (this.ewcsStatus.OASCConnected === 1 && this.devices.oascCamera) {
         console.log('[OASC] Initial OASC camera capture started');
 
         // 매번 최신 노출 시간 가져오기
@@ -667,21 +531,27 @@ class EWCSApp {
           console.log(`[OASC] Initial image captured and saved: ${captureResult.filename}`);
           // 파일 저장이 완료된 후에만 데이터베이스에 저장
           if (captureResult.filename && captureResult.savedPath) {
+            // 파일명에서 timestamp 추출
+            const filenameTimestamp = parseInt(captureResult.filename.replace('.jpg', '')) || Date.now();
             database.insertOascImageData({
-              timestamp: Date.now(),
+              timestamp: filenameTimestamp,
               filename: captureResult.filename
             });
             console.log(`[DB] Initial OASC image data saved: ${captureResult.filename}`);
+            return { success: true, filename: captureResult.filename, message: `OASC image captured and saved to database: ${captureResult.filename}` };
           }
         } else {
           console.error(`[OASC] Initial capture failed: ${captureResult.reason}`);
+          return { success: false, reason: captureResult.reason };
         }
       } else {
-        console.log('[OASC] OASC camera disconnected - skipping initial OASC capture');
+        console.log('[OASC] OASC camera not connected - skipping initial OASC capture');
+        return { success: false, reason: 'camera_not_connected' };
       }
     } catch (cameraError) {
       console.error('[OASC] Initial OASC capture failed:', cameraError.message);
-      systemState.logError('oasc_camera_capture', cameraError);
+      logManager.logError('oasc_camera_capture', cameraError);
+      return { success: false, reason: 'capture_error', error: cameraError.message };
     }
   }
 
@@ -693,12 +563,12 @@ class EWCSApp {
 
     try {
       await this.devices.pic24.cameraOn(); // PIC24에 카메라 ON 명령 전송 (VOUT1_ON)
-      systemState.setCameraPower(true);
+      logManager.logCameraPower(true);
       console.log('[CAMERA] Power ON via PIC24');
       return { success: true };
     } catch (error) {
       console.error('[CAMERA] Failed to turn on camera:', error);
-      systemState.logError('camera', error);
+      logManager.logError('camera', error);
       throw error;
     }
   }
@@ -710,12 +580,12 @@ class EWCSApp {
 
     try {
       await this.devices.pic24.cameraOff(); // PIC24에 카메라 OFF 명령 전송 (VOUT1_OFF)
-      systemState.setCameraPower(false);
+      logManager.logCameraPower(false);
       console.log('[CAMERA] Power OFF via PIC24');
       return { success: true };
     } catch (error) {
       console.error('[CAMERA] Failed to turn off camera:', error);
-      systemState.logError('camera', error);
+      logManager.logError('camera', error);
       throw error;
     }
   }
@@ -732,7 +602,7 @@ class EWCSApp {
       return { success: true };
     } catch (error) {
       console.error('[CS125] Failed to turn on CS125:', error);
-      systemState.logError('cs125', error);
+      logManager.logError('cs125', error);
       throw error;
     }
   }
@@ -748,7 +618,7 @@ class EWCSApp {
       return { success: true };
     } catch (error) {
       console.error('[CS125] Failed to turn off CS125:', error);
-      systemState.logError('cs125', error);
+      logManager.logError('cs125', error);
       throw error;
     }
   }
@@ -769,7 +639,7 @@ class EWCSApp {
       return { success: true };
     } catch (error) {
       console.error(`[CS125] Failed to turn ${enable ? 'on' : 'off'} hood heater:`, error);
-      systemState.logError('cs125_hood_heater', error);
+      logManager.logError('cs125_hood_heater', error);
       throw error;
     }
   }
@@ -778,7 +648,6 @@ class EWCSApp {
 
   // 개별 디바이스 체크 함수들
   async checkCS125Connection() {
-    console.log('[DEBUG] checkCS125Connection - cs125 exists?', !!this.devices.cs125);
     if (!this.devices.cs125) {
       this.ewcsStatus.cs125Connected = 0;
       console.log(`[${getTimestamp()}] [STATUS] CS125 Connected: ${this.ewcsStatus.cs125Connected}`);
@@ -786,16 +655,10 @@ class EWCSApp {
     }
     try {
       const isConnected = await this.devices.cs125.checkConnection();
-      console.log('[DEBUG] CS125 checkConnection returned:', isConnected);
-      // CS125에 연결 상태 전달
-      this.devices.cs125.setConnectionStatus(isConnected);
-      // ewcsStatus 업데이트
       this.ewcsStatus.cs125Connected = isConnected ? 1 : 0;
       console.log(`[${getTimestamp()}] [STATUS] CS125 Connected: ${this.ewcsStatus.cs125Connected}`);
       return isConnected;
     } catch (e) {
-      console.log('[DEBUG] CS125 checkConnection error:', e.message);
-      this.devices.cs125.setConnectionStatus(false);
       this.ewcsStatus.cs125Connected = 0;
       console.log(`[${getTimestamp()}] [STATUS] CS125 Connected: ${this.ewcsStatus.cs125Connected}`);
       return false;
@@ -803,21 +666,21 @@ class EWCSApp {
   }
 
   async checkSpinelCameraConnection() {
-    console.log(`[DEBUG] checkSpinelCameraConnection - camera exists? ${!!this.devices.camera}`);
+    //console.log(`[DEBUG] checkSpinelCameraConnection - camera exists? ${!!this.devices.camera}`);
     if (!this.devices.camera) {
       this.ewcsStatus.cameraConnected = 0;
       console.log(`[${getTimestamp()}] [STATUS] Camera Connected: ${this.ewcsStatus.cameraConnected}`);
       return false;
     }
     try {
-      console.log(`[DEBUG] Camera checkConnection calling...`);
+      //console.log(`[DEBUG] Camera checkConnection calling...`);
       const isConnected = await this.devices.camera.checkConnection();
-      console.log(`[DEBUG] Camera checkConnection returned: ${isConnected}`);
+      //console.log(`[DEBUG] Camera checkConnection returned: ${isConnected}`);
       this.ewcsStatus.cameraConnected = isConnected ? 1 : 0;
       console.log(`[${getTimestamp()}] [STATUS] Camera Connected: ${this.ewcsStatus.cameraConnected}`);
       return isConnected;
     } catch (e) {
-      console.log(`[DEBUG] Camera checkConnection error: ${e.message}`);
+      //console.log(`[DEBUG] Camera checkConnection error: ${e.message}`);
       this.ewcsStatus.cameraConnected = 0;
       console.log(`[${getTimestamp()}] [STATUS] Camera Connected: ${this.ewcsStatus.cameraConnected}`);
       return false;
@@ -908,8 +771,7 @@ class EWCSApp {
       adc: await this.checkADCConnection()
     };
 
-    // 상태 업데이트
-    systemState.updateDeviceStatus(deviceStatus);
+    // 디바이스 상태는 ewcsStatus에 저장됨 (별도 로깅 불필요)
     
     return deviceStatus;
   }
@@ -925,7 +787,7 @@ class EWCSApp {
 
   async shutdown() {
     console.log('Shutting down EWCS Controller...');
-    systemState.logSystemShutdown();
+    logManager.logSystemShutdown();
 
     try {
       // Stop data collection
@@ -1032,6 +894,25 @@ class EWCSApp {
     };
 
     scheduleCleanup();
+  }
+
+  // 주기적 작업 시작 (checkDeviceHealth 포함)
+  async startPeriodicTasks(intervalSeconds = 60) {
+    // 즉시 한 번 실행하고 완료 기다림
+    await this.checkDeviceHealth();
+
+    // 지정된 초마다 반복 실행
+    this.periodicTasksInterval = setInterval(async () => {
+      try {
+        console.log(`[${getTimestamp()}] [PERIODIC] Running periodic device health check...`);
+        await this.checkDeviceHealth();
+      } catch (error) {
+        console.error(`[${getTimestamp()}] [PERIODIC] Error during periodic tasks:`, error);
+        logManager.logError('periodic_tasks', error);
+      }
+    }, intervalSeconds * 1000);
+
+    console.log(`[${getTimestamp()}] [PERIODIC] Periodic device health check started (${intervalSeconds}s interval)`);
   }
 }
 

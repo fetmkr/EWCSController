@@ -80,16 +80,17 @@ function checkConnection() {
     const timeout = setTimeout(() => {
       resolve(false);
     }, 1000);
-    
-    cs125CurrentADCChan.read((err, reading) => {
+
+    chan1ADCChan.read((err, reading) => {
       clearTimeout(timeout);
       resolve(!err && reading && typeof reading.rawValue === 'number');
     });
   });
 }
 
-// Simple data getter
-function getADCData() {
+// Simple data getter with fresh read
+async function getADCData() {
+  await readADC();  // 먼저 ADC 읽기
   return { ...adcData };
 }
 

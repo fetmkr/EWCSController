@@ -1,9 +1,11 @@
 import express from 'express';
-import systemState from '../../utils/system-state.js';
+import logManager from '../../utils/log-manager.js';
 import config from '../../config/app-config.js';
+import { validateOnOff, validateNumber, validateString } from '../middleware/validation.js';
 
 export default function createEwcsRoutes(database, appInstance) {
   const router = express.Router();
+  const devices = appInstance.devices;
 
   // EWCS 데이터 조회 (유연한 날짜 범위 검색 지원)
   router.get('/ewcs_data', (req, res) => {
@@ -57,10 +59,19 @@ export default function createEwcsRoutes(database, appInstance) {
         ewcsData = database.getLatestData('ewcs_data', maxLimit);
       }
 
+      // Rename created_at to timestamp_readable for consistency
+      const dataWithReadableTimestamp = ewcsData.map(item => {
+        const { created_at, ...itemWithoutCreatedAt } = item;
+        return {
+          ...itemWithoutCreatedAt,
+          timestamp_readable: created_at
+        };
+      });
+
       const response = {
         query: query,
-        count: ewcsData.length,
-        data: ewcsData,
+        count: dataWithReadableTimestamp.length,
+        data: dataWithReadableTimestamp,
         timestamp: Date.now()
       };
 
@@ -136,7 +147,7 @@ export default function createEwcsRoutes(database, appInstance) {
   });
 
   // 시스템 상태 조회 (system_state.json + real-time status)
-  router.get('/ewcs_status', (req, res) => {
+  router.get('/ewcs_status', async (req, res) => {
     try {
       const response = {
         settings: {
@@ -144,6 +155,7 @@ export default function createEwcsRoutes(database, appInstance) {
           oascExposureTime: config.get('oascExposureTime'),
           lastCleanupDate: config.get('lastCleanupDate')
         },
+        schedules: null, // 나중에 설정됨
         network_info: {
           ipAddress: appInstance?.ewcsStatus?.ipAddress || 'N/A',
           gateway: appInstance?.ewcsStatus?.gateway || 'N/A'
@@ -156,13 +168,261 @@ export default function createEwcsRoutes(database, appInstance) {
           ADCConnected: appInstance.ewcsStatus.ADCConnected,
           SHT45Connected: appInstance.ewcsStatus.SHT45Connected
         } : {},
-        recent_events: systemState.getRecentEvents(20),
+        recent_events: logManager.getRecentEvents(20),
+        system_info: {
+          uptime: process.uptime(),
+          memory: process.memoryUsage()
+        },
         timestamp: Date.now()
       };
+
+      // PIC24 스케줄 정보 추가 (타임아웃 적용)
+      if (appInstance?.devices?.pic24) {
+        try {
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Schedule retrieval timeout')), 3000);
+          });
+
+          // 순차적으로 스케줄 정보 가져오기 (동시 호출 시 충돌 방지)
+          const onoffSchedule = await Promise.race([
+            appInstance.devices.pic24.getOnOffScheduleFlexible(),
+            timeoutPromise
+          ]);
+
+          const satSchedule = await Promise.race([
+            appInstance.devices.pic24.getSatSchedule(),
+            timeoutPromise
+          ]);
+
+          const [finalOnoffSchedule, finalSatSchedule] = [onoffSchedule, satSchedule];
+
+          response.schedules = {
+            onoff_schedule: finalOnoffSchedule,
+            satellite_schedule: finalSatSchedule
+          };
+        } catch (scheduleError) {
+          console.error('Failed to get PIC24 schedules:', scheduleError);
+          response.schedules = {
+            onoff_schedule: null,
+            satellite_schedule: null,
+            error: scheduleError.message || 'Failed to retrieve schedules'
+          };
+        }
+      } else {
+        response.schedules = {
+          onoff_schedule: null,
+          satellite_schedule: null,
+          error: 'PIC24 not available'
+        };
+      }
 
       res.json(response);
     } catch (error) {
       console.error('Failed to get EWCS status:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // === System Routes ===
+
+  // Station Name 설정
+  router.get('/station-name', validateString(1, 16), (req, res) => {
+    try {
+      const { value } = req.query;
+      if (value) {
+        let stationName = value.toString().trim();
+        const originalLength = stationName.length;
+
+        // 16글자 초과 시 자르기
+        if (stationName.length > 16) {
+          stationName = stationName.substring(0, 16);
+        }
+
+        config.set('stationName', stationName);
+
+        const response = {
+          success: true,
+          stationName: stationName
+        };
+
+        // 잘렸을 때 피드백 추가
+        if (originalLength > 16) {
+          response.warning = `Station name was truncated from ${originalLength} to 16 characters`;
+        }
+
+        res.json(response);
+      } else {
+        res.json({ stationName: config.get('stationName') });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // === Device Control Routes (formerly from device-routes.js) ===
+
+  // CS125 후드 히터
+  router.get('/cs125-heater', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+
+      // CS125 연결 상태 확인
+      if (!appInstance.ewcsStatus.cs125Connected) {
+        return res.status(503).json({ error: 'CS125 sensor not connected' });
+      }
+
+      const result = on === '1' ? await devices.cs125.hoodHeaterOn() : await devices.cs125.hoodHeaterOff();
+      res.json({ success: result, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Spinel 카메라 캡처
+  router.get('/spinel/capture', async (req, res) => {
+    try {
+      if (!devices.camera) {
+        return res.status(503).json({ error: 'Spinel camera not available' });
+      }
+      const result = await appInstance.runSpinelImageCaptureOnce();
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // OASC 카메라 캡처
+  router.get('/oasc/capture', async (req, res) => {
+    try {
+      if (!devices.oascCamera) {
+        return res.status(503).json({ error: 'OASC camera not available' });
+      }
+      const result = await appInstance.runOASCImageCaptureOnce();
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PIC24 VOUT 제어
+  router.get('/vout1', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (!appInstance.devices.pic24) {
+        return res.status(503).json({ error: 'PIC24 not available' });
+      }
+
+      const result = on === '1' ?
+        await appInstance.devices.pic24.turnOnVOUT(1) :
+        await appInstance.devices.pic24.turnOffVOUT(1);
+
+      res.json({ success: result.success, vout: 1, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/vout2', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (!appInstance.devices.pic24) {
+        return res.status(503).json({ error: 'PIC24 not available' });
+      }
+
+      const result = on === '1' ?
+        await appInstance.devices.pic24.turnOnVOUT(2) :
+        await appInstance.devices.pic24.turnOffVOUT(2);
+
+      res.json({ success: result.success, vout: 2, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/vout3', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (!appInstance.devices.pic24) {
+        return res.status(503).json({ error: 'PIC24 not available' });
+      }
+
+      const result = on === '1' ?
+        await appInstance.devices.pic24.turnOnVOUT(3) :
+        await appInstance.devices.pic24.turnOffVOUT(3);
+
+      res.json({ success: result.success, vout: 3, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/vout4', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (!appInstance.devices.pic24) {
+        return res.status(503).json({ error: 'PIC24 not available' });
+      }
+
+      const result = on === '1' ?
+        await appInstance.devices.pic24.turnOnVOUT(4) :
+        await appInstance.devices.pic24.turnOffVOUT(4);
+
+      res.json({ success: result.success, vout: 4, status: on });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PIC24 절전 모드 제어
+  router.get('/power-save', validateOnOff, async (req, res) => {
+    try {
+      const { on } = req.query;
+      if (!appInstance.devices.pic24) {
+        return res.status(503).json({ error: 'PIC24 not available' });
+      }
+
+      const result = on === '1' ?
+        await appInstance.devices.pic24.enablePowerSave() :
+        await appInstance.devices.pic24.disablePowerSave();
+
+      res.json({ success: result.success, powerSave: on === '1' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PIC24 위성 전송 시작
+  router.post('/satellite/start', async (req, res) => {
+    try {
+      if (!appInstance.devices.pic24) {
+        return res.status(503).json({ error: 'PIC24 not available' });
+      }
+
+      const result = await appInstance.devices.pic24.startSatelliteTransmission();
+      res.json({
+        success: result.success,
+        message: result.success ? 'Satellite transmission started' : 'Failed to start satellite transmission'
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // OASC 노출시간
+  router.get('/oasc/exposure', (req, res) => {
+    try {
+      const { value } = req.query;
+      if (value) {
+        const newExposure = parseFloat(value);
+        if (isNaN(newExposure) || newExposure < 0 || newExposure > 3600) {
+          return res.status(400).json({ error: 'Value must be between 0 and 3600' });
+        }
+        config.set('oascExposureTime', newExposure);
+        res.json({ success: true, exposureTime: newExposure });
+      } else {
+        res.json({ exposureTime: config.get('oascExposureTime') });
+      }
+    } catch (error) {
       res.status(500).json({ error: error.message });
     }
   });

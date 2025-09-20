@@ -1,0 +1,209 @@
+{
+  "recent_events": [
+    {
+      "timestamp": "2025-09-20T15:14:04.742Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T15:08:48.896Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T15:07:44.894Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T15:03:13.621Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:56:27.733Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:54:43.902Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:51:15.971Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:48:17.161Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:42:32.733Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:36:55.047Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:36:06.733Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:29:28.444Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:26:56.028Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:26:11.831Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:21:17.078Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T14:19:01.063Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T13:55:57.670Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T13:49:39.126Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T13:48:15.516Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T13:46:09.081Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T13:38:49.658Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T13:37:39.074Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T13:28:56.024Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T13:24:09.716Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:52:30.077Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:31:49.309Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:31:29.326Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:30:52.191Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:30:31.947Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:30:10.810Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:29:54.700Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:29:06.700Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:27:59.536Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T12:23:56.231Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T11:41:11.641Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T11:33:51.451Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T11:29:00.207Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T11:18:16.840Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T11:13:53.780Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T11:04:31.962Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-20T11:04:16.258Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T10:50:28.004Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-20T10:50:12.094Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T10:41:19.160Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T10:21:59.005Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-20T10:21:43.187Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T10:14:13.416Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-20T10:13:57.277Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-20T10:02:49.008Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: Camera not connected"
+    },
+    {
+      "timestamp": "2025-09-20T10:02:33.130Z",
+      "event": "System started"
+    }
+  ]
+}

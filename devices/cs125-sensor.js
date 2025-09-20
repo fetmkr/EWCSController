@@ -42,18 +42,19 @@ class CS125Sensor extends EventEmitter {
   }
 
   async initialize() {
-    if (this.isInitialized) return;
+    if (this.isInitialized) return { success: true };
 
     try {
       // Initialize serial port for CS125 data
       await this.initializeDataPort();
-      
+
       this.isInitialized = true;
       console.log('CS125 Sensor initialized');
-      
+      return { success: true };
+
     } catch (error) {
       console.error('CS125 Sensor initialization failed:', error);
-      throw error;
+      return { success: false, error: error.message };
     }
   }
 
@@ -316,18 +317,6 @@ class CS125Sensor extends EventEmitter {
     } catch (error) {
       console.error('[CS125] Connection check failed:', error);
       return false;
-    }
-  }
-
-  // Connection status management
-  setConnectionStatus(connected) {
-    this.isConnected = connected;
-    if (!connected) {
-      // Reset data when disconnected
-      this.data.visibility = 0;
-      this.data.synop = 0;
-      this.data.temperature = 0;
-      this.data.humidity = 0;
     }
   }
 

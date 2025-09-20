@@ -54,10 +54,10 @@ class OASCCamera {
       await mkdir(this.imagesBaseDir, { recursive: true });
       
       console.log('[OASC] OASC Camera module initialized');
-      return true;
+      return { success: true };
     } catch (error) {
       console.error('[OASC] Failed to initialize OASC Camera:', error);
-      throw error;
+      return { success: false, error: error.message };
     }
   }
 

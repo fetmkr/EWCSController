@@ -1,48 +1,12 @@
 import express from 'express';
-import { validateNumber, validateString } from '../middleware/validation.js';
-import config from '../../config/app-config.js';
+import { validateNumber } from '../middleware/validation.js';
 
-export default function createSystemRoutes(appInstance) {
+export default function createScheduleRoutes(appInstance) {
   const router = express.Router();
-
-  // Station Name 설정
-  router.get('/station-name', validateString(1, 16), (req, res) => {
-    try {
-      const { value } = req.query;
-      if (value) {
-        let stationName = value.toString().trim();
-        const originalLength = stationName.length;
-
-        // 16글자 초과 시 자르기
-        if (stationName.length > 16) {
-          stationName = stationName.substring(0, 16);
-        }
-
-        config.set('stationName', stationName);
-
-        const response = {
-          success: true,
-          stationName: stationName
-        };
-
-        // 잘렸을 때 피드백 추가
-        if (originalLength > 16) {
-          response.warning = `Station name was truncated from ${originalLength} to 16 characters`;
-        }
-
-        res.json(response);
-      } else {
-        res.json({ stationName: config.get('stationName') });
-      }
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
 
 
   // PIC24 OnOff 스케줄 조회
-  router.get('/schedule/onoff', async (req, res) => {
+  router.get('/onoff', async (req, res) => {
     try {
       const schedule = await appInstance.devices.pic24?.getOnOffScheduleFlexible();
       if (schedule) {
@@ -56,17 +20,17 @@ export default function createSystemRoutes(appInstance) {
   });
 
   // PIC24 OnOff 스케줄 설정
-  router.post('/schedule/onoff', async (req, res) => {
+  router.post('/onoff', async (req, res) => {
     try {
       const { mode, onMin, offMin } = req.body;
 
       // mode가 없으면 기본값 1 (매시간)
-      const scheduleMode = mode || 1;
+      const scheduleMode = mode !== undefined ? mode : 1;
 
       // mode 검증
-      if (typeof scheduleMode !== 'number' || (scheduleMode !== 1 && scheduleMode !== 2)) {
+      if (typeof scheduleMode !== 'number' || (scheduleMode !== 0 && scheduleMode !== 1 && scheduleMode !== 2)) {
         return res.status(400).json({
-          error: 'mode must be 1 (hourly) or 2 (every 10 minutes)'
+          error: 'mode must be 0 (disabled), 1 (hourly) or 2 (every 10 minutes)'
         });
       }
 
@@ -97,7 +61,9 @@ export default function createSystemRoutes(appInstance) {
 
       // 설명 생성
       let description;
-      if (scheduleMode === 1) {
+      if (scheduleMode === 0) {
+        description = 'Disabled';
+      } else if (scheduleMode === 1) {
         description = `Every hour: ON at xx:${onMin.toString().padStart(2, '0')}, OFF at xx:${offMin.toString().padStart(2, '0')}`;
       } else {
         description = `Every 10 minutes: ON at x${onMin}, OFF at x${offMin}`;
@@ -116,7 +82,7 @@ export default function createSystemRoutes(appInstance) {
   });
 
   // PIC24 위성 스케줄 조회
-  router.get('/schedule/satellite', async (req, res) => {
+  router.get('/satellite', async (req, res) => {
     try {
       const schedule = await appInstance.devices.pic24?.getSatSchedule();
       if (schedule) {
@@ -130,7 +96,7 @@ export default function createSystemRoutes(appInstance) {
   });
 
   // PIC24 위성 스케줄 설정
-  router.post('/schedule/satellite', async (req, res) => {
+  router.post('/satellite', async (req, res) => {
     try {
       const { hour, min } = req.body;
 
@@ -153,19 +119,6 @@ export default function createSystemRoutes(appInstance) {
     }
   });
 
-  // 시스템 상태
-  router.get('/status', async (req, res) => {
-    try {
-      const status = {
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        timestamp: Date.now()
-      };
-      res.json(status);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
 
   return router;
 }

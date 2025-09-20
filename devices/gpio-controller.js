@@ -49,7 +49,7 @@ const gpioController = {
   close,
   // Compatibility method for app.js
   initialize: async () => {
-    console.log('GPIO Controller initialized (LED on pin 16)');
+    console.log('[GPIO] GPIO Controller initialized (LED on pin 16)');
     return Promise.resolve();
   }
 };

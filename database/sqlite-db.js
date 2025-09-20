@@ -217,8 +217,8 @@ class SQLiteDB {
       data.DevTemp || 0,
       data.ChargEquipStat || 0,
       data.DischgEquipStat || 0,
-      // created_at - 현재 시간
-      new Date().toISOString()
+      // created_at - timestamp를 ISO 형식으로 변환
+      new Date(data.timestamp || Date.now()).toISOString()
     ];
 
     try {

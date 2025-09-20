@@ -110,13 +110,13 @@ export default class PIC24Controller {
             });
 
             this.port.on('open', () => {
-                console.log(`Connected to ${portPath} at ${baudRate} baud`);
+                //console.log(`Connected to ${portPath} at ${baudRate} baud`);
                 this.setupDataHandler();
                 resolve();
             });
 
             this.port.on('error', (err) => {
-                console.error('Serial port error:', err);
+                console.error('[PIC24] Serial port error:', err);
                 reject(err);
             });
         });
@@ -432,11 +432,11 @@ export default class PIC24Controller {
             this.sendACK(this.rxPacket.seq);
 
             console.log('System will shutdown in 3 seconds...');
-            console.log('[PIC24] Turning off all VOUT channels...');
-            this.turnOffVOUT(1).catch(err => console.error('Failed to turn off VOUT1:', err));
-            this.turnOffVOUT(2).catch(err => console.error('Failed to turn off VOUT2:', err));
-            this.turnOffVOUT(3).catch(err => console.error('Failed to turn off VOUT3:', err));
-            this.turnOffVOUT(4).catch(err => console.error('Failed to turn off VOUT4:', err));
+            // console.log('[PIC24] Turning off all VOUT channels...');
+            // this.turnOffVOUT(1).catch(err => console.error('Failed to turn off VOUT1:', err));
+            // this.turnOffVOUT(2).catch(err => console.error('Failed to turn off VOUT2:', err));
+            // this.turnOffVOUT(3).catch(err => console.error('Failed to turn off VOUT3:', err));
+            // this.turnOffVOUT(4).catch(err => console.error('Failed to turn off VOUT4:', err));
 
             setTimeout(() => {
                 console.log('Executing shutdown...');
@@ -661,7 +661,7 @@ export default class PIC24Controller {
     }
 
     async sendSyncData() {
-        console.log('Requesting sync data');
+        //console.log('Requesting sync data');
         const response = await this.sendDataCommand(EWCSPIC24.CMD.SEND_SYNC_DATA);
         if (response && response.length >= 6) {
             const timeData = {
@@ -673,13 +673,13 @@ export default class PIC24Controller {
                 sec: response[5]
             };
 
-            console.log(`[PIC24] Time received: ${timeData.year}-${String(timeData.month).padStart(2,'0')}-${String(timeData.date).padStart(2,'0')} ${String(timeData.hour).padStart(2,'0')}:${String(timeData.min).padStart(2,'0')}:${String(timeData.sec).padStart(2,'0')}`);
+            //console.log(`[PIC24] Time received: ${timeData.year}-${String(timeData.month).padStart(2,'0')}-${String(timeData.date).padStart(2,'0')} ${String(timeData.hour).padStart(2,'0')}:${String(timeData.min).padStart(2,'0')}:${String(timeData.sec).padStart(2,'0')}`);
 
             const receivedDate = new Date(timeData.year, timeData.month - 1, timeData.date);
             const validThreshold = new Date(2024, 11, 1);
 
             if (receivedDate >= validThreshold) {
-                console.log('[PIC24] Valid time data, updating system time...');
+                //console.log('[PIC24] Valid time data, updating system time...');
 
                 const dateString = `${timeData.year}-${String(timeData.month).padStart(2,'0')}-${String(timeData.date).padStart(2,'0')} ${String(timeData.hour).padStart(2,'0')}:${String(timeData.min).padStart(2,'0')}:${String(timeData.sec).padStart(2,'0')}`;
 
@@ -691,7 +691,7 @@ export default class PIC24Controller {
 
                         exec('date "+%Y-%m-%d %H:%M:%S"', (err, currentTime) => {
                             if (!err) {
-                                console.log('[PIC24] Verification - Current system time:', currentTime.trim());
+                                //console.log('[PIC24] Verification - Current system time:', currentTime.trim());
                             }
                         });
                     }
@@ -737,6 +737,9 @@ export default class PIC24Controller {
 
             let description = '';
             switch(mode) {
+                case 0:
+                    description = 'Disabled';
+                    break;
                 case 1:
                     description = `Every hour: ON at xx:${onMin.toString().padStart(2, '0')}, OFF at xx:${offMin.toString().padStart(2, '0')}`;
                     break;
@@ -744,7 +747,7 @@ export default class PIC24Controller {
                     description = `Every 10 minutes: ON at x${onMin}, OFF at x${offMin} (e.g., ${onMin},${10+onMin},${20+onMin}... and ${offMin},${10+offMin},${20+offMin}...)`;
                     break;
                 default:
-                    description = `Invalid mode ${mode} (valid: 1=hourly, 2=every10min)`;
+                    description = `Invalid mode ${mode} (valid: 0=disabled, 1=hourly, 2=every10min)`;
             }
 
             return {

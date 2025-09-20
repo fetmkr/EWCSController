@@ -32,8 +32,8 @@ export default function createImageRoutes(database) {
   router.use('/spinel', express.static(path.join(process.cwd(), 'ewcs_images')));
   router.use('/oasc', express.static(path.join(process.cwd(), 'oasc_images')));
 
-  // Get images with flexible date range search
-  router.get('/:camera/images', (req, res) => {
+  // Get image metadata with flexible date range search
+  router.get('/:camera/data', (req, res) => {
     try {
       const { camera } = req.params;
       const { from, to, limit } = req.query;
@@ -60,7 +60,8 @@ export default function createImageRoutes(database) {
         }
       }
 
-      const maxLimit = parseInt(limit) || 100;
+      // 파라미터 없으면 최신 1개, 있으면 지정된 개수 (기본 100)
+      const maxLimit = limit ? parseInt(limit) : (from || to ? 100 : 1);
 
       // Get from database
       const tableName = camera === 'spinel' ? 'ewcs_images' : 'oasc_images';
@@ -73,6 +74,15 @@ export default function createImageRoutes(database) {
 
       const imageData = stmt.all(startTime, endTime, maxLimit);
 
+      // Add readable timestamp for each image and remove created_at
+      const imagesWithReadableTime = imageData.map(img => {
+        const { created_at, ...imgWithoutCreatedAt } = img;
+        return {
+          ...imgWithoutCreatedAt,
+          timestamp_readable: new Date(img.timestamp).toISOString()
+        };
+      });
+
       res.json({
         camera: camera,
         query: {
@@ -81,8 +91,8 @@ export default function createImageRoutes(database) {
           from_readable: new Date(startTime).toISOString(),
           to_readable: new Date(endTime).toISOString()
         },
-        count: imageData.length,
-        images: imageData,
+        count: imagesWithReadableTime.length,
+        images: imagesWithReadableTime,
         timestamp: Date.now()
       });
     } catch (error) {
@@ -139,8 +149,8 @@ function generateImageViewerHTML(camera, files, imagePath) {
 </head>
 <body>
     <div class="nav">
-        <a href="/api/images/spinel/viewer">Spinel Camera</a>
-        <a href="/api/images/oasc/viewer">OASC Camera</a>
+        <a href="/api/image/spinel/viewer">Spinel Camera</a>
+        <a href="/api/image/oasc/viewer">OASC Camera</a>
     </div>
 
     <h1>${camera.toUpperCase()} Camera - Image Viewer</h1>
@@ -150,7 +160,7 @@ function generateImageViewerHTML(camera, files, imagePath) {
 
     files.forEach(file => {
       const relativePath = path.relative(imagePath, file.path);
-      const imageUrl = `/api/images/${camera}/${relativePath}`;
+      const imageUrl = `/file/image/${camera}/${relativePath}`;
       const timestamp = new Date(file.mtime).toLocaleString();
       
       html += `
