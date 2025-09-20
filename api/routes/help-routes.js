@@ -334,6 +334,52 @@ curl http://192.168.0.203:8080/api/oasc/exposure?value=30
 curl http://192.168.0.203:8080/api/oasc/exposure?value=3600</div>
         </div>
 
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/network/config</span>
+            <div class="description">네트워크 설정 변경 (IP, 게이트웨이, 서브넷)</div>
+            <div class="params">
+                JSON 파라미터:
+                <span class="param">ip: string</span> (필수, IPv4 주소)
+                <span class="param">gateway: string</span> (선택적, IPv4 주소)
+                <span class="param">subnet: string</span> (선택적, CIDR 1-30, 기본값: 24)
+            </div>
+            <div class="description">
+                <strong>동작:</strong> 네트워크 설정을 즉시 변경하고 네트워크 재시작<br>
+                <strong>IP 범위:</strong> 모든 유효한 IPv4 주소 (예: 10.0.1.100, 172.16.0.50)<br>
+                <strong>주의:</strong> 네트워크 재시작으로 1-2초간 연결 끊김, 응답을 받지 못할 수 있음
+            </div>
+            <div class="example"># 전체 네트워크 설정 변경
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"ip": "10.0.1.100", "gateway": "10.0.1.1", "subnet": "24"}' \
+  http://192.168.0.203:8080/api/network/config
+
+# IP만 변경 (게이트웨이와 서브넷은 기존 유지)
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"ip": "10.0.1.200"}' \
+  http://192.168.0.203:8080/api/network/config
+
+# 다른 서브넷으로 변경
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"ip": "172.16.0.100", "gateway": "172.16.0.1", "subnet": "16"}' \
+  http://192.168.0.203:8080/api/network/config
+
+# 응답 예시
+{
+  "success": true,
+  "config": {
+    "ip": "10.0.1.100",
+    "gateway": "10.0.1.1",
+    "subnet": "24"
+  },
+  "message": "Network configuration changed successfully. Network restarting..."
+}
+
+# 변경 후 새 IP로 접속
+curl http://10.0.1.100:8080/api/ewcs_status</div>
+        </div>
+
+
         <h3>장치 제어</h3>
 
         <div class="endpoint">

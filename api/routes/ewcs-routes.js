@@ -2,6 +2,11 @@ import express from 'express';
 import logManager from '../../utils/log-manager.js';
 import config from '../../config/app-config.js';
 import { validateOnOff, validateNumber, validateString } from '../middleware/validation.js';
+import fs from 'fs/promises';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export default function createEwcsRoutes(database, appInstance) {
   const router = express.Router();
@@ -149,6 +154,11 @@ export default function createEwcsRoutes(database, appInstance) {
   // 시스템 상태 조회 (system_state.json + real-time status)
   router.get('/ewcs_status', async (req, res) => {
     try {
+      // 최신 네트워크 정보 업데이트
+      if (appInstance && appInstance.updateNetworkInfo) {
+        await appInstance.updateNetworkInfo();
+      }
+
       const response = {
         settings: {
           stationName: config.get('stationName'),
@@ -427,6 +437,75 @@ export default function createEwcsRoutes(database, appInstance) {
     }
   });
 
+  // 네트워크 설정 변경 (IP, 게이트웨이, 서브넷 마스크)
+  router.post('/network/config', async (req, res) => {
+    try {
+      const { ip, gateway, subnet } = req.body;
+
+      // 필수 필드 검증
+      if (!ip || typeof ip !== 'string') {
+        return res.status(400).json({ error: 'IP address is required' });
+      }
+
+      // IP 주소 형식 검증 (일반적인 IPv4 형식)
+      const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      if (!ipRegex.test(ip)) {
+        return res.status(400).json({ error: 'Invalid IP address format' });
+      }
+
+      // 게이트웨이 형식 검증 (선택적)
+      if (gateway && !ipRegex.test(gateway)) {
+        return res.status(400).json({ error: 'Invalid gateway format' });
+      }
+
+      // 서브넷 마스크 검증 (CIDR 형식, 선택적)
+      let subnetMask = subnet || '24'; // 기본값
+      if (subnet) {
+        const subnetNum = parseInt(subnet);
+        if (isNaN(subnetNum) || subnetNum < 1 || subnetNum > 30) {
+          return res.status(400).json({ error: 'Subnet mask must be between 1 and 30' });
+        }
+        subnetMask = subnet.toString();
+      }
+
+      // 현재 설정과 동일한지 확인
+      const currentIp = appInstance?.ewcsStatus?.ipAddress;
+      const currentGateway = appInstance?.ewcsStatus?.gateway;
+      if (currentIp === ip && (!gateway || currentGateway === gateway)) {
+        return res.status(400).json({ error: 'Network configuration is already set to these values' });
+      }
+
+      // 네트워크 설정 파일 수정
+      await updateNetworkConfig(ip, gateway, subnetMask);
+
+      // 응답을 먼저 보내기
+      res.json({
+        success: true,
+        config: {
+          ip: ip,
+          gateway: gateway || 'unchanged',
+          subnet: subnetMask
+        },
+        message: 'Network configuration changed successfully. Network will restart in 2 seconds...'
+      });
+
+      // 응답이 전송될 시간을 주고 네트워크 재시작
+      setTimeout(async () => {
+        try {
+          await restartNetworkService();
+          console.log('[Network] Network configuration applied successfully');
+        } catch (error) {
+          console.error('[Network] Failed to restart network service:', error);
+        }
+      }, 2000);
+
+    } catch (error) {
+      console.error('Failed to change network configuration:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+
   return router;
 }
 
@@ -452,4 +531,55 @@ function parseTimeParameter(timeStr) {
   }
 
   return null;
+}
+
+// 네트워크 설정 파일 수정 함수
+async function updateNetworkConfig(newIp, newGateway = null, subnetMask = '24') {
+  const configPath = '/etc/systemd/network/10-eth0.network';
+
+  try {
+    // 현재 설정 파일 읽기
+    const currentConfig = await fs.readFile(configPath, 'utf8');
+
+    // Address 라인 수정 (IP와 서브넷 마스크)
+    let updatedConfig = currentConfig.replace(
+      /^Address=.*$/m,
+      `Address=${newIp}/${subnetMask}`
+    );
+
+    // Gateway 라인 수정 (새 게이트웨이가 제공된 경우에만)
+    if (newGateway) {
+      updatedConfig = updatedConfig.replace(
+        /^Gateway=.*$/m,
+        `Gateway=${newGateway}`
+      );
+    }
+
+    // 백업 파일 생성
+    const backupPath = `${configPath}.backup.${Date.now()}`;
+    await fs.writeFile(backupPath, currentConfig);
+    console.log(`[Network] Backup created: ${backupPath}`);
+
+    // 새 설정 파일 쓰기
+    await fs.writeFile(configPath, updatedConfig);
+    console.log(`[Network] Updated config file - IP: ${newIp}/${subnetMask}${newGateway ? `, Gateway: ${newGateway}` : ''}`);
+
+    return true;
+  } catch (error) {
+    console.error('[Network] Failed to update config file:', error);
+    throw new Error(`Failed to update network config: ${error.message}`);
+  }
+}
+
+// systemd-networkd 재시작 함수
+async function restartNetworkService() {
+  try {
+    console.log('[Network] Restarting systemd-networkd...');
+    await execAsync('sudo systemctl restart systemd-networkd');
+    console.log('[Network] systemd-networkd restarted successfully');
+    return true;
+  } catch (error) {
+    console.error('[Network] Failed to restart systemd-networkd:', error);
+    throw new Error(`Failed to restart network service: ${error.message}`);
+  }
 }
