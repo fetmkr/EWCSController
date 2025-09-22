@@ -30,6 +30,7 @@ const EWCSPIC24 = {
         GET_SENSOR_DATA: 0x0E,
         SENSOR_DATA: 0x0F,
         RPI_FACTORY_RESET: 0x90,
+        GET_BOOT_COUNT: 0x91,
         ACK_RESPONSE: 0xA0,
         NACK_RESPONSE: 0xA1,
         DATA_RESPONSE: 0xA2
@@ -595,6 +596,9 @@ export default class PIC24Controller {
                 case 'GET_SAT_SCHEDULE':
                     result = await this.sendDataCommand(EWCSPIC24.CMD.GET_SAT_SCHEDULE);
                     break;
+                case 'GET_BOOT_COUNT':
+                    result = await this.sendDataCommand(EWCSPIC24.CMD.GET_BOOT_COUNT);
+                    break;
                 case 'POWER_SAVE_ON':
                     result = await this.setPowerSave(true);
                     break;
@@ -975,6 +979,41 @@ export default class PIC24Controller {
         } catch (error) {
             console.error('[FACTORY RESET] Failed to restart systemd-networkd:', error);
             throw new Error(`Failed to restart network service: ${error.message}`);
+        }
+    }
+
+    async getBootCount() {
+        console.log('[PIC24] Requesting boot count from PIC24...');
+
+        try {
+            // Send GET_BOOT_COUNT command (no data required)
+            const dataBuffer = await this.sendCommand('GET_BOOT_COUNT');
+
+            if (dataBuffer && Buffer.isBuffer(dataBuffer) && dataBuffer.length === 4) {
+                // Parse 4-byte little-endian uint32
+                const bootCount = dataBuffer[0] |
+                                (dataBuffer[1] << 8) |
+                                (dataBuffer[2] << 16) |
+                                (dataBuffer[3] << 24);
+
+                console.log(`[PIC24] Boot count received: ${bootCount}`);
+                return {
+                    success: true,
+                    bootCount: bootCount
+                };
+            } else {
+                console.error('[PIC24] Invalid boot count response:', dataBuffer);
+                return {
+                    success: false,
+                    error: 'Invalid response format'
+                };
+            }
+        } catch (error) {
+            console.error('[PIC24] Failed to get boot count:', error);
+            return {
+                success: false,
+                error: error.message
+            };
         }
     }
 }

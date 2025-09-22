@@ -178,6 +178,10 @@ export default function createEwcsRoutes(database, appInstance) {
           ADCConnected: appInstance.ewcsStatus.ADCConnected,
           SHT45Connected: appInstance.ewcsStatus.SHT45Connected
         } : {},
+        pic24_info: {
+          boot_count: null,
+          boot_count_error: 'Will be updated below'
+        },
         recent_events: logManager.getRecentEvents(20),
         system_info: {
           uptime: process.uptime(),
@@ -186,12 +190,18 @@ export default function createEwcsRoutes(database, appInstance) {
         timestamp: Date.now()
       };
 
-      // PIC24 스케줄 정보 추가 (타임아웃 적용)
+      // PIC24 정보 추가 (boot count 및 스케줄, 타임아웃 적용)
       if (appInstance?.devices?.pic24) {
         try {
           const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Schedule retrieval timeout')), 3000);
+            setTimeout(() => reject(new Error('PIC24 data retrieval timeout')), 3000);
           });
+
+          // 먼저 boot count 가져오기
+          const bootCountResult = await Promise.race([
+            appInstance.devices.pic24.getBootCount(),
+            timeoutPromise
+          ]);
 
           // 순차적으로 스케줄 정보 가져오기 (동시 호출 시 충돌 방지)
           const onoffSchedule = await Promise.race([
@@ -206,19 +216,32 @@ export default function createEwcsRoutes(database, appInstance) {
 
           const [finalOnoffSchedule, finalSatSchedule] = [onoffSchedule, satSchedule];
 
+          response.pic24_info = {
+            boot_count: bootCountResult?.success ? bootCountResult.bootCount : null,
+            boot_count_error: bootCountResult?.success ? null : bootCountResult?.error
+          };
+
           response.schedules = {
             onoff_schedule: finalOnoffSchedule,
             satellite_schedule: finalSatSchedule
           };
-        } catch (scheduleError) {
-          console.error('Failed to get PIC24 schedules:', scheduleError);
+        } catch (error) {
+          console.error('Failed to get PIC24 data:', error);
+          response.pic24_info = {
+            boot_count: null,
+            boot_count_error: error.message || 'Failed to retrieve boot count'
+          };
           response.schedules = {
             onoff_schedule: null,
             satellite_schedule: null,
-            error: scheduleError.message || 'Failed to retrieve schedules'
+            error: error.message || 'Failed to retrieve schedules'
           };
         }
       } else {
+        response.pic24_info = {
+          boot_count: null,
+          boot_count_error: 'PIC24 not available'
+        };
         response.schedules = {
           onoff_schedule: null,
           satellite_schedule: null,
