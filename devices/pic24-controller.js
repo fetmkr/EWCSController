@@ -1,6 +1,10 @@
 import { SerialPort } from 'serialport';
 import { exec } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs/promises';
 import gpioController from './gpio-controller.js';
+
+const execAsync = promisify(exec);
 
 const EWCSPIC24 = {
     STX: 0x02,
@@ -25,6 +29,7 @@ const EWCSPIC24 = {
         GET_SAT_SCHEDULE: 0x0D,
         GET_SENSOR_DATA: 0x0E,
         SENSOR_DATA: 0x0F,
+        RPI_FACTORY_RESET: 0x90,
         ACK_RESPONSE: 0xA0,
         NACK_RESPONSE: 0xA1,
         DATA_RESPONSE: 0xA2
@@ -451,6 +456,19 @@ export default class PIC24Controller {
             return;
         }
 
+        if (this.rxPacket.cmd === EWCSPIC24.CMD.RPI_FACTORY_RESET) {
+            console.log('[PIC24] RPI FACTORY RESET command received');
+            this.sendACK(this.rxPacket.seq);
+
+            
+
+            // Execute factory reset in 5 seconds
+            setTimeout(() => {
+                this.performFactoryReset();
+            }, 1000);
+            return;
+        }
+
         if (this.rxPacket.cmd === EWCSPIC24.CMD.DATA_RESPONSE) {
             console.log('[PIC24] Data response received, length:', this.rxPacket.data.length);
             if (this.pendingDataResponse) {
@@ -874,6 +892,89 @@ export default class PIC24Controller {
         if (this.port && this.port.isOpen) {
             this.port.close();
             console.log('Disconnected from serial port');
+        }
+    }
+
+    async performFactoryReset() {
+        console.log('[FACTORY RESET] Factory reset function called');
+        console.log('[FACTORY RESET] Restoring network settings to factory defaults...');
+
+        try {
+            // config.json에서 factory 네트워크 설정 읽기
+            const configPath = '/home/pi/EWCSController/config.json';
+            const configData = await fs.readFile(configPath, 'utf8');
+            const config = JSON.parse(configData);
+
+            if (!config.factorySettings || !config.factorySettings.network) {
+                throw new Error('Factory network settings not found in config.json');
+            }
+
+            const factoryNetwork = config.factorySettings.network;
+            const { ip, gateway, subnet } = factoryNetwork;
+
+            console.log(`[FACTORY RESET] Restoring network to: IP=${ip}/${subnet}, Gateway=${gateway}`);
+
+            // 네트워크 설정 복원
+            await this.restoreNetworkConfig(ip, gateway, subnet);
+
+            // 네트워크 서비스 재시작
+            await this.restartNetworkService();
+
+            console.log('[FACTORY RESET] Network settings restored successfully');
+            console.log('[FACTORY RESET] Factory reset completed');
+
+        } catch (error) {
+            console.error('[FACTORY RESET] Failed to restore network settings:', error);
+            console.log('[FACTORY RESET] Factory reset completed with errors');
+        }
+    }
+
+    async restoreNetworkConfig(newIp, newGateway, subnetMask) {
+        const configPath = '/etc/systemd/network/10-eth0.network';
+
+        try {
+            // 현재 설정 파일 읽기
+            const currentConfig = await fs.readFile(configPath, 'utf8');
+
+            // Address 라인 수정 (IP와 서브넷 마스크)
+            let updatedConfig = currentConfig.replace(
+                /^Address=.*$/m,
+                `Address=${newIp}/${subnetMask}`
+            );
+
+            // Gateway 라인 수정
+            if (newGateway) {
+                updatedConfig = updatedConfig.replace(
+                    /^Gateway=.*$/m,
+                    `Gateway=${newGateway}`
+                );
+            }
+
+            // 백업 파일 생성
+            const backupPath = `${configPath}.factory-backup.${Date.now()}`;
+            await fs.writeFile(backupPath, currentConfig);
+            console.log(`[FACTORY RESET] Backup created: ${backupPath}`);
+
+            // 새 설정 파일 쓰기
+            await fs.writeFile(configPath, updatedConfig);
+            console.log(`[FACTORY RESET] Network config restored - IP: ${newIp}/${subnetMask}${newGateway ? `, Gateway: ${newGateway}` : ''}`);
+
+            return true;
+        } catch (error) {
+            console.error('[FACTORY RESET] Failed to update network config file:', error);
+            throw new Error(`Failed to restore network config: ${error.message}`);
+        }
+    }
+
+    async restartNetworkService() {
+        try {
+            console.log('[FACTORY RESET] Restarting systemd-networkd...');
+            await execAsync('sudo systemctl restart systemd-networkd');
+            console.log('[FACTORY RESET] systemd-networkd restarted successfully');
+            return true;
+        } catch (error) {
+            console.error('[FACTORY RESET] Failed to restart systemd-networkd:', error);
+            throw new Error(`Failed to restart network service: ${error.message}`);
         }
     }
 }
