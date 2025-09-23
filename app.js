@@ -930,9 +930,9 @@ class EWCSApp {
         await this.devices.pic24.turnOnVOUT(3);
         await this.devices.pic24.turnOnVOUT(4);
         console.log('[DEVICE HEALTH] VOUT 1, 2, 3, 4 turned ON for device health check');
-        // 전원 안정화를 위해 2초 대기
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        console.log('[DEVICE HEALTH] 1 second wait completed after VOUT ON');
+        // 전원 안정화를 위해 5초 대기
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        console.log('[DEVICE HEALTH] 5 second wait completed after VOUT ON');
       }
 
       const deviceStatus = {

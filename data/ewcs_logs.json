@@ -1,6 +1,26 @@
 {
   "recent_events": [
     {
+      "timestamp": "2025-09-23T11:06:37.125Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T10:59:21.363Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T10:49:21.267Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T10:39:30.396Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T10:29:30.878Z",
+      "event": "System started"
+    },
+    {
       "timestamp": "2025-09-23T09:59:53.610Z",
       "event": "System started"
     },
@@ -379,28 +399,6 @@
     },
     {
       "timestamp": "2025-09-20T11:18:16.840Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T11:13:53.780Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T11:04:31.962Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-20T11:04:16.258Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T10:50:28.004Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-20T10:50:12.094Z",
       "event": "System started"
     }
   ]
