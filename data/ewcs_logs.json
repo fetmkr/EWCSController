@@ -1,6 +1,115 @@
 {
   "recent_events": [
     {
+      "timestamp": "2025-09-23T09:59:53.610Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:58:20.739Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:55:21.120Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:52:37.085Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:40:00.610Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:35:54.695Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:33:58.901Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:29:56.315Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:13:25.699Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:09:23.127Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T09:01:27.273Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T08:48:54.840Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T08:28:24.319Z",
+      "event": "Error in oasc_camera_capture",
+      "error": "Error: 이미지 캡처 실패: READ_PIXELS_DELAYED 명령 전송 실패: LIBUSB_ERROR_NO_DEVICE"
+    },
+    {
+      "timestamp": "2025-09-23T08:27:54.909Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T07:49:56.215Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T06:03:16.495Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T05:46:38.112Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T05:29:20.894Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T05:19:20.895Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T04:38:39.695Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T04:25:45.667Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T02:56:11.551Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T02:49:32.682Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T02:43:37.170Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-22T11:25:20.604Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-22T11:22:37.045Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-22T11:17:40.830Z",
+      "event": "System started"
+    },
+    {
       "timestamp": "2025-09-22T11:00:59.089Z",
       "event": "System started"
     },
@@ -292,37 +401,6 @@
     },
     {
       "timestamp": "2025-09-20T10:50:12.094Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T10:41:19.160Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T10:21:59.005Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-20T10:21:43.187Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T10:14:13.416Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-20T10:13:57.277Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T10:02:49.008Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: Camera not connected"
-    },
-    {
-      "timestamp": "2025-09-20T10:02:33.130Z",
       "event": "System started"
     }
   ]

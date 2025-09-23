@@ -312,19 +312,39 @@ class OASCCamera {
         return false;
       }
 
-      // getCameraInfo 호출로 실제 연결 상태 확인
-      const cameraInfo = this.camera.getCameraInfo();
-      
-      // 카메라 정보가 정상적으로 반환되면 연결됨
-      if (cameraInfo && cameraInfo.model) {
-        console.log(`[OASC] Connection OK - Model: ${cameraInfo.model}`);
+      // 이미 연결된 상태라면 USB 재접근 시도하지 않음
+      if (this.isConnected && this.data.cameraInfo) {
+        console.log(`[OASC] Connection OK - Model: ${this.data.cameraInfo.model}`);
         return true;
-      } else {
-        console.log('[OASC] Connection failed - No camera info');
-        return false;
       }
+
+      // 연결되지 않은 경우에만 실제 연결 상태 확인
+      if (!this.isConnected) {
+        try {
+          const cameraInfo = this.camera.getCameraInfo();
+
+          if (cameraInfo && cameraInfo.model) {
+            this.isConnected = true;
+            this.data.cameraInfo = cameraInfo;
+            this.data.status = 'connected';
+            console.log(`[OASC] Connection OK - Model: ${cameraInfo.model}`);
+            return true;
+          }
+        } catch (error) {
+          // USB 접근 실패 시 연결 상태 리셋
+          this.isConnected = false;
+          this.data.status = 'disconnected';
+          console.log('[OASC] Connection failed - USB access error:', error.message);
+          return false;
+        }
+      }
+
+      console.log('[OASC] Connection failed - No camera info');
+      return false;
     } catch (error) {
       console.error('[OASC] Connection check failed:', error.message);
+      this.isConnected = false;
+      this.data.status = 'error';
       return false;
     }
   }

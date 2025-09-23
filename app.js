@@ -114,7 +114,9 @@ class EWCSApp {
       await this.initializeDevices();
       
       // Start periodic tasks (device health check, etc.) and wait for first check
-      await this.startPeriodicTasks();
+      //await this.startPeriodicTasks();
+
+      await this.checkDeviceHealth();
       
       // Setup API routes
       this.setupRoutes();
@@ -185,9 +187,6 @@ class EWCSApp {
     // Initialize OASC camera
     this.devices.oascCamera = new OASCCamera();
     await this.devices.oascCamera.initialize();
-
-    // Connect to OASC camera after initialization
-    await this.devices.oascCamera.connect();
     
 
     console.log(`[${getTimestamp()}] Device initialization complete`);
@@ -259,12 +258,39 @@ class EWCSApp {
   async runDataCollectionOnce() {
     try {
       console.log(`[${getTimestamp()}] [DB] Running initial data collection...`);
+
+      // VOUT1 켜기
+      if (this.devices.pic24) {
+        await this.devices.pic24.turnOnVOUT(1);
+        console.log('[DATA COLLECTION] VOUT1 turned ON for data collection');
+        // 전원 안정화를 위해 5초 대기
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        console.log('[DATA COLLECTION] 5 second wait completed after VOUT1 ON');
+      }
+
       await this.updateEwcsData();
       database.insertEwcsData(this.ewcsData);
       console.log(`[${getTimestamp()}] [DB] Initial EWCS data saved to database`);
+
+      // 작업 완료 후 VOUT1 끄기
+      if (this.devices.pic24) {
+        await this.devices.pic24.turnOffVOUT(1);
+        console.log('[DATA COLLECTION] VOUT1 turned OFF after data collection');
+      }
+
     } catch (error) {
       console.error('Initial data collection error:', error);
       logManager.logError('data_collection', error);
+
+      // 에러 발생 시에도 VOUT1 끄기
+      try {
+        if (this.devices.pic24) {
+          await this.devices.pic24.turnOffVOUT(1);
+          console.log('[DATA COLLECTION] VOUT1 turned OFF after error');
+        }
+      } catch (voutError) {
+        console.error('[DATA COLLECTION] Failed to turn off VOUT1 after error:', voutError.message);
+      }
     }
   }
 
@@ -488,6 +514,15 @@ class EWCSApp {
       if (this.ewcsStatus.cameraConnected === 1 && this.devices.camera) {
         console.log(`[${getTimestamp()}] [SPINEL] Initial capture started`);
 
+        // vout2 켜기
+        if (this.devices.pic24) {
+          await this.devices.pic24.turnOnVOUT(2);
+          console.log('[SPINEL] VOUT2 turned ON for Spinel capture');
+          // 전원 안정화를 위해 5초 대기
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          console.log('[SPINEL] 5 second wait completed after VOUT2 ON');
+        }
+
         const captureResult = await this.devices.camera.startCapture();
         if (captureResult.success) {
           console.log(`[${getTimestamp()}] [CAMERA] ✅ Initial Spinel saved: ${captureResult.filename}`);
@@ -501,10 +536,24 @@ class EWCSApp {
               filename: captureResult.filename
             });
             console.log(`[${getTimestamp()}] [DB] Initial Spinel image data saved: ${captureResult.filename}`);
+
+            // 캡처 완료 후 vout2 끄기
+            if (this.devices.pic24) {
+              await this.devices.pic24.turnOffVOUT(2);
+              //console.log('[SPINEL] VOUT2 turned OFF after capture');
+            }
+
             return { success: true, filename: captureResult.filename, message: `Image captured and saved to database: ${captureResult.filename}` };
           }
         } else {
           console.error(`[CAMERA] Initial Spinel capture failed: ${captureResult.reason}`);
+
+          // 실패 시에도 vout2 끄기
+          if (this.devices.pic24) {
+            await this.devices.pic24.turnOffVOUT(2);
+            //console.log('[SPINEL] VOUT2 turned OFF after capture failure');
+          }
+
           return { success: false, reason: captureResult.reason };
         }
       } else {
@@ -514,15 +563,56 @@ class EWCSApp {
     } catch (cameraError) {
       console.error('[CAMERA] Initial Spinel capture failed:', cameraError.message);
       logManager.logError('camera_capture', cameraError);
+
+      // 에러 발생 시에도 vout2 끄기
+      try {
+        if (this.devices.pic24) {
+          await this.devices.pic24.turnOffVOUT(2);
+          //console.log('[SPINEL] VOUT2 turned OFF after error');
+        }
+      } catch (voutError) {
+        console.error('[SPINEL] Failed to turn off VOUT2 after error:', voutError.message);
+      }
+
       return { success: false, reason: 'capture_error', error: cameraError.message };
     }
   }
 
   async runOASCImageCaptureOnce() {
     try {
-      // OASC Camera 촬영
-      if (this.ewcsStatus.OASCConnected === 1 && this.devices.oascCamera) {
+      // OASC Camera 촬영 - 연결 상태 확인 전에 직접 연결 시도
+      if (this.devices.oascCamera) {
         console.log('[OASC] Initial OASC camera capture started');
+
+        // vout3 켜기
+        if (this.devices.pic24) {
+          await this.devices.pic24.turnOnVOUT(3);
+          console.log('[OASC] VOUT3 turned ON for OASC capture');
+          // 전원 안정화를 위해 3초 대기
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          console.log('[OASC] 3 second wait completed after VOUT3 ON');
+        }
+
+        // USB 연결 해제 후 재연결 시도
+        console.log('[OASC] Disconnecting USB for fresh connection before capture...');
+        await this.devices.oascCamera.disconnect();
+
+        // 잠시 대기 후 재연결
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('[OASC] Attempting fresh USB connection for capture...');
+        const isConnected = await this.devices.oascCamera.connect();
+
+        if (!isConnected) {
+          console.error('[OASC] Failed to connect OASC camera for capture');
+
+          // 연결 실패 시 vout3 끄기
+          if (this.devices.pic24) {
+            await this.devices.pic24.turnOffVOUT(3);
+            console.log('[OASC] VOUT3 turned OFF after connection failure');
+          }
+
+          return { success: false, reason: 'connection_failed' };
+        }
 
         // 매번 최신 노출 시간 가져오기
         const oascExposureTime = config.get('oascExposureTime');
@@ -538,19 +628,60 @@ class EWCSApp {
               filename: captureResult.filename
             });
             console.log(`[DB] Initial OASC image data saved: ${captureResult.filename}`);
+
+            // DB 저장까지 완료 후 USB 연결 해제
+            console.log('[OASC] Disconnecting USB after DB save...');
+            await this.devices.oascCamera.disconnect();
+
+            // 캡처 완료 후 vout3 끄기
+            if (this.devices.pic24) {
+              await this.devices.pic24.turnOffVOUT(3);
+              console.log('[OASC] VOUT3 turned OFF after capture');
+            }
+
             return { success: true, filename: captureResult.filename, message: `OASC image captured and saved to database: ${captureResult.filename}` };
           }
         } else {
           console.error(`[OASC] Initial capture failed: ${captureResult.reason}`);
+
+          // 캡처 실패 시에도 USB 연결 해제
+          console.log('[OASC] Disconnecting USB after capture failure...');
+          await this.devices.oascCamera.disconnect();
+
+          // 실패 시에도 vout3 끄기
+          if (this.devices.pic24) {
+            await this.devices.pic24.turnOffVOUT(3);
+            console.log('[OASC] VOUT3 turned OFF after capture failure');
+          }
+
           return { success: false, reason: captureResult.reason };
         }
       } else {
-        console.log('[OASC] OASC camera not connected - skipping initial OASC capture');
-        return { success: false, reason: 'camera_not_connected' };
+        console.log('[OASC] OASC camera device not available - skipping initial OASC capture');
+        return { success: false, reason: 'camera_not_available' };
       }
     } catch (cameraError) {
       console.error('[OASC] Initial OASC capture failed:', cameraError.message);
       logManager.logError('oasc_camera_capture', cameraError);
+
+      // 에러 발생 시 USB 연결 해제 시도
+      try {
+        console.log('[OASC] Disconnecting USB after error...');
+        await this.devices.oascCamera.disconnect();
+      } catch (disconnectError) {
+        console.error('[OASC] Failed to disconnect USB after error:', disconnectError.message);
+      }
+
+      // 에러 발생 시에도 vout3 끄기
+      try {
+        if (this.devices.pic24) {
+          await this.devices.pic24.turnOffVOUT(3);
+          console.log('[OASC] VOUT3 turned OFF after error');
+        }
+      } catch (voutError) {
+        console.error('[OASC] Failed to turn off VOUT3 after error:', voutError.message);
+      }
+
       return { success: false, reason: 'capture_error', error: cameraError.message };
     }
   }
@@ -694,13 +825,42 @@ class EWCSApp {
       return false;
     }
     try {
-      const isConnected = await this.devices.oascCamera.checkConnection();
-      this.ewcsStatus.OASCConnected = isConnected ? 1 : 0;
+      // USB 연결 해제 후 재연결 시도
+      console.log('[OASC] Disconnecting USB for fresh connection...');
+      await this.devices.oascCamera.disconnect();
+
+      // 잠시 대기 후 재연결
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('[OASC] Attempting fresh USB connection...');
+      const isConnected = await this.devices.oascCamera.connect();
+
+      // 연결 성공 시 추가 검증
+      if (isConnected) {
+        const connectionVerified = await this.devices.oascCamera.checkConnection();
+        this.ewcsStatus.OASCConnected = connectionVerified ? 1 : 0;
+      } else {
+        this.ewcsStatus.OASCConnected = 0;
+      }
+
       console.log(`[${getTimestamp()}] [STATUS] OASC Connected: ${this.ewcsStatus.OASCConnected}`);
-      return isConnected;
+
+      // 연결 확인 완료 후 USB 해제
+      await this.devices.oascCamera.disconnect();
+      console.log('[OASC] USB disconnected after connection check');
+
+      return this.ewcsStatus.OASCConnected === 1;
     } catch (e) {
+      console.error('[OASC] Connection check error:', e.message);
       this.ewcsStatus.OASCConnected = 0;
       console.log(`[${getTimestamp()}] [STATUS] OASC Connected: ${this.ewcsStatus.OASCConnected}`);
+
+      // 에러 시에도 연결 해제 시도
+      try {
+        await this.devices.oascCamera.disconnect();
+      } catch (disconnectError) {
+        console.error('[OASC] Failed to disconnect after error:', disconnectError.message);
+      }
+
       return false;
     }
   }
@@ -762,18 +922,66 @@ class EWCSApp {
 
   // 전체 디바이스 헬스 체크
   async checkDeviceHealth() {
-    const deviceStatus = {
-      cs125: await this.checkCS125Connection(),
-      spinel_camera: await this.checkSpinelCameraConnection(),
-      oasc_camera: await this.checkOASCCameraConnection(),
-      epever: await this.checkEPEVERConnection(),
-      sht45: await this.checkSHT45Connection(),
-      adc: await this.checkADCConnection()
-    };
+    try {
+      // VOUT 1, 2, 3 켜기
+      if (this.devices.pic24) {
+        await this.devices.pic24.turnOnVOUT(1);
+        await this.devices.pic24.turnOnVOUT(2);
+        await this.devices.pic24.turnOnVOUT(3);
+        await this.devices.pic24.turnOnVOUT(4);
+        console.log('[DEVICE HEALTH] VOUT 1, 2, 3, 4 turned ON for device health check');
+        // 전원 안정화를 위해 2초 대기
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log('[DEVICE HEALTH] 1 second wait completed after VOUT ON');
+      }
 
-    // 디바이스 상태는 ewcsStatus에 저장됨 (별도 로깅 불필요)
-    
-    return deviceStatus;
+      const deviceStatus = {
+        cs125: await this.checkCS125Connection(),
+        spinel_camera: await this.checkSpinelCameraConnection(),
+        oasc_camera: await this.checkOASCCameraConnection(),
+        epever: await this.checkEPEVERConnection(),
+        sht45: await this.checkSHT45Connection(),
+        adc: await this.checkADCConnection()
+      };
+
+      // 장치 확인 완료 후 VOUT 1, 2, 3 끄기
+      if (this.devices.pic24) {
+        await this.devices.pic24.turnOffVOUT(1);
+        await this.devices.pic24.turnOffVOUT(2);
+        await this.devices.pic24.turnOffVOUT(3);
+        await this.devices.pic24.turnOffVOUT(4);
+        console.log('[DEVICE HEALTH] VOUT 1, 2, 3, 4 turned OFF after device health check');
+      }
+
+      return deviceStatus;
+
+    } catch (error) {
+      console.error('Device health check error:', error);
+
+      // 에러 발생 시에도 VOUT 1, 2, 3 끄기
+      try {
+        if (this.devices.pic24) {
+          await this.devices.pic24.turnOffVOUT(1);
+          await this.devices.pic24.turnOffVOUT(2);
+          await this.devices.pic24.turnOffVOUT(3);
+          await this.devices.pic24.turnOffVOUT(4);
+
+          console.log('[DEVICE HEALTH] VOUT 1, 2, 3, 4 turned OFF after error');
+        }
+      } catch (voutError) {
+        console.error('[DEVICE HEALTH] Failed to turn off VOUTs after error:', voutError.message);
+      }
+
+      // 에러 시 기본값 반환
+      return {
+        cs125: false,
+        spinel_camera: false,
+        oasc_camera: false,
+        epever: false,
+        sht45: false,
+        adc: false
+      };
+    }
   }
 
   startServer() {
