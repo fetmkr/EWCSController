@@ -940,10 +940,12 @@ export default class PIC24Controller {
             // 현재 설정 파일 읽기
             const currentConfig = await fs.readFile(configPath, 'utf8');
 
-            // Address 라인 수정 (IP와 서브넷 마스크)
+            // Address 라인 수정 (IP와 서브넷 마스크를 CIDR /24 형식으로)
+            // 255.255.255.0은 /24와 같음 (systemd-networkd 형식)
+            const cidr = subnetMask === "255.255.255.0" ? "24" : subnetMask;
             let updatedConfig = currentConfig.replace(
                 /^Address=.*$/m,
-                `Address=${newIp}/${subnetMask}`
+                `Address=${newIp}/${cidr}`
             );
 
             // Gateway 라인 수정

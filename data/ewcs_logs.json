@@ -1,6 +1,362 @@
 {
   "recent_events": [
     {
+      "timestamp": "2025-09-24T03:06:26.860Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T02:50:36.688Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T01:39:31.273Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T01:29:31.562Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T01:19:22.024Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T01:09:31.398Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T00:59:31.442Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T00:49:30.054Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T00:35:21.690Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T00:29:29.417Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T00:19:29.608Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-24T00:09:29.423Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T23:59:29.396Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T23:49:29.725Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T23:39:29.829Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T23:29:30.294Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T23:19:29.707Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T23:09:29.855Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T22:59:29.982Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T22:49:29.891Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T22:39:29.862Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T22:29:30.018Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T22:19:30.094Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T22:09:30.116Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T21:59:30.153Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T21:49:30.254Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T21:39:30.485Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T21:29:30.422Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T21:19:30.398Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T21:09:30.388Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T20:59:29.790Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T20:49:29.502Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T20:39:29.694Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T20:29:29.531Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T20:19:29.806Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T20:09:29.715Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T19:59:29.735Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T19:49:29.724Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T19:39:29.813Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T19:29:29.919Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T19:19:29.981Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T19:09:30.188Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T18:59:29.980Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T18:49:30.047Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T18:39:30.199Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T18:29:30.258Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T18:19:30.161Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T18:09:30.266Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T17:59:30.588Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T17:49:30.406Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T17:39:30.809Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T17:29:29.545Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T17:19:29.488Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T17:09:29.514Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T16:59:29.528Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T16:49:30.004Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T16:39:29.717Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T16:29:30.055Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T16:19:29.865Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T16:09:29.871Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T15:59:29.960Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T15:49:29.871Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T15:39:29.995Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T15:29:30.323Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T15:19:30.095Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T15:09:30.059Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T14:59:30.268Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T14:49:30.153Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T14:39:30.305Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T14:29:30.301Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T14:19:30.477Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T14:09:30.496Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T13:59:29.499Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T13:49:29.447Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T13:39:29.563Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T13:29:29.896Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T13:19:29.717Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T13:09:29.663Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T12:59:29.774Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T12:49:20.868Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T12:39:29.940Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T12:29:20.804Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T12:19:21.120Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T12:09:20.943Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T11:59:20.961Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T11:49:21.267Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T11:39:21.178Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T11:29:31.184Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-23T11:19:31.319Z",
+      "event": "System started"
+    },
+    {
       "timestamp": "2025-09-23T11:06:37.125Z",
       "event": "System started"
     },
@@ -42,363 +398,6 @@
     },
     {
       "timestamp": "2025-09-23T09:35:54.695Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T09:33:58.901Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T09:29:56.315Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T09:13:25.699Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T09:09:23.127Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T09:01:27.273Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T08:48:54.840Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T08:28:24.319Z",
-      "event": "Error in oasc_camera_capture",
-      "error": "Error: 이미지 캡처 실패: READ_PIXELS_DELAYED 명령 전송 실패: LIBUSB_ERROR_NO_DEVICE"
-    },
-    {
-      "timestamp": "2025-09-23T08:27:54.909Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T07:49:56.215Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T06:03:16.495Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T05:46:38.112Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T05:29:20.894Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T05:19:20.895Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T04:38:39.695Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T04:25:45.667Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T02:56:11.551Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T02:49:32.682Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T02:43:37.170Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T11:25:20.604Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T11:22:37.045Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T11:17:40.830Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T11:00:59.089Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T11:00:23.993Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T10:58:46.213Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T10:57:23.413Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T10:50:57.776Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T10:46:28.930Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T09:48:46.771Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T09:28:45.057Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T09:27:55.439Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T09:08:36.011Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T09:01:01.617Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-22T00:55:19.850Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T23:55:20.256Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T22:55:20.334Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T21:55:20.716Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T20:55:20.035Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T19:55:20.237Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T18:55:20.952Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T17:55:19.808Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T16:55:20.123Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T15:55:20.407Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T14:55:21.253Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-21T13:17:36.858Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:58:59.787Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:49:53.002Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:45:52.450Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:42:59.732Z",
-      "event": "System shutdown"
-    },
-    {
-      "timestamp": "2025-09-20T15:42:59.590Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:25:33.051Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:17:14.861Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:14:04.742Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:08:48.896Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:07:44.894Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T15:03:13.621Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:56:27.733Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:54:43.902Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:51:15.971Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:48:17.161Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:42:32.733Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:36:55.047Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:36:06.733Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:29:28.444Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:26:56.028Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:26:11.831Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:21:17.078Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T14:19:01.063Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T13:55:57.670Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T13:49:39.126Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T13:48:15.516Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T13:46:09.081Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T13:38:49.658Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T13:37:39.074Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T13:28:56.024Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T13:24:09.716Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:52:30.077Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:31:49.309Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:31:29.326Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:30:52.191Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:30:31.947Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:30:10.810Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:29:54.700Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:29:06.700Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:27:59.536Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T12:23:56.231Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T11:41:11.641Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T11:33:51.451Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T11:29:00.207Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-20T11:18:16.840Z",
       "event": "System started"
     }
   ]

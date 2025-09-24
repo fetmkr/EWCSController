@@ -1,5 +1,12 @@
 {
   "stationName": "hello station",
   "oascExposureTime": 20,
-  "lastCleanupDate": "2024-12-31"
+  "lastCleanupDate": "2024-12-31",
+  "factorySettings": {
+    "network": {
+      "ip": "192.168.0.203",
+      "gateway": "192.168.0.1",
+      "subnet": "255.255.255.0"
+    }
+  }
 }

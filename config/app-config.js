@@ -164,11 +164,22 @@ class AppConfig {
 
   saveConfig() {
     try {
-      // Only save user-configurable settings, not all defaults
+      // Read existing config first to preserve factory settings
+      let existingConfig = {};
+      try {
+        const existingData = fs.readFileSync(this.configPath, 'utf8');
+        existingConfig = JSON.parse(existingData);
+      } catch (e) {
+        // File doesn't exist or invalid, start fresh
+      }
+
+      // Only save user-configurable settings, preserve factory settings
       const saveableConfig = {
         stationName: this.config.stationName,
         oascExposureTime: this.config.oascExposureTime,
-        lastCleanupDate: this.config.lastCleanupDate
+        lastCleanupDate: this.config.lastCleanupDate,
+        // Preserve factory settings if they exist
+        ...(existingConfig.factorySettings && { factorySettings: existingConfig.factorySettings })
       };
 
       fs.writeFileSync(this.configPath, JSON.stringify(saveableConfig, null, 2));

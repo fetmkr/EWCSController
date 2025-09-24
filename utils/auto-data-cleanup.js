@@ -31,11 +31,11 @@ class AutoDataCleanup {
    */
   async getDiskUsage() {
     try {
-      const { execAsync } = await import('child_process');
+      const { exec } = await import('child_process');
       const { promisify } = await import('util');
-      const exec = promisify(execAsync);
+      const execAsync = promisify(exec);
 
-      const { stdout } = await exec("df / | tail -1 | awk '{print $5}' | sed 's/%//'");
+      const { stdout } = await execAsync("df / | tail -1 | awk '{print $5}' | sed 's/%//'");
       return parseInt(stdout.trim());
     } catch (error) {
       console.error('[CLEANUP] Failed to get disk usage:', error.message);
