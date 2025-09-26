@@ -280,21 +280,40 @@ class SpinelCamera {
   handleData(data) {
     //console.log(`[CAMERA] Raw incoming data: ${data.toString('hex')}`);
     this.dataBuffer = Buffer.concat([this.dataBuffer, data]);
-    
-    // 테스트 명령 응답 체크 (0x01 명령에 대한 응답)
-    if (data[0] === 0x90 && data[1] === 0xEB && data[2] === this.config.cameraId && 
-        data[3] === 0x01 && data.length === 11) {
-      this.handleTestResponse(data);
+
+    // 버퍼에서 테스트 명령 응답 체크 (0x01 명령에 대한 응답)
+    // 버퍼 기반 처리로 쓰레기 데이터가 있어도 정확한 패턴을 찾음
+    let testResponseIndex = -1;
+    for (let i = 0; i <= this.dataBuffer.length - 11; i++) {
+      if (this.dataBuffer[i] === 0x90 &&
+          this.dataBuffer[i + 1] === 0xEB &&
+          this.dataBuffer[i + 2] === this.config.cameraId &&
+          this.dataBuffer[i + 3] === 0x01) {
+        testResponseIndex = i;
+        break;
+      }
+    }
+
+    // 테스트 응답 찾으면 처리
+    if (testResponseIndex >= 0 && this.dataBuffer.length >= testResponseIndex + 11) {
+      // 찾은 위치에서 11바이트 추출
+      const testData = this.dataBuffer.slice(testResponseIndex, testResponseIndex + 11);
+      this.handleTestResponse(testData);
+      // 처리한 데이터와 그 이전의 쓰레기 데이터 모두 제거
+      if (testResponseIndex > 0) {
+        console.log(`[CAMERA] Test response found at index ${testResponseIndex}, cleared ${testResponseIndex} bytes of garbage data`);
+      }
+      this.dataBuffer = this.dataBuffer.slice(testResponseIndex + 11);
       return;
     }
-    
+
     // 스냅샷 준비 완료 응답 체크 (0x40 명령에 대한 응답) - 버퍼에서 찾기
     if (this.captureState === 0) {
       // 버퍼에서 스냅샷 응답 패턴 찾기 (분할된 패킷 처리)
       for (let i = 0; i <= this.dataBuffer.length - 19; i++) {
-        if (this.dataBuffer[i] === 0x90 && this.dataBuffer[i + 1] === 0xEB && 
+        if (this.dataBuffer[i] === 0x90 && this.dataBuffer[i + 1] === 0xEB &&
             this.dataBuffer[i + 2] === this.config.cameraId && this.dataBuffer[i + 3] === 0x40) {
-          
+
           // 최소 19바이트 있는지 확인 (스냅샷 응답은 19바이트)
           if (this.dataBuffer.length >= i + 19) {
             console.log('[CAMERA] Snapshot ready signal detected in buffer!');
@@ -772,19 +791,29 @@ class SpinelCamera {
       }
 
       return new Promise((resolve) => {
+        // 테스트 전에 버퍼 초기화 (이전 쓰레기 데이터 제거)
+        this.dataBuffer = Buffer.alloc(0);
+        console.log('[CAMERA] Buffer cleared before connection test');
+
         // 기존 handleData를 통해 응답을 받도록 설정
         this.testPromiseResolve = (result) => {
           clearTimeout(timeout);
           resolve(result.success);
         };
-        
+
         // 타임아웃 설정 (5초)
         const timeout = setTimeout(() => {
           console.log('[CAMERA] Test command timeout - no response received');
+          console.log(`[CAMERA] Buffer size at timeout: ${this.dataBuffer.length} bytes`);
+          if (this.dataBuffer.length > 0) {
+            console.log(`[CAMERA] Buffer content: ${this.dataBuffer.toString('hex')}`);
+          }
           this.testPromiseResolve = null;
+          // 타임아웃 시 버퍼 초기화
+          this.dataBuffer = Buffer.alloc(0);
           resolve(false);
         }, 5000);
-        
+
         // 테스트 명령 전송
         const testCmd = this.buildTestCommand();
         console.log(`[CAMERA] Sending test command: ${testCmd.toString('hex')}`);
