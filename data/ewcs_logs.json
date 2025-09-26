@@ -1,6 +1,14 @@
 {
   "recent_events": [
     {
+      "timestamp": "2025-09-26T03:43:30.464Z",
+      "event": "System started"
+    },
+    {
+      "timestamp": "2025-09-26T01:47:34.979Z",
+      "event": "System started"
+    },
+    {
       "timestamp": "2025-09-25T01:15:41.586Z",
       "event": "System started"
     },
@@ -390,14 +398,6 @@
     },
     {
       "timestamp": "2025-09-23T11:59:20.961Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T11:49:21.267Z",
-      "event": "System started"
-    },
-    {
-      "timestamp": "2025-09-23T11:39:21.178Z",
       "event": "System started"
     }
   ]

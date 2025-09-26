@@ -55,3 +55,56 @@
 - VOUT 전원 제어로 인한 노이즈/쓰레기 데이터 문제 해결
 - 연결 체크 안정성 향상
 - 분할된 패킷도 정상 처리 가능
+
+---
+
+## 2025-01-26
+
+### Change/Suggestion: Documentation System and Development Principles Setup
+**Type:** Documentation
+**Files Affected:** CLAUDE.md, status.md (updated)
+
+**Reason:**
+Established comprehensive project documentation and development tracking system to ensure consistent code quality, maintainability, and clear communication of all changes. This creates a single source of truth for project structure understanding and provides audit trail for all modifications. Previous status.md entries show good tracking practice, so enhanced the system with structured principles.
+
+**Implementation:**
+- Created comprehensive CLAUDE.md with complete project structure analysis
+- Documented all device communication protocols and interfaces (Serial UART, I2C, SPI, USB)
+- Established clear development principles requiring reasoning for all code changes
+- Enhanced status.md format with structured tracking requirements
+- Defined commenting standards requiring WHY reasoning in all code modifications
+- Added commands for post-change verification (lint, test, audit, database integrity)
+
+**Testing:**
+- Verified all documented file paths and device configurations match actual system
+- Confirmed directory structure analysis accuracy against real project structure
+- Validated serial port mappings and baud rates are correct
+- Cross-referenced with existing successful implementations (like Spinel improvements)
+
+**Notes:**
+- All future code modifications must be logged in status.md with date, reasoning, and impact
+- Comments in code must explain reasoning (WHY) not just functionality (WHAT)
+- This systematic approach builds on the good practices already shown in previous entries
+- Documentation will help maintain the high quality standards demonstrated in recent Spinel camera improvements
+
+### Change/Suggestion: Fixed CLAUDE.md Encoding Detection Issue
+**Type:** Bug Fix
+**Files Affected:** CLAUDE.md
+
+**Reason:**
+File encoding was not being properly detected by editors/tools, showing as "data" instead of proper UTF-8 text. This could cause issues with IDE display, git operations, and text processing tools.
+
+**Implementation:**
+- Recreated CLAUDE.md file with explicit UTF-8 encoding
+- Verified proper file structure and content integrity
+- Ensured all special characters and markdown formatting are preserved
+
+**Testing:**
+- Verified with `file` command now shows "Unicode text, UTF-8 text"
+- Confirmed file content is identical and properly formatted
+- All markdown structure and special characters intact
+
+**Notes:**
+- Problem likely occurred during initial file creation process
+- File content was never corrupted, only encoding detection was affected
+- Similar encoding issues should be checked if other files show similar problems

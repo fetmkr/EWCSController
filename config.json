@@ -1,6 +1,6 @@
 {
   "stationName": "hello station",
-  "oascExposureTime": 2,
+  "oascExposureTime": 1,
   "lastCleanupDate": "2024-12-31",
   "factorySettings": {
     "network": {
