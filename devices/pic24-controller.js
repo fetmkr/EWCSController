@@ -508,7 +508,7 @@ export default class PIC24Controller {
                 setTimeout(() => {
                     if (this.pendingPromises.has(promiseKey)) {
                         this.pendingPromises.delete(promiseKey);
-                        reject(new Error('Timeout waiting for response'));
+                        reject(new Error('Sendpacket Timeout waiting for response'));
                     }
                 }, EWCSPIC24.TIMEOUT_MS);
             }

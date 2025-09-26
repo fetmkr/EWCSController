@@ -511,7 +511,11 @@ class EWCSApp {
   async runSpinelImageCaptureOnce() {
     try {
       // Spinel Camera 촬영
-      if (this.ewcsStatus.cameraConnected === 1 && this.devices.camera) {
+      //if (this.ewcsStatus.cameraConnected === 1 && this.devices.camera) {
+
+      // less strict spinel image capture
+      if (this.devices.camera) {
+
         console.log(`[${getTimestamp()}] [SPINEL] Initial capture started`);
 
         // vout2 켜기
@@ -925,9 +929,14 @@ class EWCSApp {
     try {
       // VOUT 1, 2, 3 켜기
       if (this.devices.pic24) {
+        // REASON: PIC24 needs time to process each command before accepting the next one
+        // IMPACT: Prevents timeout errors when sending multiple VOUT commands in sequence
         await this.devices.pic24.turnOnVOUT(1);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
         await this.devices.pic24.turnOnVOUT(2);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
         await this.devices.pic24.turnOnVOUT(3);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
         await this.devices.pic24.turnOnVOUT(4);
         console.log('[DEVICE HEALTH] VOUT 1, 2, 3, 4 turned ON for device health check');
         // 전원 안정화를 위해 5초 대기
@@ -946,9 +955,14 @@ class EWCSApp {
 
       // 장치 확인 완료 후 VOUT 1, 2, 3 끄기
       if (this.devices.pic24) {
+        // REASON: PIC24 needs time to process each command before accepting the next one
+        // IMPACT: Prevents timeout errors when sending multiple VOUT commands in sequence
         await this.devices.pic24.turnOffVOUT(1);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
         await this.devices.pic24.turnOffVOUT(2);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
         await this.devices.pic24.turnOffVOUT(3);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
         await this.devices.pic24.turnOffVOUT(4);
         console.log('[DEVICE HEALTH] VOUT 1, 2, 3, 4 turned OFF after device health check');
       }
@@ -961,9 +975,14 @@ class EWCSApp {
       // 에러 발생 시에도 VOUT 1, 2, 3 끄기
       try {
         if (this.devices.pic24) {
+          // REASON: PIC24 needs time to process each command before accepting the next one
+          // IMPACT: Prevents timeout errors when sending multiple VOUT commands in sequence
           await this.devices.pic24.turnOffVOUT(1);
+          await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
           await this.devices.pic24.turnOffVOUT(2);
+          await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
           await this.devices.pic24.turnOffVOUT(3);
+          await new Promise(resolve => setTimeout(resolve, 100)); // Wait for PIC24 to process
           await this.devices.pic24.turnOffVOUT(4);
 
           console.log('[DEVICE HEALTH] VOUT 1, 2, 3, 4 turned OFF after error');

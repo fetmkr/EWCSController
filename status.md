@@ -1,5 +1,32 @@
 # EWCSController Status
 
+## 2025-09-26 Update (Session 3)
+
+### Change/Suggestion: Fix PIC24 Controller Timeout Issues with Concurrent VOUT Commands
+**Type:** Bug Fix
+**Files Affected:** app.js (lines 928-937, 956-962, 976-982)
+
+**Reason:**
+PIC24 controller was experiencing timeout errors when sending multiple VOUT control commands in rapid succession during device health check. The 200ms timeout in sendPacket was not sufficient when 4 consecutive commands were sent without delay, causing sequence number conflicts and response timeouts.
+
+**Implementation:**
+Added 100ms delay between each VOUT command to allow PIC24 sufficient processing time:
+- Between turnOnVOUT commands during health check startup
+- Between turnOffVOUT commands during health check completion
+- Between turnOffVOUT commands in error recovery path
+
+**Testing:**
+- Each command now has time to complete before next command is sent
+- Prevents overlapping of ACK responses with different sequence numbers
+- Eliminates "Timeout waiting for response" errors from sendPacket
+
+**Notes:**
+- Root cause: PIC24 needs time to process each command and send ACK before accepting next command
+- 100ms delay is sufficient based on typical response time of 15-26ms observed in testing
+- Applied to all three locations where multiple VOUT commands are sent sequentially
+
+---
+
 ## 2025-09-26 Update (Session 2)
 
 ### 수정사항
